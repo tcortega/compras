@@ -1,5 +1,6 @@
 using Api.Features.Publication.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace Api.Features.Publication.Endpoints;
 
@@ -11,6 +12,14 @@ public static partial class NotifyFlag
 	{
 		[FromRoute]
 		public required Guid Id { get; init; }
+
+		[FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)]
+		public NotifyBody? Body { get; init; }
+
+		public sealed record NotifyBody
+		{
+			public string? Artifact { get; init; }
+		}
 	}
 
 	private static async ValueTask<FlagRecord> HandleAsync(
@@ -22,7 +31,7 @@ public static partial class NotifyFlag
 		var flag = await db.Flags.FirstOrDefaultAsync(f => f.Id == command.Id, ct);
 		if (flag is null)
 			NotFoundException.ThrowNotFoundException("Flag");
-		flag.Notify(clock.GetCurrentInstant());
+		flag.Notify(clock.GetCurrentInstant(), command.Body?.Artifact);
 		await db.SaveChangesAsync(ct);
 		return FlagRecord.FromEntity(flag);
 	}

@@ -282,6 +282,8 @@ public sealed record FlagRecord
 
 	public Instant? NotifiedAt { get; init; }
 
+	public string? NotifyArtifact { get; init; }
+
 	public Instant? PublishAfter { get; init; }
 
 	public Instant? PublishedAt { get; init; }
@@ -316,6 +318,11 @@ public sealed record CreateFlagRequest
 	public required string SnapshotId { get; init; }
 
 	public required string MethodologyVersion { get; init; }
+}
+
+public sealed record NotifyFlagRequest
+{
+	public string? Artifact { get; init; }
 }
 
 public sealed record ReplyFlagRequest

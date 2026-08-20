@@ -40,6 +40,8 @@ export const ids = {
   orgaoSantaMaria: '7c2e1f40-4316-4050-9a01-000000000032',
   orgaoMontesClaros: '7c2e1f40-3143-4050-9a01-000000000033',
   orgaoGovernadorValadares: '7c2e1f40-3127-4050-9a01-000000000034',
+  orgaoCanoas: '7c2e1f40-4304-4050-9a01-000000000035',
+  orgaoLages: '7c2e1f40-4203-4050-9a01-000000000036',
   fornFarma: '8d3f2a51-3306-4050-9a02-000000000001',
   fornAlim: '8d3f2a51-3306-4050-9a02-000000000002',
   fornComb: '8d3f2a51-3306-4050-9a02-000000000003',
@@ -87,6 +89,8 @@ export const ids = {
   ctSantaMaria: '9e4a3b62-4316-4050-9a03-000000000038',
   ctMontesClaros: '9e4a3b62-3143-4050-9a03-000000000039',
   ctGovernadorValadares: '9e4a3b62-3127-4050-9a03-000000000040',
+  ctCanoas: '9e4a3b62-4304-4050-9a03-000000000041',
+  ctLages: '9e4a3b62-4203-4050-9a03-000000000042',
 } as const
 
 function orgao(
@@ -454,6 +458,26 @@ export const orgaos: Orgao[] = [
     'MG',
     '3127701',
     'Governador Valadares',
+  ),
+  orgao(
+    ids.orgaoCanoas,
+    '88577416000118',
+    'Município de Canoas',
+    'executivo',
+    T2,
+    'RS',
+    '4304606',
+    'Canoas',
+  ),
+  orgao(
+    ids.orgaoLages,
+    '82777301000190',
+    'Município de Lages',
+    'executivo',
+    T2,
+    'SC',
+    '4209300',
+    'Lages',
   ),
 ]
 
@@ -1000,6 +1024,28 @@ export const contratacoes: Contratacao[] = [
     '2024-10-30T08:39:39.000Z',
     'compras.gov.br',
   ),
+  ct(
+    ids.ctCanoas,
+    '88577416000118-1-000156/2024',
+    ids.orgaoCanoas,
+    'pregao eletronico',
+    'Fornecimento de clorímetro digital portátil e reagentes DPD para cloro livre',
+    2024,
+    3_305.99,
+    '2024-10-16T07:01:37.000Z',
+    'compras.gov.br',
+  ),
+  ct(
+    ids.ctLages,
+    '82777301000190-1-000260/2024',
+    ids.orgaoLages,
+    'pregao eletronico',
+    'Aquisição de Bolsas de Trabalho personalizadas para a equipe de fiscalização da Vigilância Sanitária',
+    2024,
+    2_910.0,
+    '2024-09-04T07:15:38.000Z',
+    'compras.gov.br',
+  ),
 ]
 
 function item(
@@ -1099,4 +1145,6 @@ export const items: Item[] = [
   item(56, ids.ctSantaMaria, ids.fornPapel, 'Risperidona', '272839', 200000, 'Comprimido', 'comprimido', 0.141, 'RS', '2024-Q4', T2),
   item(57, ids.ctMontesClaros, ids.fornPapel, 'Manutenção prevenção combate incêndio', '21822', 1, 'UNIDADE', 'un', 330811.34, 'MG', '2024-Q3', T2),
   item(58, ids.ctGovernadorValadares, ids.fornPapel, 'Cartão controle acesso', '618284', 30000, 'Unidade', 'un', 1.45, 'MG', '2024-Q4', T2),
+  item(59, ids.ctCanoas, ids.fornPapel, 'Clorímetro', '247827', 1, 'Unidade', 'un', 1667.07, 'RS', '2024-Q4', T2),
+  item(60, ids.ctLages, ids.fornPapel, 'Sacola', '229690', 30, 'Unidade', 'un', 97.0, 'SC', '2024-Q3', T2),
 ]

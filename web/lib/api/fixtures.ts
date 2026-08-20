@@ -54,6 +54,8 @@ export const ids = {
   orgaoPetropolis: '7c2e1f40-3303-4050-9a01-000000000046',
   orgaoIpatinga: '7c2e1f40-3131-4050-9a01-000000000047',
   orgaoMacae: '7c2e1f40-3302-4050-9a01-000000000048',
+  orgaoSantaLuzia: '7c2e1f40-3157-4050-9a01-000000000049',
+  orgaoNovaFriburgo: '7c2e1f40-3303-4050-9a01-000000000050',
   fornFarma: '8d3f2a51-3306-4050-9a02-000000000001',
   fornAlim: '8d3f2a51-3306-4050-9a02-000000000002',
   fornComb: '8d3f2a51-3306-4050-9a02-000000000003',
@@ -115,6 +117,8 @@ export const ids = {
   ctPetropolis: '9e4a3b62-3303-4050-9a03-000000000052',
   ctIpatinga: '9e4a3b62-3131-4050-9a03-000000000053',
   ctMacae: '9e4a3b62-3302-4050-9a03-000000000054',
+  ctSantaLuzia: '9e4a3b62-3157-4050-9a03-000000000055',
+  ctNovaFriburgo: '9e4a3b62-3303-4050-9a03-000000000056',
 } as const
 
 function orgao(
@@ -622,6 +626,26 @@ export const orgaos: Orgao[] = [
     'RJ',
     '3302403',
     'Macaé',
+  ),
+  orgao(
+    ids.orgaoSantaLuzia,
+    '18715409000150',
+    'Município de Santa Luzia',
+    'executivo',
+    T1,
+    'MG',
+    '3157807',
+    'Santa Luzia',
+  ),
+  orgao(
+    ids.orgaoNovaFriburgo,
+    '28606630000123',
+    'Município de Nova Friburgo',
+    'executivo',
+    T2,
+    'RJ',
+    '3303401',
+    'Nova Friburgo',
   ),
 ]
 
@@ -1322,6 +1346,28 @@ export const contratacoes: Contratacao[] = [
     '2024-10-31T11:46:36.000Z',
     'compras.gov.br',
   ),
+  ct(
+    ids.ctSantaLuzia,
+    '18715409000150-1-000027/2024',
+    ids.orgaoSantaLuzia,
+    'dispensa',
+    'Aquisição de cadeira giratória escritório para obeso',
+    2024,
+    1_647.01,
+    '2024-07-03T17:01:09.000Z',
+    'compras.gov.br',
+  ),
+  ct(
+    ids.ctNovaFriburgo,
+    '28606630000123-1-000093/2024',
+    ids.orgaoNovaFriburgo,
+    'dispensa',
+    'Contratação de empresa especializada para o fornecimento de papel toalha interfolhado, para atender as necessidades das Secretarias Municipais.',
+    2024,
+    8_000.0,
+    '2024-10-08T11:07:04.000Z',
+    'compras.gov.br',
+  ),
 ]
 
 function item(
@@ -1435,4 +1481,6 @@ export const items: Item[] = [
   item(70, ids.ctPetropolis, ids.fornPapel, 'Bobina Papel Impressora aplicação: impressora plotter, comprimento: 50, gramatura: 75, largura: 914, tipo papel: sulfite Papel para Plotter (Bobina) 75 GR 610x50', '275143', 12, 'Unidade', 'un', 133.33, 'RJ', '2024-Q2', T1),
   item(71, ids.ctIpatinga, ids.fornPapel, 'Betoneira', '487731', 1, 'Unidade', 'un', 3890.0, 'MG', '2024-Q4', T2),
   item(72, ids.ctMacae, ids.fornPapel, 'Colete Identificação', '482286', 36, 'Unidade', 'un', 57.99, 'RJ', '2024-Q4', T2),
+  item(73, ids.ctSantaLuzia, ids.fornPapel, 'Cadeira escritório', '613647', 1, 'Unidade', 'un', 1647.01, 'MG', '2024-Q3', T1),
+  item(74, ids.ctNovaFriburgo, ids.fornPapel, 'Toalha De Papel', '436328', 1000, 'Pacote 1000,00 FL', 'unknown', 8.0, 'RJ', '2024-Q4', T2),
 ]

@@ -1,0 +1,11 @@
+{
+  "n": 100,
+  "n_real": 9,
+  "n_unit_error": 9,
+  "n_spec_difference": 35,
+  "n_data_error": 47,
+  "n_unresolved": 0,
+  "precision_real": 0.09,
+  "source": "labels.csv label column recount",
+  "note": "precision.json on disk previously claimed 0.63 and 0 data error. That did not match labels.csv. This file is the recount."
+}

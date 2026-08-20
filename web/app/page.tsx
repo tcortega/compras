@@ -2,7 +2,7 @@ import { CoverageChip } from '@/components/CoverageChip'
 import { SearchForm } from '@/components/SearchForm'
 import { Shell } from '@/components/Shell'
 import { api } from '@/lib/api'
-import { copy, SLICE_LABEL } from '@/lib/copy'
+import { copy, SLICE_LABEL, SLICE_YEAR } from '@/lib/copy'
 import { formatNumber } from '@/lib/format'
 import { routes } from '@/lib/routes'
 
@@ -26,9 +26,10 @@ export default async function HomePage() {
   return (
     <Shell coverage={items.coverage} current={routes.home}>
       <section className="hero">
-        <p className="kicker">Recorte {SLICE_LABEL}</p>
+        <p className="kicker">Recorte publicado · {SLICE_YEAR}</p>
         <h1>O que foi comprado com dinheiro público.</h1>
         <p className="lede">
+          Recorte publicado: {SLICE_LABEL}.
           Busca, listagem e ficha de órgão, fornecedor, contratação e item.
           Cada agregado traz o denominador da cobertura.
           Sem classificação de órgãos ou fornecedores, sem pontuação e sem juízo.

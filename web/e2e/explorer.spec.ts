@@ -27,6 +27,19 @@ test('home cards usam o n da coleção, não o n de itens', async ({ page }) => 
   await expect(page.getByRole('strong').filter({ hasText: 'Cobertura incompleta' })).toBeVisible()
   await expect(page.getByText(/UF mista/).first()).toBeVisible()
   await expect(page.getByText(/Caxias do Sul \(RS\), Joinville \(SC\), Uberlândia \(MG\) e Londrina \(PR\)/).first()).toBeVisible()
+  const brand = page.locator('.brand-kicker')
+  await expect(brand).toHaveText(/sete municípios · 2024/i)
+  await expect(brand).not.toHaveText(/Caxias do Sul|Uberlândia|Londrina/)
+  const brandBox = await brand.boundingBox()
+  const masthead = await page.locator('.masthead-inner').boundingBox()
+  expect(brandBox).toBeTruthy()
+  expect(masthead).toBeTruthy()
+  expect(brandBox!.width).toBeLessThanOrEqual(masthead!.width)
+  await page.setViewportSize({ width: 390, height: 844 })
+  const narrowBrand = await brand.boundingBox()
+  const narrowMasthead = await page.locator('.masthead-inner').boundingBox()
+  expect(narrowBrand!.width).toBeLessThanOrEqual(narrowMasthead!.width)
+  await page.setViewportSize({ width: 1280, height: 720 })
   await assertCoverageAndBan(page)
 
   const orgaos = page.locator('.index-card', { has: page.getByText('Órgãos', { exact: true }) })
@@ -67,11 +80,17 @@ test('home cards usam o n da coleção, não o n de itens', async ({ page }) => 
 
 test('órgão para contratação com denominador visível', async ({ page }) => {
   await page.goto('/orgaos')
-  await page.getByRole('link', { name: voltaName }).click()
+  await page.locator('table.data').getByRole('link', { name: voltaName }).click()
   await expect(page.getByText(/volta redonda/i).first()).toBeVisible()
   await expect(page.locator('.stats .kicker', { hasText: 'Contratações' })).toBeVisible()
   await expect(page.locator('.stats .kicker', { hasText: 'Itens' })).toBeVisible()
   await expect(page.locator('.stats .kicker', { hasText: 'Homologado' })).toHaveCount(0)
+  await expect(
+    page
+      .locator('section', { has: page.getByRole('heading', { name: 'Contratações' }) })
+      .getByText(/\d{2}\/\d{2}\/\d{4}/)
+      .first(),
+  ).toBeVisible()
   await assertCoverageAndBan(page)
 
   await page
@@ -203,6 +222,67 @@ test('filtra município IBGE e UF e mantém cobertura no vazio', async ({ page }
   await expect(page.getByText(/n=0/).first()).toBeVisible()
   await expect(page.getByText(/UF RJ/).first()).toBeVisible()
   await expect(page.getByText(/metodologia/).first()).toBeVisible()
+  await assertCoverageAndBan(page)
+})
+
+test('paginação preserva UF e IBGE', async ({ page }) => {
+  await page.goto('/orgaos?uf=RJ&take=1')
+  await expect(page.getByText(/UF RJ/).first()).toBeVisible()
+  await expect(page.locator('table.data tbody tr')).toHaveCount(1)
+  await page.getByRole('link', { name: 'Próxima' }).click()
+  await expect(page).toHaveURL(/uf=RJ/)
+  await expect(page).toHaveURL(/skip=1/)
+  await expect(page.getByText(/UF RJ/).first()).toBeVisible()
+  await expect(page.locator('table.data tbody a', { hasText: bauruName })).toHaveCount(0)
+  await assertCoverageAndBan(page)
+
+  await page.goto('/itens?uf=RJ&take=1')
+  await expect(page.getByText(/UF RJ/).first()).toBeVisible()
+  await page.getByRole('link', { name: 'Próxima' }).click()
+  await expect(page).toHaveURL(/uf=RJ/)
+  await expect(page.getByText(/UF RJ/).first()).toBeVisible()
+  await expect(page.locator('table.data tbody tr')).toHaveCount(1)
+  await assertCoverageAndBan(page)
+
+  if (!againstCompose) {
+    await page.goto('/orgaos?municipioIbge=3306305&take=1')
+    await page.getByRole('link', { name: 'Próxima' }).click()
+    await expect(page).toHaveURL(/municipioIbge=3306305/)
+    await expect(page.getByText(/UF RJ/).first()).toBeVisible()
+    await expect(page.locator('table.data tbody')).toContainText(/volta redonda/i)
+    await expect(page.locator('table.data tbody a', { hasText: bauruName })).toHaveCount(0)
+    await assertCoverageAndBan(page)
+  }
+})
+
+test('unidade canônica e preço-base só quando o warehouse gravou', async ({ page }) => {
+  if (againstCompose) {
+    await page.goto('/itens?q=CONHECIDA')
+    const unknownLink = page.locator('table.data tbody a').first()
+    await expect(unknownLink).toBeVisible()
+    await expect(page.locator('table.data tbody')).not.toHaveText(/unknown/i)
+    await unknownLink.click()
+  } else {
+    await page.goto('/itens?q=Sinaliza')
+    await expect(page.getByRole('link', { name: /Sinaliza/ })).toBeVisible()
+    await expect(page.locator('table.data tbody')).not.toHaveText(/unknown/i)
+    await page.getByRole('link', { name: /Sinaliza/ }).click()
+    await expect(page.getByRole('heading', { name: /Sinaliza/ })).toBeVisible()
+  }
+  await expect(page.getByText('não mapeada').first()).toBeVisible()
+  await expect(page.locator('.stats .kicker', { hasText: 'Valor por' })).toHaveCount(0)
+  await expect(page.locator('body')).not.toHaveText(/\bunknown\b/)
+  await assertCoverageAndBan(page)
+
+  const mappedRow = page.locator('table.data tbody tr', { hasText: '·' }).first()
+  await page.goto('/itens')
+  await expect(mappedRow).toBeVisible()
+  await mappedRow.locator('a').first().click()
+  const mapped = page.locator('.fields div', { has: page.getByText('Unidade canônica', { exact: true }) })
+  await expect(mapped.getByText('não mapeada')).toHaveCount(0)
+  await expect(mapped.locator('dd')).not.toHaveText(/^n\/d$/)
+  await expect(page.locator('.stats .kicker', { hasText: 'Valor por' })).toBeVisible()
+  await expect(page.getByText(/R\$\s*[\d.]+,\d{2}/).first()).toBeVisible()
   await assertCoverageAndBan(page)
 })
 

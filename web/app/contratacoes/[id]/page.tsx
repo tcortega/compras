@@ -6,7 +6,7 @@ import { Shell } from '@/components/Shell'
 import { SourceLine } from '@/components/SourceLine'
 import { Stat } from '@/components/Stat'
 import { api, safeDetail } from '@/lib/api'
-import { formatCnpj, formatDate, formatNumber } from '@/lib/format'
+import { formatCnpj, formatDate, formatNumber, formatSource } from '@/lib/format'
 import { routes } from '@/lib/routes'
 import { itemColumns } from '@/lib/tables'
 import type { Metadata } from 'next'
@@ -50,13 +50,13 @@ export default async function ContratacaoPage({ params }: { params: Promise<{ id
           { label: 'PNCP', value: row.pncpId, mono: true },
           { label: 'Modalidade', value: row.modalidade },
           { label: 'Publicado em', value: formatDate(row.publicadoEm) },
-          { label: 'Fonte', value: row.source },
+          { label: 'Fonte', value: formatSource(row.source) },
         ]}
       />
       <div className="stats">
         <Stat label="Homologado" value={<Money value={row.valorHomologado} />} coverage={row.coverage} />
         <Stat label="Itens" value={formatNumber(row.itemCount)} coverage={row.coverage} />
-        <Stat label="Ano" value={row.ano} coverage={row.coverage} />
+        <Stat label="Fonte" value={formatSource(row.source)} coverage={row.coverage} />
       </div>
       <SourceLine
         source={row.source}

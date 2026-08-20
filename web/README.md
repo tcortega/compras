@@ -3,7 +3,7 @@
 Explorador cidadão do recorte de compras públicas.
 
 Fase 2: busca, lista e ficha de órgãos, fornecedores, contratações e itens.
-Sem pontuação, sem ranking e sem flags públicas.
+Sem pontuação, sem classificação de órgãos ou fornecedores e sem alertas públicos.
 
 Cada agregado na tela mostra o denominador da cobertura (`n`, UF, trimestre).
 A interface afirma cobertura incompleta e não afirma censo nacional.

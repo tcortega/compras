@@ -36,7 +36,7 @@ export default async function BuscaPage({ searchParams }: { searchParams: Promis
       <p className="kicker">Busca</p>
       <h1>{q ? `Resultados para “${q}”` : 'Buscar no recorte'}</h1>
       <p className="lede">
-        A busca consulta as quatro coleções publicadas. Não há índice de ranking nem pontuação.
+        A busca consulta as quatro coleções publicadas. Não há classificação de órgãos ou fornecedores nem pontuação.
       </p>
       <SearchForm defaultValue={q} />
 

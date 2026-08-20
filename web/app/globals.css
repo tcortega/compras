@@ -258,6 +258,7 @@ h3 {
   font: inherit;
   font-size: 16px;
   box-shadow: var(--shadow);
+  border-radius: 0;
 }
 
 .search button,
@@ -321,7 +322,7 @@ h3 {
   border: 1px solid var(--rule);
   text-decoration: none;
   color: inherit;
-  min-height: 132px;
+  min-height: 148px;
 }
 
 .index-card:hover {
@@ -396,6 +397,19 @@ h3 {
   color: var(--ink);
   font: inherit;
   font-size: 14px;
+  border-radius: 0;
+}
+
+.field select {
+  appearance: none;
+  padding-right: 28px;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 14px) 18px,
+    calc(100% - 9px) 18px;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
 }
 
 .field-grow {
@@ -420,6 +434,7 @@ table.data td {
   text-align: left;
   vertical-align: top;
   border-bottom: 1px solid var(--rule);
+  overflow-wrap: anywhere;
 }
 
 table.data th {
@@ -445,6 +460,8 @@ table.data th.num {
   font-variant-numeric: tabular-nums;
   font-family: var(--mono);
   font-size: 13px;
+  overflow-wrap: normal;
+  white-space: nowrap;
 }
 
 table.data a {
@@ -581,8 +598,11 @@ table.data a:hover {
   padding: 28px 16px;
   text-align: center;
   color: var(--muted);
-  background: var(--surface);
-  border: 1px solid var(--rule);
+  margin: 0;
+}
+
+.table-wrap > .empty {
+  border-bottom: 1px solid var(--rule);
 }
 
 .group {

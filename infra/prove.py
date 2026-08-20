@@ -94,6 +94,25 @@ def main() -> int:
     rows = items.get("items") or []
     if not rows:
         raise SystemExit("api /api/items returned no rows")
+    canons = [row.get("unidadeCanonica") for row in rows]
+    if all(v in (None, "") for v in canons):
+        raise SystemExit("api items unidadeCanonica always null")
+    base_prices = [row.get("valorPorUnidadeCanonica") for row in rows]
+    if "valorPorUnidadeCanonica" not in rows[0]:
+        raise SystemExit("api items missing valorPorUnidadeCanonica")
+    if all(v is None for v in base_prices):
+        raise SystemExit("api items valorPorUnidadeCanonica always null")
+    mapped = {
+        str(row.get("unidadeMedida") or "").upper(): str(row.get("unidadeCanonica") or "")
+        for row in rows
+    }
+    if mapped.get("CX") != "cx" and mapped.get("KG") != "kg":
+        raise SystemExit(f"api items missing CX/KG canonical map: {mapped}")
+    unknown = [row for row in rows if str(row.get("unidadeMedida") or "").upper() == "FOOBAR"]
+    if unknown and str(unknown[0].get("unidadeCanonica") or "") != "unknown":
+        raise SystemExit(f"api invented a unit for FOOBAR: {unknown[0].get('unidadeCanonica')}")
+    if unknown and unknown[0].get("valorPorUnidadeCanonica") is not None:
+        raise SystemExit("api invented a base price for unknown unit")
     ufs = {str(row.get("uf") or "") for row in rows}
     if ufs != {"RJ", "SP"}:
         raise SystemExit(f"api items UF set is not RJ+SP: {sorted(ufs)}")

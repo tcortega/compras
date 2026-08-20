@@ -274,6 +274,10 @@ namespace Api.Persistence.Migrations
                     b.Property<Instant>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<decimal?>("ValorPorUnidadeCanonica")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)");
+
                     b.Property<decimal?>("ValorTotal")
                         .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)");

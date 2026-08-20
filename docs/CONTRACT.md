@@ -74,8 +74,15 @@ Closed sets are enums stored as text.
 `quantidade` numeric.
 `unidadeMedida` text.
 `unidadeCanonica` text nullable.
+Closed set from `normalize/compras_normalize/data/unidade_medida.csv`, or the explicit token `unknown` when the source unit does not match.
 `valorUnitario` numeric nullable.
 `valorTotal` numeric nullable.
+`valorPorUnidadeCanonica` numeric nullable.
+Price per canonical unit is `valorUnitario / to_base_factor`.
+When unit price is missing it is `valorTotal / (quantidade * to_base_factor)`.
+`to_base_factor` is how many canonical units sit in one source unit.
+Unknown units stay `unknown` and leave `valorPorUnidadeCanonica` null.
+Do not invent a unit or a comparable price.
 `uf` text.
 `quarter` text.
 `snapshotId` text.
@@ -110,6 +117,8 @@ Replies store unedited.
 
 One wide item-fact table for later analytical reads.
 Same grain as `item`.
+`unidade_canonica` matches Postgres `unidadeCanonica`.
+`valor_unitario_base` and `valor_por_unidade_canonica` match Postgres `valorPorUnidadeCanonica`.
 C# may package ClickHouse.Client.
 Explorer queries Postgres first.
 

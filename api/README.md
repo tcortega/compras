@@ -14,7 +14,7 @@ Flags stay internal and are framed as an indicio requiring verification.
 
 Explorer reads Postgres.
 
-Compose (`infra/`) seeds the 2024 warehouse (Volta Redonda, Niterói, Bauru) via Python, then serves this API on http://127.0.0.1:5080.
+Compose (`infra/`) seeds the 2024 warehouse (Volta Redonda, Niterói, Bauru, Caxias do Sul, Joinville) via Python, then serves this API on http://127.0.0.1:5080.
 
 The warehouse schema is the contract.
 This process does not apply EF migrations against that schema unless `App:ApplyMigrations` is true.

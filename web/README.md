@@ -30,7 +30,7 @@ npm install
 npm run dev
 ```
 
-`API_BASE_URL=stub` (padrão) usa o recorte em processo: Volta Redonda e Niterói (RJ) e Bauru (SP), 2024.
+`API_BASE_URL=stub` (padrão) usa o recorte em processo: Volta Redonda e Niterói (RJ), Bauru (SP), Caxias do Sul (RS) e Joinville (SC), 2024.
 O compose em `/infra` aponta `API_BASE_URL` para `http://api:5080` e publica o explorador em http://127.0.0.1:3100.
 Fora do compose, aponte `API_BASE_URL` para a API C#, por exemplo `http://127.0.0.1:5080`.
 Se `API_BASE_URL` aponta para a API, o cliente HTTP é obrigatório e o stub não pode responder.

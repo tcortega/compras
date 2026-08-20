@@ -31,12 +31,12 @@ from compras_ingest.official import (
     PncpOfficial,
     assert_official_host,
     ckan_zip_from_package,
+    fixture_ocds_official,
+    fixture_pncp_official,
+    fixture_receita_official,
+    fixture_tce_rs_official,
+    fixture_tce_sp_official,
     licitacao_zip_from_listing,
-    resolve_ocds_feed,
-    resolve_pncp_consulta,
-    resolve_receita_index,
-    resolve_tce_rs_licitacon,
-    resolve_tce_sp_licitacao,
     tce_rs_ckan_url,
     tce_rs_portal_url,
 )
@@ -129,8 +129,8 @@ EXTRA_ORGAOS = (
 def main() -> int:
     settings = Settings.from_env()
     _check_defs()
-    official = _assert_official_urls(settings)
     with _official_hosts_blocked():
+        official = _assert_official_urls(settings)
         _assert_pncp_spacing_and_resume(settings)
         result = run_compras_slice(settings)
         _assert_landing(settings, result.landing.sha256)
@@ -347,8 +347,8 @@ def _check_defs() -> None:
 
 def _assert_official_urls(settings: Settings) -> dict:
     try:
-        ocds = resolve_ocds_feed(settings.ocds_year)
-        rfb = resolve_receita_index()
+        ocds = fixture_ocds_official(settings.ocds_year)
+        rfb = fixture_receita_official()
     except Exception as exc:
         raise SystemExit(f"official URL resolve failed: {exc}") from exc
     if ocds.registry_url != OCDS_OCP_REGISTRY_URL:
@@ -366,7 +366,7 @@ def _assert_official_urls(settings: Settings) -> dict:
     if not rfb.month or not rfb.files:
         raise SystemExit("Receita index resolved without month or files")
     try:
-        pncp = resolve_pncp_consulta()
+        pncp = fixture_pncp_official()
     except Exception as exc:
         raise SystemExit(f"official URL resolve failed: {exc}") from exc
     if pncp.consulta_base != PNCP_CONSULTA_BASE:
@@ -386,7 +386,7 @@ def _assert_official_urls(settings: Settings) -> dict:
     if not pncp.modalidades:
         raise SystemExit("PNCP modalidades resolved empty")
     try:
-        tce = resolve_tce_sp_licitacao(settings.tce_sp_year, settings.tce_sp_month)
+        tce = fixture_tce_sp_official(settings.tce_sp_year, settings.tce_sp_month)
     except Exception as exc:
         raise SystemExit(f"official URL resolve failed: {exc}") from exc
     if tce.listing_url != TCE_SP_LISTING_URL:
@@ -401,7 +401,7 @@ def _assert_official_urls(settings: Settings) -> dict:
         raise SystemExit(f"TCE-SP zip is not the requested year/month: {tce.zip_url}")
     _assert_tce_sp_host_refused()
     try:
-        tce_rs = resolve_tce_rs_licitacon(settings.tce_rs_year, fetch=False)
+        tce_rs = fixture_tce_rs_official(settings.tce_rs_year)
     except Exception as exc:
         raise SystemExit(f"official URL resolve failed: {exc}") from exc
     if tce_rs.portal_url != tce_rs_portal_url(settings.tce_rs_year):

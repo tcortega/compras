@@ -1628,6 +1628,48 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Coverage = s_macaeOrgaoCoverage,
 	};
 
+	private static readonly Coverage s_santaLuziaOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "MG",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_santaLuzia = new()
+	{
+		Id = SliceIds.OrgaoSantaLuzia,
+		Cnpj = "18715409000150",
+		RazaoSocial = "Municipio de Santa Luzia",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "MG",
+		MunicipioIbge = "3157807",
+		MunicipioNome = "Santa Luzia",
+		Coverage = s_santaLuziaOrgaoCoverage,
+	};
+
+	private static readonly Coverage s_novaFriburgoOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "RJ",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_novaFriburgo = new()
+	{
+		Id = SliceIds.OrgaoNovaFriburgo,
+		Cnpj = "28606630000123",
+		RazaoSocial = "Municipio de Nova Friburgo",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "RJ",
+		MunicipioIbge = "3303401",
+		MunicipioNome = "Nova Friburgo",
+		Coverage = s_novaFriburgoOrgaoCoverage,
+	};
+
 	private static readonly ItemRecord s_itemDourados = new()
 	{
 		Id = SliceIds.ItemDourados,
@@ -2408,6 +2450,58 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		},
 	};
 
+	private static readonly ItemRecord s_itemSantaLuzia = new()
+	{
+		Id = SliceIds.ItemSantaLuzia,
+		ContratacaoId = SliceIds.ContratacaoSantaLuzia,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Cadeira escritorio",
+		Catmat = "613647",
+		Catser = null,
+		Quantidade = 1m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 1647.01m,
+		ValorTotal = 1647.01m,
+		Uf = "MG",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "MG",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
+	private static readonly ItemRecord s_itemNovaFriburgo = new()
+	{
+		Id = SliceIds.ItemNovaFriburgo,
+		ContratacaoId = SliceIds.ContratacaoNovaFriburgo,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Toalha De Papel",
+		Catmat = "436328",
+		Catser = null,
+		Quantidade = 1000m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 8m,
+		ValorTotal = 8000m,
+		Uf = "RJ",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "RJ",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
 	[Fact]
 	public async Task FullCycle_BrowseMunicipioAndUf()
 	{
@@ -2803,7 +2897,7 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(new[] { s_governadorValadares }, governadorValadaresPage.Items);
 		await ValidateOrgao(client, s_governadorValadares);
 
-		var mixed = await client.ListOrgaos(quarter: SliceIds.Quarter);
+		var mixed = await client.ListOrgaos(quarter: SliceIds.Quarter, take: 100);
 		Assert.Equal("", mixed.Coverage.Uf);
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3306305", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3303302", StringComparison.Ordinal));
@@ -2850,6 +2944,8 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3303906", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3131307", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3302403", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3157807", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3303401", StringComparison.Ordinal));
 
 		var canoasPage = await client.ListOrgaos(municipioIbge: "4304606", quarter: SliceIds.Quarter);
 		Assert.Equal(
@@ -3032,6 +3128,32 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 			macaePage.Coverage);
 		Assert.Equal(new[] { s_macae }, macaePage.Items);
 		await ValidateOrgao(client, s_macae);
+
+		var santaLuziaPage = await client.ListOrgaos(municipioIbge: "3157807", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			santaLuziaPage.Coverage);
+		Assert.Equal(new[] { s_santaLuzia }, santaLuziaPage.Items);
+		await ValidateOrgao(client, s_santaLuzia);
+
+		var novaFriburgoPage = await client.ListOrgaos(municipioIbge: "3303401", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			novaFriburgoPage.Coverage);
+		Assert.Equal(new[] { s_novaFriburgo }, novaFriburgoPage.Items);
+		await ValidateOrgao(client, s_novaFriburgo);
 
 		var spItems = await client.ListItems(uf: "SP", quarter: SliceIds.Quarter);
 		Assert.Equal(
@@ -3537,6 +3659,22 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 			OrgaoRazaoSocial = "Municipio de Macae",
 			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
 			ContratacaoPncpId = "29115474000160-1-000119/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemSantaLuzia,
+			OrgaoId = SliceIds.OrgaoSantaLuzia,
+			OrgaoRazaoSocial = "Municipio de Santa Luzia",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "18715409000150-1-000027/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemNovaFriburgo,
+			OrgaoId = SliceIds.OrgaoNovaFriburgo,
+			OrgaoRazaoSocial = "Municipio de Nova Friburgo",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "28606630000123-1-000093/2024",
 		});
 
 		var empty = new Coverage

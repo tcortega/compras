@@ -1712,6 +1712,216 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Coverage = s_balnearioOrgaoCoverage,
 	};
 
+	private static readonly Coverage s_itaquaOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "SP",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_itaqua = new()
+	{
+		Id = SliceIds.OrgaoItaqua,
+		Cnpj = "46316600000164",
+		RazaoSocial = "Municipio de Itaquaquecetuba",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "SP",
+		MunicipioIbge = "3523107",
+		MunicipioNome = "Itaquaquecetuba",
+		Coverage = s_itaquaOrgaoCoverage,
+	};
+
+	private static readonly Coverage s_praiaGrandeOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "SP",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_praiaGrande = new()
+	{
+		Id = SliceIds.OrgaoPraiaGrande,
+		Cnpj = "46177531000155",
+		RazaoSocial = "Municipio de Praia Grande",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "SP",
+		MunicipioIbge = "3541000",
+		MunicipioNome = "Praia Grande",
+		Coverage = s_praiaGrandeOrgaoCoverage,
+	};
+
+	private static readonly Coverage s_saoJoseDosPinhaisOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "PR",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_saoJoseDosPinhais = new()
+	{
+		Id = SliceIds.OrgaoSaoJoseDosPinhais,
+		Cnpj = "76105543000135",
+		RazaoSocial = "Municipio de Sao Jose dos Pinhais",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "PR",
+		MunicipioIbge = "4125506",
+		MunicipioNome = "Sao Jose dos Pinhais",
+		Coverage = s_saoJoseDosPinhaisOrgaoCoverage,
+	};
+
+	private static readonly Coverage s_suzanoOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "SP",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_suzano = new()
+	{
+		Id = SliceIds.OrgaoSuzano,
+		Cnpj = "46523056000121",
+		RazaoSocial = "Municipio de Suzano",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "SP",
+		MunicipioIbge = "3552502",
+		MunicipioNome = "Suzano",
+		Coverage = s_suzanoOrgaoCoverage,
+	};
+
+	private static readonly Coverage s_guarujaOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "SP",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_guaruja = new()
+	{
+		Id = SliceIds.OrgaoGuaruja,
+		Cnpj = "44959021000104",
+		RazaoSocial = "Municipio de Guaruja",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "SP",
+		MunicipioIbge = "3518701",
+		MunicipioNome = "Guaruja",
+		Coverage = s_guarujaOrgaoCoverage,
+	};
+
+	private static readonly Coverage s_cotiaOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "SP",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_cotia = new()
+	{
+		Id = SliceIds.OrgaoCotia,
+		Cnpj = "46523049000120",
+		RazaoSocial = "Municipio de Cotia",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "SP",
+		MunicipioIbge = "3513009",
+		MunicipioNome = "Cotia",
+		Coverage = s_cotiaOrgaoCoverage,
+	};
+
+	private static readonly Coverage s_parauapebasOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "PA",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_parauapebas = new()
+	{
+		Id = SliceIds.OrgaoParauapebas,
+		Cnpj = "22980999000115",
+		RazaoSocial = "Municipio de Parauapebas",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "PA",
+		MunicipioIbge = "1505536",
+		MunicipioNome = "Parauapebas",
+		Coverage = s_parauapebasOrgaoCoverage,
+	};
+
+	private static readonly Coverage s_jacareiOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "SP",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_jacarei = new()
+	{
+		Id = SliceIds.OrgaoJacarei,
+		Cnpj = "46694139000183",
+		RazaoSocial = "Municipio de Jacarei",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "SP",
+		MunicipioIbge = "3524402",
+		MunicipioNome = "Jacarei",
+		Coverage = s_jacareiOrgaoCoverage,
+	};
+
+	private static readonly Coverage s_itaboraiOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "RJ",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_itaborai = new()
+	{
+		Id = SliceIds.OrgaoItaborai,
+		Cnpj = "28741080000155",
+		RazaoSocial = "Municipio de Itaborai",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "RJ",
+		MunicipioIbge = "3301900",
+		MunicipioNome = "Itaborai",
+		Coverage = s_itaboraiOrgaoCoverage,
+	};
+
+	private static readonly Coverage s_maricaOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "RJ",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_marica = new()
+	{
+		Id = SliceIds.OrgaoMarica,
+		Cnpj = "29131075000193",
+		RazaoSocial = "Municipio de Marica",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "RJ",
+		MunicipioIbge = "3302700",
+		MunicipioNome = "Marica",
+		Coverage = s_maricaOrgaoCoverage,
+	};
+
 	private static readonly ItemRecord s_itemDourados = new()
 	{
 		Id = SliceIds.ItemDourados,
@@ -2596,6 +2806,266 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		},
 	};
 
+	private static readonly ItemRecord s_itemItaqua = new()
+	{
+		Id = SliceIds.ItemItaqua,
+		ContratacaoId = SliceIds.ContratacaoItaqua,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Pao",
+		Catmat = "460400",
+		Catser = null,
+		Quantidade = 1m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 14.04m,
+		ValorTotal = 14.04m,
+		Uf = "SP",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "SP",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
+	private static readonly ItemRecord s_itemPraiaGrande = new()
+	{
+		Id = SliceIds.ItemPraiaGrande,
+		ContratacaoId = SliceIds.ContratacaoPraiaGrande,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Tnt",
+		Catmat = "300805",
+		Catser = null,
+		Quantidade = 3m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 249.99m,
+		ValorTotal = 749.97m,
+		Uf = "SP",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "SP",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
+	private static readonly ItemRecord s_itemSaoJoseDosPinhais = new()
+	{
+		Id = SliceIds.ItemSaoJoseDosPinhais,
+		ContratacaoId = SliceIds.ContratacaoSaoJoseDosPinhais,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Swab",
+		Catmat = "480902",
+		Catser = null,
+		Quantidade = 32000m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 0.13m,
+		ValorTotal = 4160m,
+		Uf = "PR",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "PR",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
+	private static readonly ItemRecord s_itemSuzano = new()
+	{
+		Id = SliceIds.ItemSuzano,
+		ContratacaoId = SliceIds.ContratacaoSuzano,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Sal",
+		Catmat = "291893",
+		Catser = null,
+		Quantidade = 1000m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 2.56m,
+		ValorTotal = 2560m,
+		Uf = "SP",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "SP",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
+	private static readonly ItemRecord s_itemGuaruja = new()
+	{
+		Id = SliceIds.ItemGuaruja,
+		ContratacaoId = SliceIds.ContratacaoGuaruja,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Pia",
+		Catmat = "481480",
+		Catser = null,
+		Quantidade = 204m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 3934.6m,
+		ValorTotal = 802658.4m,
+		Uf = "SP",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "SP",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
+	private static readonly ItemRecord s_itemCotia = new()
+	{
+		Id = SliceIds.ItemCotia,
+		ContratacaoId = SliceIds.ContratacaoCotia,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Transporte Rodoviario - Pessoal por Automoveis",
+		Catmat = "3239",
+		Catser = null,
+		Quantidade = 1680m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 28650m,
+		ValorTotal = 48132000m,
+		Uf = "SP",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "SP",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
+	private static readonly ItemRecord s_itemParauapebas = new()
+	{
+		Id = SliceIds.ItemParauapebas,
+		ContratacaoId = SliceIds.ContratacaoParauapebas,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Botijao Para Gas",
+		Catmat = null,
+		Catser = null,
+		Quantidade = 4m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 1486m,
+		ValorTotal = 5944m,
+		Uf = "PA",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "PA",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
+	private static readonly ItemRecord s_itemJacarei = new()
+	{
+		Id = SliceIds.ItemJacarei,
+		ContratacaoId = SliceIds.ContratacaoJacarei,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Macacao",
+		Catmat = "221026",
+		Catser = null,
+		Quantidade = 132m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 349.51m,
+		ValorTotal = 46135.32m,
+		Uf = "SP",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "SP",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
+	private static readonly ItemRecord s_itemItaborai = new()
+	{
+		Id = SliceIds.ItemItaborai,
+		ContratacaoId = SliceIds.ContratacaoItaborai,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Cola",
+		Catmat = "619622",
+		Catser = null,
+		Quantidade = 400m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 11.16m,
+		ValorTotal = 4464m,
+		Uf = "RJ",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "RJ",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
+	private static readonly ItemRecord s_itemMarica = new()
+	{
+		Id = SliceIds.ItemMarica,
+		ContratacaoId = SliceIds.ContratacaoMarica,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Bomba",
+		Catmat = "607508",
+		Catser = null,
+		Quantidade = 1m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 198.4m,
+		ValorTotal = 198.4m,
+		Uf = "RJ",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "RJ",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
 	[Fact]
 	public async Task FullCycle_BrowseMunicipioAndUf()
 	{
@@ -2618,13 +3088,13 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(
 			new Coverage
 			{
-				N = 3,
+				N = 9,
 				Uf = "SP",
 				Quarter = SliceIds.Quarter,
 				MethodologyVersion = SliceIds.Methodology,
 			},
 			bauruPage.Coverage);
-		Assert.Equal(new[] { s_bauru, s_marilia, s_taubate }, bauruPage.Items);
+		Assert.Equal(new[] { s_bauru, s_cotia, s_guaruja, s_itaqua, s_jacarei, s_marilia, s_praiaGrande, s_suzano, s_taubate }, bauruPage.Items);
 		await ValidateOrgao(client, s_bauru);
 
 		var caxiasPage = await client.ListOrgaos(municipioIbge: "4305108", quarter: SliceIds.Quarter);
@@ -2670,13 +3140,13 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(
 			new Coverage
 			{
-				N = 4,
+				N = 5,
 				Uf = "PR",
 				Quarter = SliceIds.Quarter,
 				MethodologyVersion = SliceIds.Methodology,
 			},
 			londrinaPage.Coverage);
-		Assert.Equal(new[] { s_cascavel, s_foz, s_londrina, s_maringa }, londrinaPage.Items);
+		Assert.Equal(new[] { s_cascavel, s_foz, s_londrina, s_maringa, s_saoJoseDosPinhais }, londrinaPage.Items);
 		await ValidateOrgao(client, s_londrina);
 
 		var feiraPage = await client.ListOrgaos(municipioIbge: "2910800", quarter: SliceIds.Quarter);
@@ -2800,13 +3270,13 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(
 			new Coverage
 			{
-				N = 3,
+				N = 4,
 				Uf = "PA",
 				Quarter = SliceIds.Quarter,
 				MethodologyVersion = SliceIds.Methodology,
 			},
 			marabaPage.Coverage);
-		Assert.Equal(new[] { s_castanhal, s_maraba, s_santarem }, marabaPage.Items);
+		Assert.Equal(new[] { s_castanhal, s_maraba, s_parauapebas, s_santarem }, marabaPage.Items);
 		await ValidateOrgao(client, s_maraba);
 
 		var varzeaGrandePage = await client.ListOrgaos(municipioIbge: "5108402", quarter: SliceIds.Quarter);
@@ -3042,6 +3512,16 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3303401", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3529005", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "4202008", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3523107", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3541000", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "4125506", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3552502", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3518701", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3513009", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "1505536", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3524402", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3301900", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3302700", StringComparison.Ordinal));
 
 		var canoasPage = await client.ListOrgaos(municipioIbge: "4304606", quarter: SliceIds.Quarter);
 		Assert.Equal(
@@ -3277,17 +3757,147 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(new[] { s_balneario }, balnearioPage.Items);
 		await ValidateOrgao(client, s_balneario);
 
+		var itaquaPage = await client.ListOrgaos(municipioIbge: "3523107", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			itaquaPage.Coverage);
+		Assert.Equal(new[] { s_itaqua }, itaquaPage.Items);
+		await ValidateOrgao(client, s_itaqua);
+
+		var praiaGrandePage = await client.ListOrgaos(municipioIbge: "3541000", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			praiaGrandePage.Coverage);
+		Assert.Equal(new[] { s_praiaGrande }, praiaGrandePage.Items);
+		await ValidateOrgao(client, s_praiaGrande);
+
+		var saoJosePage = await client.ListOrgaos(municipioIbge: "4125506", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			saoJosePage.Coverage);
+		Assert.Equal(new[] { s_saoJoseDosPinhais }, saoJosePage.Items);
+		await ValidateOrgao(client, s_saoJoseDosPinhais);
+
+		var suzanoPage = await client.ListOrgaos(municipioIbge: "3552502", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			suzanoPage.Coverage);
+		Assert.Equal(new[] { s_suzano }, suzanoPage.Items);
+		await ValidateOrgao(client, s_suzano);
+
+		var guarujaPage = await client.ListOrgaos(municipioIbge: "3518701", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			guarujaPage.Coverage);
+		Assert.Equal(new[] { s_guaruja }, guarujaPage.Items);
+		await ValidateOrgao(client, s_guaruja);
+
+		var cotiaPage = await client.ListOrgaos(municipioIbge: "3513009", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			cotiaPage.Coverage);
+		Assert.Equal(new[] { s_cotia }, cotiaPage.Items);
+		await ValidateOrgao(client, s_cotia);
+
+		var parauapebasPage = await client.ListOrgaos(municipioIbge: "1505536", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			parauapebasPage.Coverage);
+		Assert.Equal(new[] { s_parauapebas }, parauapebasPage.Items);
+		await ValidateOrgao(client, s_parauapebas);
+
+		var jacareiPage = await client.ListOrgaos(municipioIbge: "3524402", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			jacareiPage.Coverage);
+		Assert.Equal(new[] { s_jacarei }, jacareiPage.Items);
+		await ValidateOrgao(client, s_jacarei);
+
+		var itaboraiPage = await client.ListOrgaos(municipioIbge: "3301900", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			itaboraiPage.Coverage);
+		Assert.Equal(new[] { s_itaborai }, itaboraiPage.Items);
+		await ValidateOrgao(client, s_itaborai);
+
+		var maricaPage = await client.ListOrgaos(municipioIbge: "3302700", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			maricaPage.Coverage);
+		Assert.Equal(new[] { s_marica }, maricaPage.Items);
+		await ValidateOrgao(client, s_marica);
+
 		var spItems = await client.ListItems(uf: "SP", quarter: SliceIds.Quarter);
 		Assert.Equal(
 			new Coverage
 			{
-				N = 3,
+				N = 9,
 				Uf = "SP",
 				Quarter = SliceIds.Quarter,
 				MethodologyVersion = SliceIds.Methodology,
 			},
 			spItems.Coverage);
-		Assert.Equal(new[] { s_itemTaubate, s_itemMarilia, s_itemBauru }, spItems.Items);
+		Assert.Equal(new[] { s_itemTaubate, s_itemJacarei, s_itemMarilia, s_itemItaqua, s_itemGuaruja, s_itemBauru, s_itemSuzano, s_itemPraiaGrande, s_itemCotia }, spItems.Items);
 		await ValidateItem(client, new()
 		{
 			Item = s_itemBauru,
@@ -3335,13 +3945,13 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(
 			new Coverage
 			{
-				N = 4,
+				N = 5,
 				Uf = "PR",
 				Quarter = SliceIds.Quarter,
 				MethodologyVersion = SliceIds.Methodology,
 			},
 			prItems.Coverage);
-		Assert.Equal(new[] { s_itemLondrina, s_itemMaringa, s_itemFoz, s_itemCascavel }, prItems.Items);
+		Assert.Equal(new[] { s_itemLondrina, s_itemMaringa, s_itemFoz, s_itemCascavel, s_itemSaoJoseDosPinhais }, prItems.Items);
 		await ValidateItem(client, new()
 		{
 			Item = s_itemLondrina,
@@ -3486,13 +4096,13 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(
 			new Coverage
 			{
-				N = 3,
+				N = 4,
 				Uf = "PA",
 				Quarter = SliceIds.Quarter,
 				MethodologyVersion = SliceIds.Methodology,
 			},
 			paItems.Coverage);
-		Assert.Equal(new[] { s_itemCastanhal, s_itemMaraba, s_itemSantarem }, paItems.Items);
+		Assert.Equal(new[] { s_itemCastanhal, s_itemParauapebas, s_itemMaraba, s_itemSantarem }, paItems.Items);
 		await ValidateItem(client, new()
 		{
 			Item = s_itemCastanhal,
@@ -3813,6 +4423,86 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 			OrgaoRazaoSocial = "Municipio de Balneario Camboriu",
 			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
 			ContratacaoPncpId = "83102285000107-1-000442/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemItaqua,
+			OrgaoId = SliceIds.OrgaoItaqua,
+			OrgaoRazaoSocial = "Municipio de Itaquaquecetuba",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "46316600000164-1-000239/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemPraiaGrande,
+			OrgaoId = SliceIds.OrgaoPraiaGrande,
+			OrgaoRazaoSocial = "Municipio de Praia Grande",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "46177531000155-1-000109/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemSaoJoseDosPinhais,
+			OrgaoId = SliceIds.OrgaoSaoJoseDosPinhais,
+			OrgaoRazaoSocial = "Municipio de Sao Jose dos Pinhais",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "76105543000135-1-000085/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemSuzano,
+			OrgaoId = SliceIds.OrgaoSuzano,
+			OrgaoRazaoSocial = "Municipio de Suzano",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "46523056000121-1-000058/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemGuaruja,
+			OrgaoId = SliceIds.OrgaoGuaruja,
+			OrgaoRazaoSocial = "Municipio de Guaruja",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "44959021000104-1-000305/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemCotia,
+			OrgaoId = SliceIds.OrgaoCotia,
+			OrgaoRazaoSocial = "Municipio de Cotia",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "46523049000120-1-000203/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemParauapebas,
+			OrgaoId = SliceIds.OrgaoParauapebas,
+			OrgaoRazaoSocial = "Municipio de Parauapebas",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "22980999000115-1-000150/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemJacarei,
+			OrgaoId = SliceIds.OrgaoJacarei,
+			OrgaoRazaoSocial = "Municipio de Jacarei",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "46694139000183-1-001263/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemItaborai,
+			OrgaoId = SliceIds.OrgaoItaborai,
+			OrgaoRazaoSocial = "Municipio de Itaborai",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "28741080000155-1-000038/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemMarica,
+			OrgaoId = SliceIds.OrgaoMarica,
+			OrgaoRazaoSocial = "Municipio de Marica",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "29131075000193-1-000135/2024",
 		});
 
 		var empty = new Coverage

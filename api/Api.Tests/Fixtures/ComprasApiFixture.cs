@@ -642,6 +642,116 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			MunicipioIbge = "4202008",
 			MunicipioNome = "Balneario Camboriu",
 		};
+		var itaqua = new Orgao
+		{
+			Id = SliceIds.OrgaoItaqua,
+			Cnpj = "46316600000164",
+			RazaoSocial = "Municipio de Itaquaquecetuba",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "SP",
+			MunicipioIbge = "3523107",
+			MunicipioNome = "Itaquaquecetuba",
+		};
+		var praiaGrande = new Orgao
+		{
+			Id = SliceIds.OrgaoPraiaGrande,
+			Cnpj = "46177531000155",
+			RazaoSocial = "Municipio de Praia Grande",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "SP",
+			MunicipioIbge = "3541000",
+			MunicipioNome = "Praia Grande",
+		};
+		var saoJoseDosPinhais = new Orgao
+		{
+			Id = SliceIds.OrgaoSaoJoseDosPinhais,
+			Cnpj = "76105543000135",
+			RazaoSocial = "Municipio de Sao Jose dos Pinhais",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "PR",
+			MunicipioIbge = "4125506",
+			MunicipioNome = "Sao Jose dos Pinhais",
+		};
+		var suzano = new Orgao
+		{
+			Id = SliceIds.OrgaoSuzano,
+			Cnpj = "46523056000121",
+			RazaoSocial = "Municipio de Suzano",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "SP",
+			MunicipioIbge = "3552502",
+			MunicipioNome = "Suzano",
+		};
+		var guaruja = new Orgao
+		{
+			Id = SliceIds.OrgaoGuaruja,
+			Cnpj = "44959021000104",
+			RazaoSocial = "Municipio de Guaruja",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "SP",
+			MunicipioIbge = "3518701",
+			MunicipioNome = "Guaruja",
+		};
+		var cotia = new Orgao
+		{
+			Id = SliceIds.OrgaoCotia,
+			Cnpj = "46523049000120",
+			RazaoSocial = "Municipio de Cotia",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "SP",
+			MunicipioIbge = "3513009",
+			MunicipioNome = "Cotia",
+		};
+		var parauapebas = new Orgao
+		{
+			Id = SliceIds.OrgaoParauapebas,
+			Cnpj = "22980999000115",
+			RazaoSocial = "Municipio de Parauapebas",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "PA",
+			MunicipioIbge = "1505536",
+			MunicipioNome = "Parauapebas",
+		};
+		var jacarei = new Orgao
+		{
+			Id = SliceIds.OrgaoJacarei,
+			Cnpj = "46694139000183",
+			RazaoSocial = "Municipio de Jacarei",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "SP",
+			MunicipioIbge = "3524402",
+			MunicipioNome = "Jacarei",
+		};
+		var itaborai = new Orgao
+		{
+			Id = SliceIds.OrgaoItaborai,
+			Cnpj = "28741080000155",
+			RazaoSocial = "Municipio de Itaborai",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "RJ",
+			MunicipioIbge = "3301900",
+			MunicipioNome = "Itaborai",
+		};
+		var marica = new Orgao
+		{
+			Id = SliceIds.OrgaoMarica,
+			Cnpj = "29131075000193",
+			RazaoSocial = "Municipio de Marica",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "RJ",
+			MunicipioIbge = "3302700",
+			MunicipioNome = "Marica",
+		};
 		var fornecedor = new Fornecedor
 		{
 			Id = SliceIds.Fornecedor,
@@ -1374,6 +1484,146 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			Ano = 2024,
 			ValorHomologado = 18500m,
 			PublicadoEm = Instant.FromUtc(2024, 9, 19, 7, 9),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoItaqua = new Contratacao
+		{
+			Id = SliceIds.ContratacaoItaqua,
+			PncpId = "46316600000164-1-000239/2024",
+			OrgaoId = SliceIds.OrgaoItaqua,
+			Modalidade = "pregao eletronico",
+			Objeto = "Aquisicao de kits congelados para distribuicao entre os servidores efetivos, estagiarios e comissionados da Prefeitura Municipal de Itaquaquecetuba.",
+			Ano = 2024,
+			ValorHomologado = 609.49m,
+			PublicadoEm = Instant.FromUtc(2024, 11, 26, 7, 9),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoPraiaGrande = new Contratacao
+		{
+			Id = SliceIds.ContratacaoPraiaGrande,
+			PncpId = "46177531000155-1-000109/2024",
+			OrgaoId = SliceIds.OrgaoPraiaGrande,
+			Modalidade = "dispensa",
+			Objeto = "Aquisicao de armarinhos e tecidos para o fundo social de solidariedade",
+			Ano = 2024,
+			ValorHomologado = 31339.03m,
+			PublicadoEm = Instant.FromUtc(2024, 10, 31, 15, 54),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoSaoJoseDosPinhais = new Contratacao
+		{
+			Id = SliceIds.ContratacaoSaoJoseDosPinhais,
+			PncpId = "76105543000135-1-000085/2024",
+			OrgaoId = SliceIds.OrgaoSaoJoseDosPinhais,
+			Modalidade = "pregao eletronico",
+			Objeto = "Registro de Precos para aquisicao de material consumiveis - descartaveis destinados a realizacao de exames.",
+			Ano = 2024,
+			ValorHomologado = 275195.1m,
+			PublicadoEm = Instant.FromUtc(2024, 7, 15, 7, 0),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoSuzano = new Contratacao
+		{
+			Id = SliceIds.ContratacaoSuzano,
+			PncpId = "46523056000121-1-000058/2024",
+			OrgaoId = SliceIds.OrgaoSuzano,
+			Modalidade = "pregao eletronico",
+			Objeto = "Aquisicao de cesta basica",
+			Ano = 2024,
+			ValorHomologado = 256010m,
+			PublicadoEm = Instant.FromUtc(2024, 7, 17, 7, 11),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoGuaruja = new Contratacao
+		{
+			Id = SliceIds.ContratacaoGuaruja,
+			PncpId = "44959021000104-1-000305/2024",
+			OrgaoId = SliceIds.OrgaoGuaruja,
+			Modalidade = "pregao eletronico",
+			Objeto = "Registro de preco para aquisicao de materiais hidraulicos para atender as Secretarias do Municipio de Guaruja.",
+			Ano = 2024,
+			ValorHomologado = 50077028.25m,
+			PublicadoEm = Instant.FromUtc(2024, 10, 2, 7, 30),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoCotia = new Contratacao
+		{
+			Id = SliceIds.ContratacaoCotia,
+			PncpId = "46523049000120-1-000203/2024",
+			OrgaoId = SliceIds.OrgaoCotia,
+			Modalidade = "pregao eletronico",
+			Objeto = "Contratacao de empresa especializada para prestacao de servico de Transporte Escolar Gratuito - TEG",
+			Ano = 2024,
+			ValorHomologado = 104235750m,
+			PublicadoEm = Instant.FromUtc(2024, 8, 14, 7, 17),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoParauapebas = new Contratacao
+		{
+			Id = SliceIds.ContratacaoParauapebas,
+			PncpId = "22980999000115-1-000150/2024",
+			OrgaoId = SliceIds.OrgaoParauapebas,
+			Modalidade = "pregao eletronico",
+			Objeto = "Aquisicao de forma continuada de gas liquefeito de petroleo GLP (Gas de cozinha).",
+			Ano = 2024,
+			ValorHomologado = 79800m,
+			PublicadoEm = Instant.FromUtc(2024, 11, 29, 7, 22),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoJacarei = new Contratacao
+		{
+			Id = SliceIds.ContratacaoJacarei,
+			PncpId = "46694139000183-1-001263/2024",
+			OrgaoId = SliceIds.OrgaoJacarei,
+			Modalidade = "pregao eletronico",
+			Objeto = "Registro de Precos para fornecimento de EPI's",
+			Ano = 2024,
+			ValorHomologado = 421978.9m,
+			PublicadoEm = Instant.FromUtc(2024, 10, 8, 7, 15),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoItaborai = new Contratacao
+		{
+			Id = SliceIds.ContratacaoItaborai,
+			PncpId = "28741080000155-1-000038/2024",
+			OrgaoId = SliceIds.OrgaoItaborai,
+			Modalidade = "pregao eletronico",
+			Objeto = "Registro de precos para aquisicao de material ludico pedagogico",
+			Ano = 2024,
+			ValorHomologado = 243131.11m,
+			PublicadoEm = Instant.FromUtc(2024, 9, 19, 7, 22),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoMarica = new Contratacao
+		{
+			Id = SliceIds.ContratacaoMarica,
+			PncpId = "29131075000193-1-000135/2024",
+			OrgaoId = SliceIds.OrgaoMarica,
+			Modalidade = "dispensa",
+			Objeto = "Fornecimento de bombas d'agua e chaves-boias sensor de nivel para atender as necessidades do Arquivo Publico Municipal.",
+			Ano = 2024,
+			ValorHomologado = 764.9m,
+			PublicadoEm = Instant.FromUtc(2024, 9, 27, 16, 43),
 			Source = "compras.gov.br",
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
@@ -2193,11 +2443,181 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
 		};
+		var itemItaqua = new Item
+		{
+			Id = SliceIds.ItemItaqua,
+			ContratacaoId = SliceIds.ContratacaoItaqua,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Pao",
+			Catmat = "460400",
+			Quantidade = 1m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 14.04m,
+			ValorTotal = 14.04m,
+			Uf = "SP",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var itemPraiaGrande = new Item
+		{
+			Id = SliceIds.ItemPraiaGrande,
+			ContratacaoId = SliceIds.ContratacaoPraiaGrande,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Tnt",
+			Catmat = "300805",
+			Quantidade = 3m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 249.99m,
+			ValorTotal = 749.97m,
+			Uf = "SP",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var itemSaoJoseDosPinhais = new Item
+		{
+			Id = SliceIds.ItemSaoJoseDosPinhais,
+			ContratacaoId = SliceIds.ContratacaoSaoJoseDosPinhais,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Swab",
+			Catmat = "480902",
+			Quantidade = 32000m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 0.13m,
+			ValorTotal = 4160m,
+			Uf = "PR",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var itemSuzano = new Item
+		{
+			Id = SliceIds.ItemSuzano,
+			ContratacaoId = SliceIds.ContratacaoSuzano,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Sal",
+			Catmat = "291893",
+			Quantidade = 1000m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 2.56m,
+			ValorTotal = 2560m,
+			Uf = "SP",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var itemGuaruja = new Item
+		{
+			Id = SliceIds.ItemGuaruja,
+			ContratacaoId = SliceIds.ContratacaoGuaruja,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Pia",
+			Catmat = "481480",
+			Quantidade = 204m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 3934.6m,
+			ValorTotal = 802658.4m,
+			Uf = "SP",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var itemCotia = new Item
+		{
+			Id = SliceIds.ItemCotia,
+			ContratacaoId = SliceIds.ContratacaoCotia,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Transporte Rodoviario - Pessoal por Automoveis",
+			Catmat = "3239",
+			Quantidade = 1680m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 28650m,
+			ValorTotal = 48132000m,
+			Uf = "SP",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var itemParauapebas = new Item
+		{
+			Id = SliceIds.ItemParauapebas,
+			ContratacaoId = SliceIds.ContratacaoParauapebas,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Botijao Para Gas",
+			Catmat = null,
+			Quantidade = 4m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 1486m,
+			ValorTotal = 5944m,
+			Uf = "PA",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var itemJacarei = new Item
+		{
+			Id = SliceIds.ItemJacarei,
+			ContratacaoId = SliceIds.ContratacaoJacarei,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Macacao",
+			Catmat = "221026",
+			Quantidade = 132m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 349.51m,
+			ValorTotal = 46135.32m,
+			Uf = "SP",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var itemItaborai = new Item
+		{
+			Id = SliceIds.ItemItaborai,
+			ContratacaoId = SliceIds.ContratacaoItaborai,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Cola",
+			Catmat = "619622",
+			Quantidade = 400m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 11.16m,
+			ValorTotal = 4464m,
+			Uf = "RJ",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var itemMarica = new Item
+		{
+			Id = SliceIds.ItemMarica,
+			ContratacaoId = SliceIds.ContratacaoMarica,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Bomba",
+			Catmat = "607508",
+			Quantidade = 1m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 198.4m,
+			ValorTotal = 198.4m,
+			Uf = "RJ",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
 
-		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville, uberlandia, londrina, feira, caruaru, anapolis, vilaVelha, campinaGrande, caucaia, imperatriz, arapiraca, dourados, maraba, varzeaGrande, jiParana, parnamirim, cruzeiroDoSul, santana, rorainopolis, maringa, taubate, cascavel, juizDeFora, foz, santaMaria, montesClaros, governadorValadares, canoas, lages, santarem, rioVerde, pauloAfonso, saoLourenco, crato, ariquemes, colatina, castanhal, divinopolis, petropolis, ipatinga, macae, santaLuzia, novaFriburgo, marilia, balneario);
+		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville, uberlandia, londrina, feira, caruaru, anapolis, vilaVelha, campinaGrande, caucaia, imperatriz, arapiraca, dourados, maraba, varzeaGrande, jiParana, parnamirim, cruzeiroDoSul, santana, rorainopolis, maringa, taubate, cascavel, juizDeFora, foz, santaMaria, montesClaros, governadorValadares, canoas, lages, santarem, rioVerde, pauloAfonso, saoLourenco, crato, ariquemes, colatina, castanhal, divinopolis, petropolis, ipatinga, macae, santaLuzia, novaFriburgo, marilia, balneario, itaqua, praiaGrande, saoJoseDosPinhais, suzano, guaruja, cotia, parauapebas, jacarei, itaborai, marica);
 		db.Fornecedores.AddRange(fornecedor, fornecedorExtra);
-		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina, contratacaoFeira, contratacaoCaruaru, contratacaoAnapolis, contratacaoVilaVelha, contratacaoCampinaGrande, contratacaoCaucaia, contratacaoImperatriz, contratacaoArapiraca, contratacaoDourados, contratacaoMaraba, contratacaoVarzeaGrande, contratacaoJiParana, contratacaoParnamirim, contratacaoCruzeiroDoSul, contratacaoSantana, contratacaoRorainopolis, contratacaoMaringa, contratacaoTaubate, contratacaoCascavel, contratacaoJuizDeFora, contratacaoFoz, contratacaoSantaMaria, contratacaoMontesClaros, contratacaoGovernadorValadares, contratacaoCanoas, contratacaoLages, contratacaoSantarem, contratacaoRioVerde, contratacaoPauloAfonso, contratacaoSaoLourenco, contratacaoCrato, contratacaoAriquemes, contratacaoColatina, contratacaoCastanhal, contratacaoDivinopolis, contratacaoPetropolis, contratacaoIpatinga, contratacaoMacae, contratacaoSantaLuzia, contratacaoNovaFriburgo, contratacaoMarilia, contratacaoBalneario);
-		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina, itemFeira, itemCaruaru, itemAnapolis, itemVilaVelha, itemCampinaGrande, itemCaucaia, itemImperatriz, itemArapiraca, itemDourados, itemMaraba, itemVarzeaGrande, itemJiParana, itemParnamirim, itemCruzeiroDoSul, itemSantana, itemRorainopolis, itemMaringa, itemTaubate, itemCascavel, itemJuizDeFora, itemFoz, itemSantaMaria, itemMontesClaros, itemGovernadorValadares, itemCanoas, itemLages, itemSantarem, itemRioVerde, itemPauloAfonso, itemSaoLourenco, itemCrato, itemAriquemes, itemColatina, itemCastanhal, itemDivinopolis, itemPetropolis, itemIpatinga, itemMacae, itemSantaLuzia, itemNovaFriburgo, itemMarilia, itemBalneario);
+		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina, contratacaoFeira, contratacaoCaruaru, contratacaoAnapolis, contratacaoVilaVelha, contratacaoCampinaGrande, contratacaoCaucaia, contratacaoImperatriz, contratacaoArapiraca, contratacaoDourados, contratacaoMaraba, contratacaoVarzeaGrande, contratacaoJiParana, contratacaoParnamirim, contratacaoCruzeiroDoSul, contratacaoSantana, contratacaoRorainopolis, contratacaoMaringa, contratacaoTaubate, contratacaoCascavel, contratacaoJuizDeFora, contratacaoFoz, contratacaoSantaMaria, contratacaoMontesClaros, contratacaoGovernadorValadares, contratacaoCanoas, contratacaoLages, contratacaoSantarem, contratacaoRioVerde, contratacaoPauloAfonso, contratacaoSaoLourenco, contratacaoCrato, contratacaoAriquemes, contratacaoColatina, contratacaoCastanhal, contratacaoDivinopolis, contratacaoPetropolis, contratacaoIpatinga, contratacaoMacae, contratacaoSantaLuzia, contratacaoNovaFriburgo, contratacaoMarilia, contratacaoBalneario, contratacaoItaqua, contratacaoPraiaGrande, contratacaoSaoJoseDosPinhais, contratacaoSuzano, contratacaoGuaruja, contratacaoCotia, contratacaoParauapebas, contratacaoJacarei, contratacaoItaborai, contratacaoMarica);
+		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina, itemFeira, itemCaruaru, itemAnapolis, itemVilaVelha, itemCampinaGrande, itemCaucaia, itemImperatriz, itemArapiraca, itemDourados, itemMaraba, itemVarzeaGrande, itemJiParana, itemParnamirim, itemCruzeiroDoSul, itemSantana, itemRorainopolis, itemMaringa, itemTaubate, itemCascavel, itemJuizDeFora, itemFoz, itemSantaMaria, itemMontesClaros, itemGovernadorValadares, itemCanoas, itemLages, itemSantarem, itemRioVerde, itemPauloAfonso, itemSaoLourenco, itemCrato, itemAriquemes, itemColatina, itemCastanhal, itemDivinopolis, itemPetropolis, itemIpatinga, itemMacae, itemSantaLuzia, itemNovaFriburgo, itemMarilia, itemBalneario, itemItaqua, itemPraiaGrande, itemSaoJoseDosPinhais, itemSuzano, itemGuaruja, itemCotia, itemParauapebas, itemJacarei, itemItaborai, itemMarica);
 	}
 
 	private static JsonSerializerOptions CreateJson()

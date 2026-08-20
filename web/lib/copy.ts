@@ -57,12 +57,22 @@ export const SLICE_MUNICIPIOS = [
   { nome: 'Nova Friburgo', uf: 'RJ', ibge: '3303401' },
   { nome: 'Marília', uf: 'SP', ibge: '3529005' },
   { nome: 'Balneário Camboriú', uf: 'SC', ibge: '4202008' },
+  { nome: 'Itaquaquecetuba', uf: 'SP', ibge: '3523107' },
+  { nome: 'Praia Grande', uf: 'SP', ibge: '3541000' },
+  { nome: 'São José dos Pinhais', uf: 'PR', ibge: '4125506' },
+  { nome: 'Suzano', uf: 'SP', ibge: '3552502' },
+  { nome: 'Guarujá', uf: 'SP', ibge: '3518701' },
+  { nome: 'Cotia', uf: 'SP', ibge: '3513009' },
+  { nome: 'Parauapebas', uf: 'PA', ibge: '1505536' },
+  { nome: 'Jacareí', uf: 'SP', ibge: '3524402' },
+  { nome: 'Itaboraí', uf: 'RJ', ibge: '3301900' },
+  { nome: 'Maricá', uf: 'RJ', ibge: '3302700' },
 ] as const
 
-export const SLICE_BRAND = 'Quarenta e nove municípios · 2024'
+export const SLICE_BRAND = 'Cinquenta e nove municípios · 2024'
 
 export const SLICE_LABEL =
-  'Volta Redonda e Niterói (RJ), Bauru (SP), Caxias do Sul (RS), Joinville (SC), Uberlândia (MG), Londrina (PR), Feira de Santana (BA), Caruaru (PE), Anápolis (GO), Vila Velha (ES), Campina Grande (PB), Caucaia (CE), Imperatriz (MA), Arapiraca (AL), Dourados (MS), Marabá (PA), Várzea Grande (MT), Ji-Paraná (RO), Parnamirim (RN), Cruzeiro do Sul (AC), Santana (AP), Rorainópolis (RR), Maringá (PR), Taubaté (SP), Cascavel (PR), Juiz de Fora (MG), Foz do Iguaçu (PR), Santa Maria (RS), Montes Claros (MG), Governador Valadares (MG), Canoas (RS), Lages (SC), Santarém (PA), Rio Verde (GO), Paulo Afonso (BA), São Lourenço da Mata (PE), Crato (CE), Ariquemes (RO), Colatina (ES), Castanhal (PA), Divinópolis (MG), Petrópolis (RJ), Ipatinga (MG), Macaé (RJ), Santa Luzia (MG), Nova Friburgo (RJ), Marília (SP) e Balneário Camboriú (SC) · 2024'
+  'Volta Redonda e Niterói (RJ), Bauru (SP), Caxias do Sul (RS), Joinville (SC), Uberlândia (MG), Londrina (PR), Feira de Santana (BA), Caruaru (PE), Anápolis (GO), Vila Velha (ES), Campina Grande (PB), Caucaia (CE), Imperatriz (MA), Arapiraca (AL), Dourados (MS), Marabá (PA), Várzea Grande (MT), Ji-Paraná (RO), Parnamirim (RN), Cruzeiro do Sul (AC), Santana (AP), Rorainópolis (RR), Maringá (PR), Taubaté (SP), Cascavel (PR), Juiz de Fora (MG), Foz do Iguaçu (PR), Santa Maria (RS), Montes Claros (MG), Governador Valadares (MG), Canoas (RS), Lages (SC), Santarém (PA), Rio Verde (GO), Paulo Afonso (BA), São Lourenço da Mata (PE), Crato (CE), Ariquemes (RO), Colatina (ES), Castanhal (PA), Divinópolis (MG), Petrópolis (RJ), Ipatinga (MG), Macaé (RJ), Santa Luzia (MG), Nova Friburgo (RJ), Marília (SP), Balneário Camboriú (SC), Itaquaquecetuba (SP), Praia Grande (SP), São José dos Pinhais (PR), Suzano (SP), Guarujá (SP), Cotia (SP), Parauapebas (PA), Jacareí (SP), Itaboraí (RJ) e Maricá (RJ) · 2024'
 
 export const copy = {
   coverageIncomplete:

@@ -120,6 +120,12 @@ Partition by source / date.
 Python writes.
 C# never writes landing.
 
+TCE-SP monthly LICITACOES CSVs land under `tce_sp_licitacao/date=`.
+That source is internal.
+Participant CNPJ and Valor da Proposta stay in landing parquet.
+The explorer does not read this source.
+Cubo SQL is not used.
+
 ## Explorer API
 
 Shared `PageRequest` / `SkipTake`.

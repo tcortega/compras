@@ -4,7 +4,7 @@ import sys
 
 from compras_ingest.pipeline import run_compras_slice
 from compras_ingest.settings import Settings
-from compras_ingest.warehouse import fetch_counts, fetch_one_orgao, fetch_orgaos
+from compras_ingest.warehouse import fetch_contratacao_anos, fetch_counts, fetch_one_orgao, fetch_orgaos
 
 SLICES = (
     ("29477000000180", "3306305", "RJ", "Volta Redonda"),
@@ -157,6 +157,10 @@ def main() -> int:
         raise SystemExit("warehouse has no items")
     if counts["orgao"] < 59:
         raise SystemExit(f"warehouse orgao count {counts['orgao']} < 59")
+    anos = set(fetch_contratacao_anos(settings))
+    missing_years = {2024, 2025, 2026} - anos
+    if missing_years:
+        raise SystemExit(f"warehouse missing years {sorted(missing_years)}: {sorted(anos)}")
     print("seed ok")
     print(f"entities={result.entity_counts} facts={result.fact_rows} flags={result.flag_rows} adjacencies={result.adjacency_rows}")
     print(f"counts={counts}")

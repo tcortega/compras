@@ -342,19 +342,25 @@ def _job_asset_keys(job) -> set[str]:
     return set()
 
 
+def _compras_frames(store: LandingStore, compras: dict):
+    keys = store.year_partition_keys("compras_gov")
+    if not keys and compras.get("key"):
+        keys = [str(compras["key"])]
+    return [store.read_parquet(key) for key in keys]
+
+
 def _basicos_from_ref(store: LandingStore, compras: dict) -> set[str]:
-    key = compras.get("key")
-    if not key:
-        return set()
-    return cnpj_basicos_from_frame(store.read_parquet(str(key)))
+    basicos: set[str] = set()
+    for df in _compras_frames(store, compras):
+        basicos |= cnpj_basicos_from_frame(df)
+    return basicos
 
 
 def _compras_ids(store: LandingStore, compras: dict) -> set[str]:
-    key = compras.get("key")
-    if not key:
-        return set()
-    df = store.read_parquet(str(key))
-    col = "numerocontrolepncp" if "numerocontrolepncp" in df.columns else None
-    if not col:
-        return set()
-    return {str(v) for v in df[col].to_list() if v}
+    ids: set[str] = set()
+    for df in _compras_frames(store, compras):
+        col = "numerocontrolepncp" if "numerocontrolepncp" in df.columns else None
+        if not col:
+            continue
+        ids |= {str(v) for v in df[col].to_list() if v}
+    return ids

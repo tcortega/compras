@@ -1,7 +1,7 @@
 import { DataTable } from '@/components/DataTable'
 import { EntityHeader } from '@/components/EntityHeader'
 import { FieldList } from '@/components/FieldList'
-import { Shell } from '@/components/Shell'
+import { SliceShell } from '@/components/SliceShell'
 import { SourceLine } from '@/components/SourceLine'
 import { Stat } from '@/components/Stat'
 import { api, safeDetail } from '@/lib/api'
@@ -39,7 +39,7 @@ export default async function OrgaoPage({ params }: { params: Promise<{ id: stri
   ])
 
   return (
-    <Shell coverage={its.coverage} current={routes.orgaos}>
+    <SliceShell coverage={its.coverage} current={routes.orgaos}>
       <EntityHeader
         kicker={`Órgão · ${formatEsfera(row.esfera)} · ${formatPoder(row.poder)} · ${row.uf}`}
         title={row.razaoSocial}
@@ -75,6 +75,6 @@ export default async function OrgaoPage({ params }: { params: Promise<{ id: stri
         </div>
         <DataTable rows={its.items} columns={itemColumns} coverage={its.coverage} />
       </section>
-    </Shell>
+    </SliceShell>
   )
 }

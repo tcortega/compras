@@ -48,6 +48,8 @@ export const ids = {
   orgaoSaoLourenco: '7c2e1f40-2613-4050-9a01-000000000040',
   orgaoCrato: '7c2e1f40-2304-4050-9a01-000000000041',
   orgaoAriquemes: '7c2e1f40-1102-4050-9a01-000000000042',
+  orgaoColatina: '7c2e1f40-3201-4050-9a01-000000000043',
+  orgaoCastanhal: '7c2e1f40-1502-4050-9a01-000000000044',
   fornFarma: '8d3f2a51-3306-4050-9a02-000000000001',
   fornAlim: '8d3f2a51-3306-4050-9a02-000000000002',
   fornComb: '8d3f2a51-3306-4050-9a02-000000000003',
@@ -103,6 +105,8 @@ export const ids = {
   ctSaoLourenco: '9e4a3b62-2613-4050-9a03-000000000046',
   ctCrato: '9e4a3b62-2304-4050-9a03-000000000047',
   ctAriquemes: '9e4a3b62-1102-4050-9a03-000000000048',
+  ctColatina: '9e4a3b62-3201-4050-9a03-000000000049',
+  ctCastanhal: '9e4a3b62-1502-4050-9a03-000000000050',
 } as const
 
 function orgao(
@@ -550,6 +554,26 @@ export const orgaos: Orgao[] = [
     'RO',
     '1100023',
     'Ariquemes',
+  ),
+  orgao(
+    ids.orgaoColatina,
+    '27165729000174',
+    'Município de Colatina',
+    'executivo',
+    T2,
+    'ES',
+    '3201506',
+    'Colatina',
+  ),
+  orgao(
+    ids.orgaoCastanhal,
+    '05121991000184',
+    'Município de Castanhal',
+    'executivo',
+    T1,
+    'PA',
+    '1502400',
+    'Castanhal',
   ),
 ]
 
@@ -1184,6 +1208,28 @@ export const contratacoes: Contratacao[] = [
     '2024-09-16T09:20:15.000Z',
     'compras.gov.br',
   ),
+  ct(
+    ids.ctColatina,
+    '27165729000174-1-000253/2024',
+    ids.orgaoColatina,
+    'dispensa',
+    'Contratação de empresa especializada na prestação de serviço de fornecimento de licença de uso de ferramenta de pesquisa e comparação de preços.',
+    2024,
+    19_500.0,
+    '2024-11-14T14:43:12.000Z',
+    'compras.gov.br',
+  ),
+  ct(
+    ids.ctCastanhal,
+    '05121991000184-1-000017/2024',
+    ids.orgaoCastanhal,
+    'pregao eletronico',
+    'Contratação de empresa especializada para fornecimento de água mineral em embalagem de 200ml, destinado a atender as necessidades das diversas Secretarias/Fundos Municipais e o Instituto de Previdência deste município de Castanhal/PA por um período de 12 (doze) meses.',
+    2024,
+    32_930.0,
+    '2024-08-22T07:05:06.000Z',
+    'compras.gov.br',
+  ),
 ]
 
 function item(
@@ -1291,4 +1337,6 @@ export const items: Item[] = [
   item(64, ids.ctSaoLourenco, ids.fornPapel, 'Ventilador', '461897', 375, 'Unidade', 'un', 194.0, 'PE', '2024-Q4', T2),
   item(65, ids.ctCrato, ids.fornPapel, 'Bolo Alimentício', '308385', 200, 'Quilograma', 'kg', 48.06, 'CE', '2024-Q3', T1),
   item(66, ids.ctAriquemes, ids.fornPapel, 'Álcool Etílico', '269941', 6909, 'Frasco 1000,00 ML', 'frasco', 6.88, 'RO', '2024-Q3', T2),
+  item(67, ids.ctColatina, ids.fornPapel, 'Assinatura - Publicação Informatizada', '21040', 5, 'UN', 'un', 3900.0, 'ES', '2024-Q4', T2),
+  item(68, ids.ctCastanhal, ids.fornPapel, 'Água Mineral Natural', '613476', 89000, 'Copo 200,00 ML', 'l', 0.37, 'PA', '2024-Q3', T1),
 ]

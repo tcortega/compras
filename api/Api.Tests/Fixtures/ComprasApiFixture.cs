@@ -532,6 +532,28 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			MunicipioIbge = "1100023",
 			MunicipioNome = "Ariquemes",
 		};
+		var colatina = new Orgao
+		{
+			Id = SliceIds.OrgaoColatina,
+			Cnpj = "27165729000174",
+			RazaoSocial = "Municipio de Colatina",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "ES",
+			MunicipioIbge = "3201506",
+			MunicipioNome = "Colatina",
+		};
+		var castanhal = new Orgao
+		{
+			Id = SliceIds.OrgaoCastanhal,
+			Cnpj = "05121991000184",
+			RazaoSocial = "Municipio de Castanhal",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "PA",
+			MunicipioIbge = "1502400",
+			MunicipioNome = "Castanhal",
+		};
 		var fornecedor = new Fornecedor
 		{
 			Id = SliceIds.Fornecedor,
@@ -1124,6 +1146,34 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			Ano = 2024,
 			ValorHomologado = 68280.36m,
 			PublicadoEm = Instant.FromUtc(2024, 9, 16, 9, 20),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoColatina = new Contratacao
+		{
+			Id = SliceIds.ContratacaoColatina,
+			PncpId = "27165729000174-1-000253/2024",
+			OrgaoId = SliceIds.OrgaoColatina,
+			Modalidade = "dispensa",
+			Objeto = "Contratacao de empresa especializada na prestacao de servico de fornecimento de licenca de uso de ferramenta de pesquisa e comparacao de precos.",
+			Ano = 2024,
+			ValorHomologado = 19500m,
+			PublicadoEm = Instant.FromUtc(2024, 11, 14, 14, 43),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoCastanhal = new Contratacao
+		{
+			Id = SliceIds.ContratacaoCastanhal,
+			PncpId = "05121991000184-1-000017/2024",
+			OrgaoId = SliceIds.OrgaoCastanhal,
+			Modalidade = "pregao eletronico",
+			Objeto = "Contratacao de empresa especializada para fornecimento de agua mineral em embalagem de 200ml, destinado a atender as necessidades das diversas Secretarias/Fundos Municipais e o Instituto de Previdencia deste municipio de Castanhal/PA por um periodo de 12 (doze) meses.",
+			Ano = 2024,
+			ValorHomologado = 32930m,
+			PublicadoEm = Instant.FromUtc(2024, 8, 22, 7, 5),
 			Source = "compras.gov.br",
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
@@ -1773,11 +1823,45 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
 		};
+		var itemColatina = new Item
+		{
+			Id = SliceIds.ItemColatina,
+			ContratacaoId = SliceIds.ContratacaoColatina,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Assinatura - Publicacao Informatizada",
+			Catmat = "21040",
+			Quantidade = 5m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 3900m,
+			ValorTotal = 19500m,
+			Uf = "ES",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var itemCastanhal = new Item
+		{
+			Id = SliceIds.ItemCastanhal,
+			ContratacaoId = SliceIds.ContratacaoCastanhal,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Agua Mineral Natural",
+			Catmat = "613476",
+			Quantidade = 89000m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 0.37m,
+			ValorTotal = 32930m,
+			Uf = "PA",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
 
-		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville, uberlandia, londrina, feira, caruaru, anapolis, vilaVelha, campinaGrande, caucaia, imperatriz, arapiraca, dourados, maraba, varzeaGrande, jiParana, parnamirim, cruzeiroDoSul, santana, rorainopolis, maringa, taubate, cascavel, juizDeFora, foz, santaMaria, montesClaros, governadorValadares, canoas, lages, santarem, rioVerde, pauloAfonso, saoLourenco, crato, ariquemes);
+		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville, uberlandia, londrina, feira, caruaru, anapolis, vilaVelha, campinaGrande, caucaia, imperatriz, arapiraca, dourados, maraba, varzeaGrande, jiParana, parnamirim, cruzeiroDoSul, santana, rorainopolis, maringa, taubate, cascavel, juizDeFora, foz, santaMaria, montesClaros, governadorValadares, canoas, lages, santarem, rioVerde, pauloAfonso, saoLourenco, crato, ariquemes, colatina, castanhal);
 		db.Fornecedores.AddRange(fornecedor, fornecedorExtra);
-		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina, contratacaoFeira, contratacaoCaruaru, contratacaoAnapolis, contratacaoVilaVelha, contratacaoCampinaGrande, contratacaoCaucaia, contratacaoImperatriz, contratacaoArapiraca, contratacaoDourados, contratacaoMaraba, contratacaoVarzeaGrande, contratacaoJiParana, contratacaoParnamirim, contratacaoCruzeiroDoSul, contratacaoSantana, contratacaoRorainopolis, contratacaoMaringa, contratacaoTaubate, contratacaoCascavel, contratacaoJuizDeFora, contratacaoFoz, contratacaoSantaMaria, contratacaoMontesClaros, contratacaoGovernadorValadares, contratacaoCanoas, contratacaoLages, contratacaoSantarem, contratacaoRioVerde, contratacaoPauloAfonso, contratacaoSaoLourenco, contratacaoCrato, contratacaoAriquemes);
-		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina, itemFeira, itemCaruaru, itemAnapolis, itemVilaVelha, itemCampinaGrande, itemCaucaia, itemImperatriz, itemArapiraca, itemDourados, itemMaraba, itemVarzeaGrande, itemJiParana, itemParnamirim, itemCruzeiroDoSul, itemSantana, itemRorainopolis, itemMaringa, itemTaubate, itemCascavel, itemJuizDeFora, itemFoz, itemSantaMaria, itemMontesClaros, itemGovernadorValadares, itemCanoas, itemLages, itemSantarem, itemRioVerde, itemPauloAfonso, itemSaoLourenco, itemCrato, itemAriquemes);
+		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina, contratacaoFeira, contratacaoCaruaru, contratacaoAnapolis, contratacaoVilaVelha, contratacaoCampinaGrande, contratacaoCaucaia, contratacaoImperatriz, contratacaoArapiraca, contratacaoDourados, contratacaoMaraba, contratacaoVarzeaGrande, contratacaoJiParana, contratacaoParnamirim, contratacaoCruzeiroDoSul, contratacaoSantana, contratacaoRorainopolis, contratacaoMaringa, contratacaoTaubate, contratacaoCascavel, contratacaoJuizDeFora, contratacaoFoz, contratacaoSantaMaria, contratacaoMontesClaros, contratacaoGovernadorValadares, contratacaoCanoas, contratacaoLages, contratacaoSantarem, contratacaoRioVerde, contratacaoPauloAfonso, contratacaoSaoLourenco, contratacaoCrato, contratacaoAriquemes, contratacaoColatina, contratacaoCastanhal);
+		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina, itemFeira, itemCaruaru, itemAnapolis, itemVilaVelha, itemCampinaGrande, itemCaucaia, itemImperatriz, itemArapiraca, itemDourados, itemMaraba, itemVarzeaGrande, itemJiParana, itemParnamirim, itemCruzeiroDoSul, itemSantana, itemRorainopolis, itemMaringa, itemTaubate, itemCascavel, itemJuizDeFora, itemFoz, itemSantaMaria, itemMontesClaros, itemGovernadorValadares, itemCanoas, itemLages, itemSantarem, itemRioVerde, itemPauloAfonso, itemSaoLourenco, itemCrato, itemAriquemes, itemColatina, itemCastanhal);
 	}
 
 	private static JsonSerializerOptions CreateJson()

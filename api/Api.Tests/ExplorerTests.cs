@@ -1502,6 +1502,48 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Coverage = s_ariquemesOrgaoCoverage,
 	};
 
+	private static readonly Coverage s_colatinaOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "ES",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_colatina = new()
+	{
+		Id = SliceIds.OrgaoColatina,
+		Cnpj = "27165729000174",
+		RazaoSocial = "Municipio de Colatina",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "ES",
+		MunicipioIbge = "3201506",
+		MunicipioNome = "Colatina",
+		Coverage = s_colatinaOrgaoCoverage,
+	};
+
+	private static readonly Coverage s_castanhalOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "PA",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_castanhal = new()
+	{
+		Id = SliceIds.OrgaoCastanhal,
+		Cnpj = "05121991000184",
+		RazaoSocial = "Municipio de Castanhal",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "PA",
+		MunicipioIbge = "1502400",
+		MunicipioNome = "Castanhal",
+		Coverage = s_castanhalOrgaoCoverage,
+	};
+
 	private static readonly ItemRecord s_itemDourados = new()
 	{
 		Id = SliceIds.ItemDourados,
@@ -2126,6 +2168,58 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		},
 	};
 
+	private static readonly ItemRecord s_itemColatina = new()
+	{
+		Id = SliceIds.ItemColatina,
+		ContratacaoId = SliceIds.ContratacaoColatina,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Assinatura - Publicacao Informatizada",
+		Catmat = "21040",
+		Catser = null,
+		Quantidade = 5m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 3900m,
+		ValorTotal = 19500m,
+		Uf = "ES",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "ES",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
+	private static readonly ItemRecord s_itemCastanhal = new()
+	{
+		Id = SliceIds.ItemCastanhal,
+		ContratacaoId = SliceIds.ContratacaoCastanhal,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Agua Mineral Natural",
+		Catmat = "613476",
+		Catser = null,
+		Quantidade = 89000m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 0.37m,
+		ValorTotal = 32930m,
+		Uf = "PA",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "PA",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
 	[Fact]
 	public async Task FullCycle_BrowseMunicipioAndUf()
 	{
@@ -2252,13 +2346,13 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(
 			new Coverage
 			{
-				N = 1,
+				N = 2,
 				Uf = "ES",
 				Quarter = SliceIds.Quarter,
 				MethodologyVersion = SliceIds.Methodology,
 			},
 			vilaVelhaPage.Coverage);
-		Assert.Equal(new[] { s_vilaVelha }, vilaVelhaPage.Items);
+		Assert.Equal(new[] { s_colatina, s_vilaVelha }, vilaVelhaPage.Items);
 		await ValidateOrgao(client, s_vilaVelha);
 
 		var campinaGrandePage = await client.ListOrgaos(municipioIbge: "2504009", quarter: SliceIds.Quarter);
@@ -2330,13 +2424,13 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(
 			new Coverage
 			{
-				N = 2,
+				N = 3,
 				Uf = "PA",
 				Quarter = SliceIds.Quarter,
 				MethodologyVersion = SliceIds.Methodology,
 			},
 			marabaPage.Coverage);
-		Assert.Equal(new[] { s_maraba, s_santarem }, marabaPage.Items);
+		Assert.Equal(new[] { s_castanhal, s_maraba, s_santarem }, marabaPage.Items);
 		await ValidateOrgao(client, s_maraba);
 
 		var varzeaGrandePage = await client.ListOrgaos(municipioIbge: "5108402", quarter: SliceIds.Quarter);
@@ -2562,6 +2656,8 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "2613701", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "2304202", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "1100023", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3201506", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "1502400", StringComparison.Ordinal));
 
 		var canoasPage = await client.ListOrgaos(municipioIbge: "4304606", quarter: SliceIds.Quarter);
 		Assert.Equal(
@@ -2666,6 +2762,32 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 			ariquemesPage.Coverage);
 		Assert.Equal(new[] { s_ariquemes }, ariquemesPage.Items);
 		await ValidateOrgao(client, s_ariquemes);
+
+		var colatinaPage = await client.ListOrgaos(municipioIbge: "3201506", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			colatinaPage.Coverage);
+		Assert.Equal(new[] { s_colatina }, colatinaPage.Items);
+		await ValidateOrgao(client, s_colatina);
+
+		var castanhalPage = await client.ListOrgaos(municipioIbge: "1502400", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			castanhalPage.Coverage);
+		Assert.Equal(new[] { s_castanhal }, castanhalPage.Items);
+		await ValidateOrgao(client, s_castanhal);
 
 		var spItems = await client.ListItems(uf: "SP", quarter: SliceIds.Quarter);
 		Assert.Equal(
@@ -2779,13 +2901,21 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(
 			new Coverage
 			{
-				N = 1,
+				N = 2,
 				Uf = "ES",
 				Quarter = SliceIds.Quarter,
 				MethodologyVersion = SliceIds.Methodology,
 			},
 			esItems.Coverage);
-		Assert.Equal(new[] { s_itemVilaVelha }, esItems.Items);
+		Assert.Equal(new[] { s_itemColatina, s_itemVilaVelha }, esItems.Items);
+		await ValidateItem(client, new()
+		{
+			Item = s_itemColatina,
+			OrgaoId = SliceIds.OrgaoColatina,
+			OrgaoRazaoSocial = "Municipio de Colatina",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "27165729000174-1-000253/2024",
+		});
 		await ValidateItem(client, new()
 		{
 			Item = s_itemVilaVelha,
@@ -2868,13 +2998,21 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(
 			new Coverage
 			{
-				N = 2,
+				N = 3,
 				Uf = "PA",
 				Quarter = SliceIds.Quarter,
 				MethodologyVersion = SliceIds.Methodology,
 			},
 			paItems.Coverage);
-		Assert.Equal(new[] { s_itemMaraba, s_itemSantarem }, paItems.Items);
+		Assert.Equal(new[] { s_itemCastanhal, s_itemMaraba, s_itemSantarem }, paItems.Items);
+		await ValidateItem(client, new()
+		{
+			Item = s_itemCastanhal,
+			OrgaoId = SliceIds.OrgaoCastanhal,
+			OrgaoRazaoSocial = "Municipio de Castanhal",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "05121991000184-1-000017/2024",
+		});
 		await ValidateItem(client, new()
 		{
 			Item = s_itemMaraba,
@@ -3107,6 +3245,22 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 			OrgaoRazaoSocial = "Municipio de Ariquemes",
 			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
 			ContratacaoPncpId = "04104816000116-1-000206/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemColatina,
+			OrgaoId = SliceIds.OrgaoColatina,
+			OrgaoRazaoSocial = "Municipio de Colatina",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "27165729000174-1-000253/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemCastanhal,
+			OrgaoId = SliceIds.OrgaoCastanhal,
+			OrgaoRazaoSocial = "Municipio de Castanhal",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "05121991000184-1-000017/2024",
 		});
 
 		var empty = new Coverage

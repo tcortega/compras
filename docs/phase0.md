@@ -2,7 +2,7 @@
 
 Municipio chosen for the Phase 0 precision gate: Volta Redonda, RJ, IBGE 3306305, year 2024.
 Population is about 274k (IBGE 2022), inside the 100k-500k mid-size band, and it is not a capital.
-The published explorer fixture also lands municípios that the same 2024 COMPRA file already counted: Niterói, RJ, IBGE 3303302 (238 municipal contratacoes), Bauru, SP, IBGE 3506003 (736), Caxias do Sul, RS, IBGE 4305108 (577), Joinville, SC, IBGE 4209102 (346), Uberlândia, MG, IBGE 3170206 (1152), Londrina, PR, IBGE 4113700 (257), Feira de Santana, BA, IBGE 2910800 (12), Caruaru, PE, IBGE 2604106 (167), Anápolis, GO, IBGE 5201108 (62), Vila Velha, ES, IBGE 3205200 (33), Campina Grande, PB, IBGE 2504009 (225), Caucaia, CE, IBGE 2303709 (83), Imperatriz, MA, IBGE 2105302 (6), Arapiraca, AL, IBGE 2700300 (162), Dourados, MS, IBGE 5003702 (53), Marabá, PA, IBGE 1504208 (233), Várzea Grande, MT, IBGE 5108402 (23), Ji-Paraná, RO, IBGE 1100122 (183), Parnamirim, RN, IBGE 2403251 (52), Cruzeiro do Sul, AC, IBGE 1200203 (56), Santana, AP, IBGE 1600600 (6), Rorainópolis, RR, IBGE 1400472 (6), Maringá, PR, IBGE 4115200 (425), Taubaté, SP, IBGE 3554102 (384), Cascavel, PR, IBGE 4104808 (245), Juiz de Fora, MG, IBGE 3136702 (142), Foz do Iguaçu, PR, IBGE 4108304 (871), Santa Maria, RS, IBGE 4316907 (240), Montes Claros, MG, IBGE 3143302 (67), and Governador Valadares, MG, IBGE 3127701 (78).
+The published explorer fixture also lands municípios that the same 2024 COMPRA file already counted: Niterói, RJ, IBGE 3303302 (238 municipal contratacoes), Bauru, SP, IBGE 3506003 (736), Caxias do Sul, RS, IBGE 4305108 (577), Joinville, SC, IBGE 4209102 (346), Uberlândia, MG, IBGE 3170206 (1152), Londrina, PR, IBGE 4113700 (257), Feira de Santana, BA, IBGE 2910800 (12), Caruaru, PE, IBGE 2604106 (167), Anápolis, GO, IBGE 5201108 (62), Vila Velha, ES, IBGE 3205200 (33), Campina Grande, PB, IBGE 2504009 (225), Caucaia, CE, IBGE 2303709 (83), Imperatriz, MA, IBGE 2105302 (6), Arapiraca, AL, IBGE 2700300 (162), Dourados, MS, IBGE 5003702 (53), Marabá, PA, IBGE 1504208 (233), Várzea Grande, MT, IBGE 5108402 (23), Ji-Paraná, RO, IBGE 1100122 (183), Parnamirim, RN, IBGE 2403251 (52), Cruzeiro do Sul, AC, IBGE 1200203 (56), Santana, AP, IBGE 1600600 (6), Rorainópolis, RR, IBGE 1400472 (6), Maringá, PR, IBGE 4115200 (425), Taubaté, SP, IBGE 3554102 (384), Cascavel, PR, IBGE 4104808 (245), Juiz de Fora, MG, IBGE 3136702 (142), Foz do Iguaçu, PR, IBGE 4108304 (871), Santa Maria, RS, IBGE 4316907 (240), Montes Claros, MG, IBGE 3143302 (67), Governador Valadares, MG, IBGE 3127701 (78), Canoas, RS, IBGE 4304606 (11), and Lages, SC, IBGE 4209300 (199).
 Those extra rows use the same landed COMPRA/ITEM schema.
 They do not replace the Volta Redonda labeled set.
 Jaboatão dos Guararapes, PE, IBGE 2607901, has no municipal row in that 2024 COMPRA file.
@@ -63,9 +63,19 @@ Palhoça, SC, IBGE 4211900, has 11 municipal rows, all from the Câmara.
 Itajaí, SC, IBGE 4208203, has 93 municipal rows from the water service, the Câmara, and the port, and no MUNICIPIO DE ITAJAI row.
 Montes Claros is the listed municipal MG fallback with landed volume after those unused UFs still had no mid-size municipal row.
 Governador Valadares is the listed municipal MG fallback with landed volume after those unused UFs still had no mid-size municipal row.
+São José, SC, IBGE 4216602, has 24 municipal rows, all from the Câmara.
+Chapecó, SC, IBGE 4204202, is present in the 2024 COMPRA file only as federal rows.
+Sete Lagoas, MG, IBGE 3167202, is present in the 2024 COMPRA file only as federal rows.
+Passo Fundo, RS, IBGE 4314100, is present in the 2024 COMPRA file only as federal rows.
+Gravataí, RS, IBGE 4309209, is present in the 2024 COMPRA file only as federal rows.
+Rio Grande, RS, IBGE 4315602, is present in the 2024 COMPRA file only as federal rows.
+Cabo Frio, RJ, IBGE 3300704, has no row in that 2024 COMPRA file.
+Magé, RJ, IBGE 3302502, has no municipal row in that 2024 COMPRA file.
+Canoas is the leftover municipal RS row with landed volume after those unused UFs still had no mid-size municipal row.
+Lages is the leftover municipal SC row with landed volume after São José had only Câmara rows, Chapecó had only federal rows, and SC still had only Joinville.
 The 2024 COMPRA file has 57,384 municipal rows across 731 distinct municipio names.
 Volta Redonda has 964 municipal contratacoes (959 unique id_compra), the highest volume among clearly mid-size non-capital cities after excluding Uberlandia / Ribeirao Preto which sit above 500k.
-Other candidates present with volume: Bauru 736, Caxias do Sul 577, Maringa 425, Taubate 384, Joinville 346, Cascavel 245, Campina Grande 225 municipal 2024, Londrina 257, Niteroi 238, Santa Maria 240, Juiz de Fora 142, Foz do Iguacu 871, Montes Claros 67, Governador Valadares 78.
+Other candidates present with volume: Bauru 736, Caxias do Sul 577, Maringa 425, Taubate 384, Joinville 346, Cascavel 245, Campina Grande 225 municipal 2024, Londrina 257, Niteroi 238, Santa Maria 240, Juiz de Fora 142, Foz do Iguacu 871, Montes Claros 67, Governador Valadares 78, Canoas 11, Lages 199.
 
 ## Bulk repo layout
 

@@ -1334,6 +1334,48 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Coverage = s_governadorValadaresOrgaoCoverage,
 	};
 
+	private static readonly Coverage s_canoasOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "RS",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_canoas = new()
+	{
+		Id = SliceIds.OrgaoCanoas,
+		Cnpj = "88577416000118",
+		RazaoSocial = "Municipio de Canoas",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "RS",
+		MunicipioIbge = "4304606",
+		MunicipioNome = "Canoas",
+		Coverage = s_canoasOrgaoCoverage,
+	};
+
+	private static readonly Coverage s_lagesOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "SC",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_lages = new()
+	{
+		Id = SliceIds.OrgaoLages,
+		Cnpj = "82777301000190",
+		RazaoSocial = "Municipio de Lages",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "SC",
+		MunicipioIbge = "4209300",
+		MunicipioNome = "Lages",
+		Coverage = s_lagesOrgaoCoverage,
+	};
+
 	private static readonly ItemRecord s_itemDourados = new()
 	{
 		Id = SliceIds.ItemDourados,
@@ -1750,6 +1792,58 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		},
 	};
 
+	private static readonly ItemRecord s_itemCanoas = new()
+	{
+		Id = SliceIds.ItemCanoas,
+		ContratacaoId = SliceIds.ContratacaoCanoas,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Clorimetro",
+		Catmat = "247827",
+		Catser = null,
+		Quantidade = 1m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 1667.07m,
+		ValorTotal = 1667.07m,
+		Uf = "RS",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "RS",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
+	private static readonly ItemRecord s_itemLages = new()
+	{
+		Id = SliceIds.ItemLages,
+		ContratacaoId = SliceIds.ContratacaoLages,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Sacola",
+		Catmat = "229690",
+		Catser = null,
+		Quantidade = 30m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 97m,
+		ValorTotal = 2910m,
+		Uf = "SC",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "SC",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
 	[Fact]
 	public async Task FullCycle_BrowseMunicipioAndUf()
 	{
@@ -1798,13 +1892,13 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(
 			new Coverage
 			{
-				N = 1,
+				N = 2,
 				Uf = "SC",
 				Quarter = SliceIds.Quarter,
 				MethodologyVersion = SliceIds.Methodology,
 			},
 			joinvillePage.Coverage);
-		Assert.Equal(new[] { s_joinville }, joinvillePage.Items);
+		Assert.Equal(new[] { s_joinville, s_lages }, joinvillePage.Items);
 		await ValidateOrgao(client, s_joinville);
 
 		var uberlandiaPage = await client.ListOrgaos(municipioIbge: "3170206", quarter: SliceIds.Quarter);
@@ -2178,6 +2272,34 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "4316907", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3143302", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3127701", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "4304606", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "4209300", StringComparison.Ordinal));
+
+		var canoasPage = await client.ListOrgaos(municipioIbge: "4304606", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			canoasPage.Coverage);
+		Assert.Equal(new[] { s_canoas }, canoasPage.Items);
+		await ValidateOrgao(client, s_canoas);
+
+		var lagesPage = await client.ListOrgaos(municipioIbge: "4209300", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			lagesPage.Coverage);
+		Assert.Equal(new[] { s_lages }, lagesPage.Items);
+		await ValidateOrgao(client, s_lages);
 
 		var spItems = await client.ListItems(uf: "SP", quarter: SliceIds.Quarter);
 		Assert.Equal(
@@ -2210,13 +2332,13 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(
 			new Coverage
 			{
-				N = 1,
+				N = 2,
 				Uf = "SC",
 				Quarter = SliceIds.Quarter,
 				MethodologyVersion = SliceIds.Methodology,
 			},
 			scItems.Coverage);
-		Assert.Equal(new[] { s_itemJoinville }, scItems.Items);
+		Assert.Equal(new[] { s_itemJoinville, s_itemLages }, scItems.Items);
 		await ValidateItem(client, new()
 		{
 			Item = s_itemJoinville,
@@ -2539,6 +2661,22 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 			OrgaoRazaoSocial = "Municipio de Governador Valadares",
 			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
 			ContratacaoPncpId = "20622890000180-1-000098/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemCanoas,
+			OrgaoId = SliceIds.OrgaoCanoas,
+			OrgaoRazaoSocial = "Municipio de Canoas",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "88577416000118-1-000156/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemLages,
+			OrgaoId = SliceIds.OrgaoLages,
+			OrgaoRazaoSocial = "Municipio de Lages",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "82777301000190-1-000260/2024",
 		});
 
 		var empty = new Coverage

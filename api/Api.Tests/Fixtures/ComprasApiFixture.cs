@@ -136,6 +136,28 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			MunicipioIbge = "3506003",
 			MunicipioNome = "Bauru",
 		};
+		var caxias = new Orgao
+		{
+			Id = SliceIds.OrgaoCaxias,
+			Cnpj = "88830609000139",
+			RazaoSocial = "Municipio de Caxias do Sul",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "RS",
+			MunicipioIbge = "4305108",
+			MunicipioNome = "Caxias do Sul",
+		};
+		var joinville = new Orgao
+		{
+			Id = SliceIds.OrgaoJoinville,
+			Cnpj = "83169623000110",
+			RazaoSocial = "Municipio de Joinville",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "SC",
+			MunicipioIbge = "4209102",
+			MunicipioNome = "Joinville",
+		};
 		var fornecedor = new Fornecedor
 		{
 			Id = SliceIds.Fornecedor,
@@ -228,6 +250,34 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
 		};
+		var contratacaoCaxias = new Contratacao
+		{
+			Id = SliceIds.ContratacaoCaxias,
+			PncpId = "88830609000139-1-000888/2024",
+			OrgaoId = SliceIds.OrgaoCaxias,
+			Modalidade = "pregao eletronico",
+			Objeto = "Fornecimento de suporte para monitor",
+			Ano = 2024,
+			ValorHomologado = 11000m,
+			PublicadoEm = Instant.FromUtc(2024, 11, 4, 7, 17),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoJoinville = new Contratacao
+		{
+			Id = SliceIds.ContratacaoJoinville,
+			PncpId = "83169623000110-1-000301/2024",
+			OrgaoId = SliceIds.OrgaoJoinville,
+			Modalidade = "pregao eletronico",
+			Objeto = "Aquisicao de leitores de codigo de barras a laser fixo",
+			Ano = 2024,
+			ValorHomologado = 33180m,
+			PublicadoEm = Instant.FromUtc(2024, 8, 9, 7, 1),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
 		var itemNiteroi = new Item
 		{
 			Id = SliceIds.ItemNiteroi,
@@ -262,11 +312,45 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
 		};
+		var itemCaxias = new Item
+		{
+			Id = SliceIds.ItemCaxias,
+			ContratacaoId = SliceIds.ContratacaoCaxias,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Suporte para monitor LCD",
+			Catmat = "601992",
+			Quantidade = 100m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 110m,
+			ValorTotal = 11000m,
+			Uf = "RS",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var itemJoinville = new Item
+		{
+			Id = SliceIds.ItemJoinville,
+			ContratacaoId = SliceIds.ContratacaoJoinville,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Leitora codigo de barras",
+			Catmat = "617529",
+			Quantidade = 35m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 948m,
+			ValorTotal = 33180m,
+			Uf = "SC",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
 
-		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru);
+		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville);
 		db.Fornecedores.AddRange(fornecedor, fornecedorExtra);
-		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru);
-		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru);
+		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville);
+		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville);
 	}
 
 	private static JsonSerializerOptions CreateJson()

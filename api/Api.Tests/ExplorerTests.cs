@@ -434,6 +434,100 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		},
 	};
 
+	private static readonly Coverage s_caxiasOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "RS",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_caxias = new()
+	{
+		Id = SliceIds.OrgaoCaxias,
+		Cnpj = "88830609000139",
+		RazaoSocial = "Municipio de Caxias do Sul",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "RS",
+		MunicipioIbge = "4305108",
+		MunicipioNome = "Caxias do Sul",
+		Coverage = s_caxiasOrgaoCoverage,
+	};
+
+	private static readonly Coverage s_joinvilleOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "SC",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_joinville = new()
+	{
+		Id = SliceIds.OrgaoJoinville,
+		Cnpj = "83169623000110",
+		RazaoSocial = "Municipio de Joinville",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "SC",
+		MunicipioIbge = "4209102",
+		MunicipioNome = "Joinville",
+		Coverage = s_joinvilleOrgaoCoverage,
+	};
+
+	private static readonly ItemRecord s_itemCaxias = new()
+	{
+		Id = SliceIds.ItemCaxias,
+		ContratacaoId = SliceIds.ContratacaoCaxias,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Suporte para monitor LCD",
+		Catmat = "601992",
+		Catser = null,
+		Quantidade = 100m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 110m,
+		ValorTotal = 11000m,
+		Uf = "RS",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "RS",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
+	private static readonly ItemRecord s_itemJoinville = new()
+	{
+		Id = SliceIds.ItemJoinville,
+		ContratacaoId = SliceIds.ContratacaoJoinville,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Leitora codigo de barras",
+		Catmat = "617529",
+		Catser = null,
+		Quantidade = 35m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 948m,
+		ValorTotal = 33180m,
+		Uf = "SC",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "SC",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
 	[Fact]
 	public async Task FullCycle_BrowseMunicipioAndUf()
 	{
@@ -465,11 +559,39 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(new[] { s_bauru }, bauruPage.Items);
 		await ValidateOrgao(client, s_bauru);
 
+		var caxiasPage = await client.ListOrgaos(municipioIbge: "4305108", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			caxiasPage.Coverage);
+		Assert.Equal(new[] { s_caxias }, caxiasPage.Items);
+		await ValidateOrgao(client, s_caxias);
+
+		var joinvillePage = await client.ListOrgaos(uf: "SC", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "SC",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			joinvillePage.Coverage);
+		Assert.Equal(new[] { s_joinville }, joinvillePage.Items);
+		await ValidateOrgao(client, s_joinville);
+
 		var mixed = await client.ListOrgaos(quarter: SliceIds.Quarter);
 		Assert.Equal("", mixed.Coverage.Uf);
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3306305", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3303302", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3506003", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "4305108", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "4209102", StringComparison.Ordinal));
 
 		var spItems = await client.ListItems(uf: "SP", quarter: SliceIds.Quarter);
 		Assert.Equal(
@@ -497,6 +619,33 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 			OrgaoRazaoSocial = "Municipio de Niteroi",
 			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
 			ContratacaoPncpId = "3303302-1-000001/2024",
+		});
+		var scItems = await client.ListItems(uf: "SC", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "SC",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			scItems.Coverage);
+		Assert.Equal(new[] { s_itemJoinville }, scItems.Items);
+		await ValidateItem(client, new()
+		{
+			Item = s_itemJoinville,
+			OrgaoId = SliceIds.OrgaoJoinville,
+			OrgaoRazaoSocial = "Municipio de Joinville",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "83169623000110-1-000301/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemCaxias,
+			OrgaoId = SliceIds.OrgaoCaxias,
+			OrgaoRazaoSocial = "Municipio de Caxias do Sul",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "88830609000139-1-000888/2024",
 		});
 
 		var empty = new Coverage

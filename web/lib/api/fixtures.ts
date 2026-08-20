@@ -38,6 +38,8 @@ export const ids = {
   orgaoJuizDeFora: '7c2e1f40-3136-4050-9a01-000000000030',
   orgaoFoz: '7c2e1f40-4108-4050-9a01-000000000031',
   orgaoSantaMaria: '7c2e1f40-4316-4050-9a01-000000000032',
+  orgaoMontesClaros: '7c2e1f40-3143-4050-9a01-000000000033',
+  orgaoGovernadorValadares: '7c2e1f40-3127-4050-9a01-000000000034',
   fornFarma: '8d3f2a51-3306-4050-9a02-000000000001',
   fornAlim: '8d3f2a51-3306-4050-9a02-000000000002',
   fornComb: '8d3f2a51-3306-4050-9a02-000000000003',
@@ -83,6 +85,8 @@ export const ids = {
   ctJuizDeFora: '9e4a3b62-3136-4050-9a03-000000000036',
   ctFoz: '9e4a3b62-4108-4050-9a03-000000000037',
   ctSantaMaria: '9e4a3b62-4316-4050-9a03-000000000038',
+  ctMontesClaros: '9e4a3b62-3143-4050-9a03-000000000039',
+  ctGovernadorValadares: '9e4a3b62-3127-4050-9a03-000000000040',
 } as const
 
 function orgao(
@@ -430,6 +434,26 @@ export const orgaos: Orgao[] = [
     'RS',
     '4316907',
     'Santa Maria',
+  ),
+  orgao(
+    ids.orgaoMontesClaros,
+    '22678874000135',
+    'Município de Montes Claros',
+    'executivo',
+    T2,
+    'MG',
+    '3143302',
+    'Montes Claros',
+  ),
+  orgao(
+    ids.orgaoGovernadorValadares,
+    '20622890000180',
+    'Município de Governador Valadares',
+    'executivo',
+    T2,
+    'MG',
+    '3127701',
+    'Governador Valadares',
   ),
 ]
 
@@ -954,6 +978,28 @@ export const contratacoes: Contratacao[] = [
     '2024-10-15T07:06:03.000Z',
     'compras.gov.br',
   ),
+  ct(
+    ids.ctMontesClaros,
+    '22678874000135-1-000430/2024',
+    ids.orgaoMontesClaros,
+    'concorrencia eletronica',
+    'Contratação de empresa especializada para execução de obras de reforma dos sistemas de segurança contra incêndio e pânico do mercado central christo raeff - montes claros/mg, com fornecimento de materiais, na área urbana do municipio de Montes Claros.',
+    2024,
+    330_811.34,
+    '2024-07-30T07:09:11.000Z',
+    'compras.gov.br',
+  ),
+  ct(
+    ids.ctGovernadorValadares,
+    '20622890000180-1-000098/2024',
+    ids.orgaoGovernadorValadares,
+    'pregao eletronico',
+    'Aquisição de material gráfico – cartão do idoso – para garantir o andamento e desenvolvimento do serviço prestado pela SMAS',
+    2024,
+    43_500.0,
+    '2024-10-30T08:39:39.000Z',
+    'compras.gov.br',
+  ),
 ]
 
 function item(
@@ -1051,4 +1097,6 @@ export const items: Item[] = [
   item(54, ids.ctJuizDeFora, ids.fornPapel, 'Pembrolizumabe', '440269', 10, 'Frasco 4 ML', 'frasco', 16021.4, 'MG', '2024-Q3', T2),
   item(55, ids.ctFoz, ids.fornPapel, 'Fermento', '459596', 2500, 'Embalagem 125 G', 'unknown', 16.47, 'PR', '2024-Q3', T2),
   item(56, ids.ctSantaMaria, ids.fornPapel, 'Risperidona', '272839', 200000, 'Comprimido', 'comprimido', 0.141, 'RS', '2024-Q4', T2),
+  item(57, ids.ctMontesClaros, ids.fornPapel, 'Manutenção prevenção combate incêndio', '21822', 1, 'UNIDADE', 'un', 330811.34, 'MG', '2024-Q3', T2),
+  item(58, ids.ctGovernadorValadares, ids.fornPapel, 'Cartão controle acesso', '618284', 30000, 'Unidade', 'un', 1.45, 'MG', '2024-Q4', T2),
 ]

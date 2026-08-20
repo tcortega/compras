@@ -50,6 +50,8 @@ export const ids = {
   orgaoAriquemes: '7c2e1f40-1102-4050-9a01-000000000042',
   orgaoColatina: '7c2e1f40-3201-4050-9a01-000000000043',
   orgaoCastanhal: '7c2e1f40-1502-4050-9a01-000000000044',
+  orgaoDivinopolis: '7c2e1f40-3122-4050-9a01-000000000045',
+  orgaoPetropolis: '7c2e1f40-3303-4050-9a01-000000000046',
   fornFarma: '8d3f2a51-3306-4050-9a02-000000000001',
   fornAlim: '8d3f2a51-3306-4050-9a02-000000000002',
   fornComb: '8d3f2a51-3306-4050-9a02-000000000003',
@@ -107,6 +109,8 @@ export const ids = {
   ctAriquemes: '9e4a3b62-1102-4050-9a03-000000000048',
   ctColatina: '9e4a3b62-3201-4050-9a03-000000000049',
   ctCastanhal: '9e4a3b62-1502-4050-9a03-000000000050',
+  ctDivinopolis: '9e4a3b62-3122-4050-9a03-000000000051',
+  ctPetropolis: '9e4a3b62-3303-4050-9a03-000000000052',
 } as const
 
 function orgao(
@@ -574,6 +578,26 @@ export const orgaos: Orgao[] = [
     'PA',
     '1502400',
     'Castanhal',
+  ),
+  orgao(
+    ids.orgaoDivinopolis,
+    '18291351000164',
+    'Município de Divinópolis',
+    'executivo',
+    T1,
+    'MG',
+    '3122306',
+    'Divinópolis',
+  ),
+  orgao(
+    ids.orgaoPetropolis,
+    '29138344000143',
+    'Município de Petrópolis',
+    'executivo',
+    T1,
+    'RJ',
+    '3303906',
+    'Petrópolis',
   ),
 ]
 
@@ -1230,6 +1254,28 @@ export const contratacoes: Contratacao[] = [
     '2024-08-22T07:05:06.000Z',
     'compras.gov.br',
   ),
+  ct(
+    ids.ctDivinopolis,
+    '18291351000164-1-000236/2024',
+    ids.orgaoDivinopolis,
+    'dispensa',
+    'Aquisição de 01 (uma) cadeira digitador, conforme termo de referência, para Secretaria Municipal de Fazenda.',
+    2024,
+    1_819.55,
+    '2024-08-28T17:18:49.000Z',
+    'compras.gov.br',
+  ),
+  ct(
+    ids.ctPetropolis,
+    '29138344000143-1-000165/2024',
+    ids.orgaoPetropolis,
+    'dispensa',
+    'Aquisição de Papel para Plotter HP Design Jet T830',
+    2024,
+    2_099.96,
+    '2024-06-12T18:42:08.000Z',
+    'compras.gov.br',
+  ),
 ]
 
 function item(
@@ -1339,4 +1385,6 @@ export const items: Item[] = [
   item(66, ids.ctAriquemes, ids.fornPapel, 'Álcool Etílico', '269941', 6909, 'Frasco 1000,00 ML', 'frasco', 6.88, 'RO', '2024-Q3', T2),
   item(67, ids.ctColatina, ids.fornPapel, 'Assinatura - Publicação Informatizada', '21040', 5, 'UN', 'un', 3900.0, 'ES', '2024-Q4', T2),
   item(68, ids.ctCastanhal, ids.fornPapel, 'Água Mineral Natural', '613476', 89000, 'Copo 200,00 ML', 'l', 0.37, 'PA', '2024-Q3', T1),
+  item(69, ids.ctDivinopolis, ids.fornPapel, 'Cadeira digitador', '246097', 1, 'Unidade', 'un', 1819.55, 'MG', '2024-Q3', T1),
+  item(70, ids.ctPetropolis, ids.fornPapel, 'Bobina Papel Impressora aplicação: impressora plotter, comprimento: 50, gramatura: 75, largura: 914, tipo papel: sulfite Papel para Plotter (Bobina) 75 GR 610x50', '275143', 12, 'Unidade', 'un', 133.33, 'RJ', '2024-Q2', T1),
 ]

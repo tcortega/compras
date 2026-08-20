@@ -1544,6 +1544,48 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Coverage = s_castanhalOrgaoCoverage,
 	};
 
+	private static readonly Coverage s_divinopolisOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "MG",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_divinopolis = new()
+	{
+		Id = SliceIds.OrgaoDivinopolis,
+		Cnpj = "18291351000164",
+		RazaoSocial = "Municipio de Divinopolis",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "MG",
+		MunicipioIbge = "3122306",
+		MunicipioNome = "Divinopolis",
+		Coverage = s_divinopolisOrgaoCoverage,
+	};
+
+	private static readonly Coverage s_petropolisOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "RJ",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_petropolis = new()
+	{
+		Id = SliceIds.OrgaoPetropolis,
+		Cnpj = "29138344000143",
+		RazaoSocial = "Municipio de Petropolis",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "RJ",
+		MunicipioIbge = "3303906",
+		MunicipioNome = "Petropolis",
+		Coverage = s_petropolisOrgaoCoverage,
+	};
+
 	private static readonly ItemRecord s_itemDourados = new()
 	{
 		Id = SliceIds.ItemDourados,
@@ -2220,6 +2262,58 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		},
 	};
 
+	private static readonly ItemRecord s_itemDivinopolis = new()
+	{
+		Id = SliceIds.ItemDivinopolis,
+		ContratacaoId = SliceIds.ContratacaoDivinopolis,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Cadeira digitador",
+		Catmat = "246097",
+		Catser = null,
+		Quantidade = 1m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 1819.55m,
+		ValorTotal = 1819.55m,
+		Uf = "MG",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "MG",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
+	private static readonly ItemRecord s_itemPetropolis = new()
+	{
+		Id = SliceIds.ItemPetropolis,
+		ContratacaoId = SliceIds.ContratacaoPetropolis,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Bobina Papel Impressora aplicacao: impressora plotter, comprimento: 50, gramatura: 75, largura: 914, tipo papel: sulfite Papel para Plotter (Bobina) 75 GR 610x50",
+		Catmat = "275143",
+		Catser = null,
+		Quantidade = 12m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 133.33m,
+		ValorTotal = 1599.96m,
+		Uf = "RJ",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "RJ",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
 	[Fact]
 	public async Task FullCycle_BrowseMunicipioAndUf()
 	{
@@ -2658,6 +2752,8 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "1100023", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3201506", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "1502400", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3122306", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3303906", StringComparison.Ordinal));
 
 		var canoasPage = await client.ListOrgaos(municipioIbge: "4304606", quarter: SliceIds.Quarter);
 		Assert.Equal(
@@ -2788,6 +2884,32 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 			castanhalPage.Coverage);
 		Assert.Equal(new[] { s_castanhal }, castanhalPage.Items);
 		await ValidateOrgao(client, s_castanhal);
+
+		var divinopolisPage = await client.ListOrgaos(municipioIbge: "3122306", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			divinopolisPage.Coverage);
+		Assert.Equal(new[] { s_divinopolis }, divinopolisPage.Items);
+		await ValidateOrgao(client, s_divinopolis);
+
+		var petropolisPage = await client.ListOrgaos(municipioIbge: "3303906", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			petropolisPage.Coverage);
+		Assert.Equal(new[] { s_petropolis }, petropolisPage.Items);
+		await ValidateOrgao(client, s_petropolis);
 
 		var spItems = await client.ListItems(uf: "SP", quarter: SliceIds.Quarter);
 		Assert.Equal(
@@ -3261,6 +3383,22 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 			OrgaoRazaoSocial = "Municipio de Castanhal",
 			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
 			ContratacaoPncpId = "05121991000184-1-000017/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemDivinopolis,
+			OrgaoId = SliceIds.OrgaoDivinopolis,
+			OrgaoRazaoSocial = "Municipio de Divinopolis",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "18291351000164-1-000236/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemPetropolis,
+			OrgaoId = SliceIds.OrgaoPetropolis,
+			OrgaoRazaoSocial = "Municipio de Petropolis",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "29138344000143-1-000165/2024",
 		});
 
 		var empty = new Coverage

@@ -14,7 +14,7 @@ Flags stay internal and are framed as an indicio requiring verification.
 
 Explorer reads Postgres.
 
-Compose (`infra/`) seeds the 2024 warehouse (Volta Redonda, Niterói, Bauru, Caxias do Sul, Joinville, Uberlândia, Londrina, Feira de Santana, Caruaru, Anápolis, Vila Velha, Campina Grande, Caucaia, Imperatriz, Arapiraca, Dourados, Marabá, Várzea Grande, Ji-Paraná, Parnamirim, Cruzeiro do Sul, Santana, Rorainópolis, Maringá, Taubaté, Cascavel, Juiz de Fora, Foz do Iguaçu, Santa Maria, Montes Claros, Governador Valadares, Canoas, Lages, Santarém, Rio Verde, Paulo Afonso, São Lourenço da Mata, Crato, Ariquemes, Colatina, Castanhal) via Python, then serves this API on http://127.0.0.1:5080.
+Compose (`infra/`) seeds the 2024 warehouse (Volta Redonda, Niterói, Bauru, Caxias do Sul, Joinville, Uberlândia, Londrina, Feira de Santana, Caruaru, Anápolis, Vila Velha, Campina Grande, Caucaia, Imperatriz, Arapiraca, Dourados, Marabá, Várzea Grande, Ji-Paraná, Parnamirim, Cruzeiro do Sul, Santana, Rorainópolis, Maringá, Taubaté, Cascavel, Juiz de Fora, Foz do Iguaçu, Santa Maria, Montes Claros, Governador Valadares, Canoas, Lages, Santarém, Rio Verde, Paulo Afonso, São Lourenço da Mata, Crato, Ariquemes, Colatina, Castanhal, Divinópolis, Petrópolis) via Python, then serves this API on http://127.0.0.1:5080.
 
 The warehouse schema is the contract.
 This process does not apply EF migrations against that schema unless `App:ApplyMigrations` is true.

@@ -111,4 +111,5 @@ export const copy = {
   loadError: 'Não foi possível ler este recorte.',
   notFound: 'Registro não encontrado neste recorte.',
   skipTake: 'Paginação por skip e take, no servidor.',
+  qsaEmpty: 'sem QSA na base',
 } as const

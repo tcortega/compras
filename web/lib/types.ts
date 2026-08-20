@@ -43,12 +43,22 @@ export type Orgao = {
   updatedAt: string
 }
 
+export type FornecedorSocio = {
+  nome: string
+  cpfMasked: string | null
+  qualificacao: string | null
+}
+
 export type Fornecedor = {
   id: string
   cnpj: string
   razaoSocial: string
   openedOn: string | null
   cnae: string | null
+  cnaeDescricao?: string | null
+  idadeCadastral?: string | null
+  idadeAsOf?: string | null
+  qsa?: FornecedorSocio[]
   suspended: boolean
   createdAt: string
   updatedAt: string

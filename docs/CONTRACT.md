@@ -47,6 +47,36 @@ Closed sets are enums stored as text.
 `suspended` bool default false.
 `createdAt` / `updatedAt` Instant.
 
+### cnae
+
+Official Receita CNAE lookup landed from the same dump as estabelecimentos.
+`codigo` text primary key, digits only.
+`descricao` text from the RFB Cnaes file.
+Python writes.
+C# joins `fornecedor.cnae` by digits.
+Missing rows leave the description null.
+Do not invent a description.
+
+### fornecedor_socio
+
+Public-record QSA rows for slice fornecedores.
+This is E2 factual enrichment, not F1 `fornecedor_adjacency`.
+Undirected public names only.
+No score, no shared-partner count, no adjacency kind.
+`id` uuid.
+`fornecedorId` uuid FK fornecedor.
+`fornecedorCnpj` text.
+`nome` text.
+`cpfMasked` text nullable.
+PF socios store the ingest mask `***.XXX.XXX-**`.
+PJ socios leave `cpfMasked` null.
+Raw CPF is forbidden.
+`qualificacao` text nullable, resolved from RFB Qualificacoes when that code landed, otherwise the source code.
+Python writes from landed `receita_cnpj_socios` after CPF mask.
+C# reads.
+GET `/api/fornecedores/{id}` returns these rows.
+GET `/api/fornecedores` does not.
+
 ### contratacao
 
 `id` uuid.
@@ -272,7 +302,11 @@ No ranking.
 - `GET /api/orgaos`
 - `GET /api/orgaos/{id}`
 - `GET /api/fornecedores`
-- `GET /api/fornecedores/{id}`
+- `GET /api/fornecedores/{id}` returns the list fields plus `cnaeDescricao` when the CNAE table has that code, `idadeCadastral` as a duration from `openedOn` to a stated `idadeAsOf` civil date, and `qsa` names with masked CPF.
+List items do not carry `qsa`.
+Company age is cadastral duration, not a risk signal.
+Null `openedOn` returns `idadeCadastral` `n/d`.
+Empty QSA is an empty array.
 - `GET /api/contratacoes`
 - `GET /api/contratacoes/{id}`
 - `GET /api/items`

@@ -41,7 +41,7 @@ export default async function BuscaPage({ searchParams }: { searchParams: Promis
       <SearchForm defaultValue={q} />
 
       {!q ? (
-        <p className="muted">Informe um termo. A consulta usa skip/take em cada endpoint.</p>
+        <p className="muted">Informe um termo para consultar as quatro coleções deste recorte.</p>
       ) : (
         <>
           <section className="group">

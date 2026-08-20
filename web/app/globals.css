@@ -263,6 +263,9 @@ h3 {
 
 .search button,
 .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   height: 48px;
   padding: 0 18px;
   border: 1px solid var(--forest);
@@ -272,14 +275,25 @@ h3 {
   font-size: 14px;
   letter-spacing: 0.02em;
   cursor: pointer;
+  text-decoration: none;
 }
 
 .search button:hover,
 .btn:hover {
   background: #163328;
+  color: var(--forest-ink);
+}
+
+.search button:focus-visible,
+.btn:focus-visible {
+  outline: 2px solid #c5b57a;
+  outline-offset: 3px;
 }
 
 .btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: transparent;
   color: var(--ink);
   border: 1px solid var(--rule-strong);
@@ -287,10 +301,25 @@ h3 {
   cursor: pointer;
   height: 40px;
   padding: 0 12px;
+  text-decoration: none;
 }
 
 .btn-ghost:hover {
   background: var(--paper-deep);
+  color: var(--ink);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 0;
+}
+
+.actions .btn-ghost {
+  height: 48px;
+  padding: 0 18px;
 }
 
 .notice {
@@ -318,7 +347,8 @@ h3 {
 }
 
 .index-card {
-  display: block;
+  display: flex;
+  flex-direction: column;
   padding: 16px 16px 14px;
   background: var(--surface);
   border: 1px solid var(--rule);
@@ -346,14 +376,8 @@ h3 {
 }
 
 .index-card .chip {
-  margin-top: 8px;
-}
-
-.index-card .chip span {
-  display: inline;
-  margin-top: 0;
-  color: inherit;
-  font-size: inherit;
+  margin-top: auto;
+  padding-top: 12px;
 }
 
 .section {
@@ -422,6 +446,19 @@ h3 {
   flex: 1 1 220px;
 }
 
+.field-uf input {
+  width: 4.75rem;
+  text-transform: uppercase;
+}
+
+.field-ano input {
+  width: 5.5rem;
+}
+
+.field-quarter input {
+  width: 7.75rem;
+}
+
 .table-wrap {
   background: var(--surface);
   border: 1px solid var(--rule);
@@ -440,7 +477,7 @@ table.data td {
   text-align: left;
   vertical-align: top;
   border-bottom: 1px solid var(--rule);
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 table.data th {
@@ -461,13 +498,19 @@ table.data tbody tr:hover td {
 }
 
 table.data td.num,
-table.data th.num {
-  text-align: right;
+table.data th.num,
+table.data td.mono,
+table.data th.mono {
   font-variant-numeric: tabular-nums;
   font-family: var(--mono);
   font-size: 13px;
   overflow-wrap: normal;
   white-space: nowrap;
+}
+
+table.data td.num,
+table.data th.num {
+  text-align: right;
 }
 
 table.data a {
@@ -494,6 +537,7 @@ table.data a:hover {
   display: flex;
   align-items: center;
   gap: 12px;
+  font-variant-numeric: tabular-nums;
 }
 
 .pager a,
@@ -510,13 +554,13 @@ table.data a:hover {
 .chip {
   display: inline-flex;
   flex-wrap: wrap;
-  gap: 6px 10px;
+  gap: 0 0.4em;
   align-items: baseline;
   padding: 4px 8px;
   background: var(--wheat);
   color: var(--wheat-ink);
   font-size: 12px;
-  line-height: 1.35;
+  line-height: 1.45;
 }
 
 .chip b {
@@ -526,7 +570,7 @@ table.data a:hover {
 
 .stats {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
   gap: 12px;
   margin: 22px 0 8px;
 }
@@ -565,10 +609,22 @@ table.data a:hover {
 
 .fields div {
   padding: 10px 12px;
+  border-right: 1px solid var(--rule);
   border-bottom: 1px solid var(--rule);
+  min-width: 0;
 }
 
-.fields div:nth-last-child(-n + 2) {
+.fields div:nth-child(2n) {
+  border-right: 0;
+}
+
+.fields div:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+  border-right: 0;
+}
+
+.fields div:last-child,
+.fields div:nth-last-child(2):nth-child(odd) {
   border-bottom: 0;
 }
 
@@ -583,6 +639,7 @@ table.data a:hover {
 .fields dd {
   margin: 0;
   font-variant-numeric: tabular-nums;
+  overflow-wrap: break-word;
 }
 
 .fields dd.mono {
@@ -683,17 +740,8 @@ table.data a:hover {
   }
 
   .index-grid,
-  .stats,
   .fields {
     grid-template-columns: 1fr 1fr;
-  }
-
-  .fields div:nth-last-child(-n + 2) {
-    border-bottom: 1px solid var(--rule);
-  }
-
-  .fields div:last-child {
-    border-bottom: 0;
   }
 }
 
@@ -702,6 +750,22 @@ table.data a:hover {
   .stats,
   .fields {
     grid-template-columns: 1fr;
+  }
+
+  .fields div {
+    border-right: 0;
+  }
+
+  .fields div:last-child:nth-child(odd) {
+    grid-column: auto;
+  }
+
+  .fields div:nth-last-child(2):nth-child(odd) {
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .fields div:last-child {
+    border-bottom: 0;
   }
 
   h1 {

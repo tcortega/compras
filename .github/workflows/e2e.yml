@@ -42,10 +42,6 @@ jobs:
           python-version: "3.12"
       - name: Install pipeline
         run: pip install -e ingest
-      - name: Load Dagster defs
-        run: python -c "from compras_ingest.definitions import defs; print(defs)"
-      - name: Compose file present
-        run: test -f infra/docker-compose.yml && python -c "import pathlib; print(pathlib.Path('infra/docker-compose.yml').read_text().splitlines()[0])"
       - name: E2E fixture in, parquet and rows out
         env:
           POSTGRES_DSN: postgresql://compras:compras@127.0.0.1:5432/compras

@@ -31,12 +31,11 @@ class PipelineResult:
 
 def run_compras_slice(settings: Settings, store: LandingStore | None = None) -> PipelineResult:
     store = store or LandingStore(settings)
-    apply_schema(settings)
-    catalog_ref, catalog_df = land_catalogo_cnbs(settings, store)
-    _ = catalog_ref
-    cnpj_df = pl.DataFrame()
+    catalog_ref, _catalog_df = land_catalogo_cnbs(settings, store)
+    receita_ref: dict = {"source": "receita_cnpj", "skipped": True}
     if settings.receita_cnpj_path is not None:
-        _, cnpj_df = land_receita_cnpj(settings, store)
+        landed_cnpj, _cnpj_df = land_receita_cnpj(settings, store)
+        receita_ref = landed_cnpj.as_dict()
     landing, raw = land_compras_gov(settings, store)
     compras_ids = set()
     if "numerocontrolepncp" in raw.columns:
@@ -44,26 +43,99 @@ def run_compras_slice(settings: Settings, store: LandingStore | None = None) -> 
     ocds_report = {}
     if settings.ocds_path is not None:
         _, ocds_report = land_ocds(settings, compras_ids, store)
-    frames = [catalog_df]
-    if settings.catalogo_cnbs_dir is not None:
-        frames = [read_csv(p) for p in sorted(settings.catalogo_cnbs_dir.glob("*.csv"))]
-    catalog = load_catalog(frames)
+    items, warehouse = warehouse_from_landing(
+        settings,
+        store,
+        landing.as_dict(),
+        catalog_ref.as_dict(),
+        receita_ref,
+    )
+    flags, flag_rows = run_tier1_and_write_flags(settings, store, items)
+    return PipelineResult(
+        landing,
+        ocds_report,
+        warehouse["entities"],
+        warehouse["facts"],
+        flag_rows,
+        items,
+        flags,
+    )
+
+
+def warehouse_from_landing(
+    settings: Settings,
+    store: LandingStore,
+    compras: dict,
+    catalog: dict,
+    receita: dict | None = None,
+) -> tuple[pl.DataFrame, dict]:
+    """Normalize landed parquet and write warehouse rows. Does not land or detect."""
+    apply_schema(settings)
+    raw = store.read_parquet(_require_key(compras, "compras_gov"))
+    catalog_df = store.read_parquet(_require_key(catalog, "catalogo_cnbs"))
+    catalog_model = load_catalog([catalog_df])
     units = load_unit_table()
+    cnpj_df = _read_optional_landing(store, receita)
+    snapshot_id = str(compras.get("sha256") or "")
+    if not snapshot_id:
+        raise ValueError("compras_gov landing missing sha256")
     items = normalize_frame(
         raw,
-        catalog,
+        catalog_model,
         units,
-        cnpj_df if not cnpj_df.is_empty() else None,
-        landing.sha256,
+        cnpj_df,
+        snapshot_id,
         settings.methodology_version,
     )
     entity_counts = write_entities(settings, items)
     fact_rows = write_facts(settings, items)
+    part = str(compras.get("partition_date") or "")
+    if not part:
+        from datetime import datetime, timezone
+
+        part = datetime.now(timezone.utc).date().isoformat()
+    items_ref = store.write_parquet("normalized_items", part, items)
+    return items, {
+        "landing": {
+            "source": compras.get("source"),
+            "sha256": snapshot_id,
+            "key": compras.get("key"),
+            "uri": compras.get("uri"),
+            "partition_date": compras.get("partition_date"),
+        },
+        "entities": entity_counts,
+        "facts": fact_rows,
+        "items_key": items_ref.key,
+        "snapshot_id": snapshot_id,
+    }
+
+
+def run_tier1_and_write_flags(
+    settings: Settings,
+    store: LandingStore,
+    items: pl.DataFrame,
+) -> tuple[pl.DataFrame, int]:
+    """Run internal Tier 1 detectors and persist flags. Does not land or normalize."""
     sanctions = _load_sanctions(settings)
     landing_records = _collect_landing_records(store, "compras_gov")
     flags = run_tier1(items, landing_records=landing_records, sanctions=sanctions)
-    flag_rows = write_flags(settings, flags, items)
-    return PipelineResult(landing, ocds_report, entity_counts, fact_rows, flag_rows, items, flags)
+    return flags, write_flags(settings, flags, items)
+
+
+def _require_key(ref: dict | None, name: str) -> str:
+    if not ref or ref.get("skipped"):
+        raise ValueError(f"{name} landing was skipped or missing")
+    key = ref.get("key")
+    if not key:
+        raise ValueError(f"{name} landing missing key")
+    return str(key)
+
+
+def _read_optional_landing(store: LandingStore, ref: dict | None) -> pl.DataFrame | None:
+    if not ref or ref.get("skipped") or not ref.get("key"):
+        return None
+    df = store.read_parquet(str(ref["key"]))
+    return None if df.is_empty() else df
 
 
 def _load_sanctions(settings: Settings) -> pl.DataFrame | None:

@@ -779,7 +779,6 @@ def _assert_refetch_schedule(settings: Settings) -> None:
         SCHEDULE_NAME,
         SCHEDULE_TZ,
         defs,
-        trailing_window_refetch_job,
     )
     from compras_ingest.refetch import REFETCH_SOURCES
     from compras_ingest.settings import TRAILING_WINDOW_DAYS
@@ -799,16 +798,17 @@ def _assert_refetch_schedule(settings: Settings) -> None:
     target = found.job_name or getattr(found.job, "name", "")
     if target != JOB_NAME:
         raise SystemExit(f"schedule does not target {JOB_NAME}: {target}")
+    job = defs.resolve_job_def(JOB_NAME)
     store = LandingStore(settings)
     before = {src: set(store.list_parquet(src)) for src in REFETCH_SOURCES}
-    result = trailing_window_refetch_job.execute_in_process()
+    result = job.execute_in_process()
     if not result.success:
         raise SystemExit("trailing_window_refetch job failed")
     mid = {src: set(store.list_parquet(src)) for src in REFETCH_SOURCES}
     extra = {src: sorted(mid[src] - before[src]) for src in REFETCH_SOURCES if mid[src] - before[src]}
     if extra:
         raise SystemExit(f"refetch wrote new landing hashes: {extra}")
-    result2 = trailing_window_refetch_job.execute_in_process()
+    result2 = job.execute_in_process()
     if not result2.success:
         raise SystemExit("second trailing_window_refetch job failed")
     after = {src: set(store.list_parquet(src)) for src in REFETCH_SOURCES}

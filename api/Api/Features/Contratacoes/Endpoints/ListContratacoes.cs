@@ -17,6 +17,9 @@ public static partial class ListContratacoes
 		public Guid? OrgaoId { get; init; }
 
 		[FromQuery]
+		public Guid? FornecedorId { get; init; }
+
+		[FromQuery]
 		public int? Ano { get; init; }
 
 		[FromQuery]
@@ -45,6 +48,12 @@ public static partial class ListContratacoes
 
 		if (command.OrgaoId is { } orgaoId)
 			rows = rows.Where(c => c.OrgaoId == orgaoId);
+		if (command.FornecedorId is { } fornecedorId)
+			rows = rows.Where(c =>
+				c.Items.Any(i =>
+					i.FornecedorId == fornecedorId
+					&& !i.Suspended
+					&& (i.Fornecedor == null || !i.Fornecedor.Suspended)));
 		if (command.Ano is { } ano)
 			rows = rows.Where(c => c.Ano == ano);
 		if (command.Modalidade is { Length: > 0 } modalidade)

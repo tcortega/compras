@@ -1,24 +1,27 @@
-import { SNAPSHOT_ID } from '@/lib/copy'
 import { formatDate, formatSource } from '@/lib/format'
 
 export function SourceLine({
   source,
-  snapshotId = SNAPSHOT_ID,
+  snapshotId,
   methodologyVersion,
   publishedAt,
 }: {
   source?: string
-  snapshotId?: string
+  snapshotId?: string | null
   methodologyVersion: string
   publishedAt?: string | null
 }) {
   return (
     <p className="source">
       <span>Fonte: {source ? formatSource(source) : 'recorte ingerido'}</span>
-      <span>
-        Snapshot {snapshotId}
-        {publishedAt ? ` · publicado em ${formatDate(publishedAt)}` : ''}
-      </span>
+      {snapshotId ? (
+        <span>
+          Snapshot {snapshotId}
+          {publishedAt ? ` · publicado em ${formatDate(publishedAt)}` : ''}
+        </span>
+      ) : publishedAt ? (
+        <span>Publicado em {formatDate(publishedAt)}</span>
+      ) : null}
       <span>Metodologia {methodologyVersion}</span>
     </p>
   )

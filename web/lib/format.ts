@@ -12,19 +12,29 @@ const decFmt = new Intl.NumberFormat('pt-BR', {
   maximumFractionDigits: 4,
 })
 
-export function formatMoney(value: number | null | undefined): string {
-  if (value == null || Number.isNaN(value)) return copy.noValue
-  return moneyFmt.format(value)
+function asNumber(value: number | string | null | undefined): number | null {
+  if (value == null || value === '') return null
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null
+  const n = Number(value.trim().replace(/\s/g, '').replace(',', '.'))
+  return Number.isFinite(n) ? n : null
 }
 
-export function formatNumber(value: number | null | undefined): string {
-  if (value == null || Number.isNaN(value)) return copy.noValue
-  return intFmt.format(value)
+export function formatMoney(value: number | string | null | undefined): string {
+  const n = asNumber(value)
+  if (n == null) return copy.noValue
+  return moneyFmt.format(n)
 }
 
-export function formatDecimal(value: number | null | undefined): string {
-  if (value == null || Number.isNaN(value)) return copy.noValue
-  return decFmt.format(value)
+export function formatNumber(value: number | string | null | undefined): string {
+  const n = asNumber(value)
+  if (n == null) return copy.noValue
+  return intFmt.format(n)
+}
+
+export function formatDecimal(value: number | string | null | undefined): string {
+  const n = asNumber(value)
+  if (n == null) return copy.noValue
+  return decFmt.format(n)
 }
 
 export function formatCnpj(raw: string): string {
@@ -34,10 +44,11 @@ export function formatCnpj(raw: string): string {
 }
 
 const LOCAL_DATE = /^(\d{4})-(\d{2})-(\d{2})$/
+const UTC_MIDNIGHT = /^(\d{4})-(\d{2})-(\d{2})T00:00:00(?:\.\d+)?(?:Z|[+-]00:00)$/
 
 export function formatDate(iso: string | null | undefined): string {
   if (!iso) return copy.noValue
-  const calendar = LOCAL_DATE.exec(iso)
+  const calendar = LOCAL_DATE.exec(iso) ?? UTC_MIDNIGHT.exec(iso)
   if (calendar) {
     const [, year, month, day] = calendar
     return `${day}/${month}/${year}`
@@ -62,7 +73,7 @@ export function formatQuarter(quarter: string | null): string {
 
 export function formatSource(source: string): string {
   if (source === 'pncp') return 'PNCP'
-  if (source === 'compras.gov.br') return 'Compras.gov.br'
+  if (source === 'compras.gov.br' || source === 'compras_gov') return 'Compras.gov.br'
   return source
 }
 

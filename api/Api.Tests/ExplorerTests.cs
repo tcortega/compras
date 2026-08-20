@@ -1586,6 +1586,48 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Coverage = s_petropolisOrgaoCoverage,
 	};
 
+	private static readonly Coverage s_ipatingaOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "MG",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_ipatinga = new()
+	{
+		Id = SliceIds.OrgaoIpatinga,
+		Cnpj = "19876424000142",
+		RazaoSocial = "Municipio de Ipatinga",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "MG",
+		MunicipioIbge = "3131307",
+		MunicipioNome = "Ipatinga",
+		Coverage = s_ipatingaOrgaoCoverage,
+	};
+
+	private static readonly Coverage s_macaeOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "RJ",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_macae = new()
+	{
+		Id = SliceIds.OrgaoMacae,
+		Cnpj = "29115474000160",
+		RazaoSocial = "Municipio de Macae",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "RJ",
+		MunicipioIbge = "3302403",
+		MunicipioNome = "Macae",
+		Coverage = s_macaeOrgaoCoverage,
+	};
+
 	private static readonly ItemRecord s_itemDourados = new()
 	{
 		Id = SliceIds.ItemDourados,
@@ -2314,6 +2356,58 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		},
 	};
 
+	private static readonly ItemRecord s_itemIpatinga = new()
+	{
+		Id = SliceIds.ItemIpatinga,
+		ContratacaoId = SliceIds.ContratacaoIpatinga,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Betoneira",
+		Catmat = "487731",
+		Catser = null,
+		Quantidade = 1m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 3890m,
+		ValorTotal = 3890m,
+		Uf = "MG",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "MG",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
+	private static readonly ItemRecord s_itemMacae = new()
+	{
+		Id = SliceIds.ItemMacae,
+		ContratacaoId = SliceIds.ContratacaoMacae,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Colete Identificacao",
+		Catmat = "482286",
+		Catser = null,
+		Quantidade = 36m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 57.99m,
+		ValorTotal = 2087.64m,
+		Uf = "RJ",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "RJ",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
 	[Fact]
 	public async Task FullCycle_BrowseMunicipioAndUf()
 	{
@@ -2754,6 +2848,8 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "1502400", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3122306", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3303906", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3131307", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3302403", StringComparison.Ordinal));
 
 		var canoasPage = await client.ListOrgaos(municipioIbge: "4304606", quarter: SliceIds.Quarter);
 		Assert.Equal(
@@ -2910,6 +3006,32 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 			petropolisPage.Coverage);
 		Assert.Equal(new[] { s_petropolis }, petropolisPage.Items);
 		await ValidateOrgao(client, s_petropolis);
+
+		var ipatingaPage = await client.ListOrgaos(municipioIbge: "3131307", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			ipatingaPage.Coverage);
+		Assert.Equal(new[] { s_ipatinga }, ipatingaPage.Items);
+		await ValidateOrgao(client, s_ipatinga);
+
+		var macaePage = await client.ListOrgaos(municipioIbge: "3302403", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			macaePage.Coverage);
+		Assert.Equal(new[] { s_macae }, macaePage.Items);
+		await ValidateOrgao(client, s_macae);
 
 		var spItems = await client.ListItems(uf: "SP", quarter: SliceIds.Quarter);
 		Assert.Equal(
@@ -3399,6 +3521,22 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 			OrgaoRazaoSocial = "Municipio de Petropolis",
 			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
 			ContratacaoPncpId = "29138344000143-1-000165/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemIpatinga,
+			OrgaoId = SliceIds.OrgaoIpatinga,
+			OrgaoRazaoSocial = "Municipio de Ipatinga",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "19876424000142-1-000142/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemMacae,
+			OrgaoId = SliceIds.OrgaoMacae,
+			OrgaoRazaoSocial = "Municipio de Macae",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "29115474000160-1-000119/2024",
 		});
 
 		var empty = new Coverage

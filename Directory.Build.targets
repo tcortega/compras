@@ -1,0 +1,8 @@
+<Project>
+  <Target Name="_SetupSourceControlMetadata" AfterTargets="InitializeSourceControlInformation">
+	<ItemGroup>
+	  <AssemblyMetadata Include="SourceRevision" Value="$(SourceRevisionId)" />
+	  <AssemblyMetadata Include="SourceBranch" Value="$(SourceBranchName)" />
+	</ItemGroup>
+  </Target>
+</Project>

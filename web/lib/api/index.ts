@@ -3,7 +3,7 @@ import { createHttpClient } from '@/lib/api/http'
 import { stubClient } from '@/lib/api/stub'
 import { SLICE_YEAR, SLICE_YEAR_CANDIDATES } from '@/lib/copy'
 import { fillCoverage, overlaySlice } from '@/lib/coverage'
-import type { CoberturaPayload, Coverage, ExplorerClient, SkipTakePage } from '@/lib/types'
+import type { CoberturaPayload, Coverage, ExplorerClient, SearchPage, SkipTakePage } from '@/lib/types'
 
 export { ids } from '@/lib/api/fixtures'
 
@@ -52,6 +52,22 @@ async function withSlice<T>(page: SkipTakePage<T>): Promise<SkipTakePage<T>> {
   return { ...page, coverage: overlaySlice(page.coverage, slice) }
 }
 
+async function withSearch(page: SearchPage): Promise<SearchPage> {
+  const slice = await loadSliceCoverage()
+  return {
+    ...page,
+    coverage: {
+      n: slice.n,
+      uf: page.source === 'meilisearch' || !page.coverage.uf ? null : page.coverage.uf,
+      quarter: page.coverage.quarter ?? slice.quarter,
+      methodologyVersion: page.coverage.methodologyVersion || slice.methodologyVersion,
+    },
+    orgaos: { ...page.orgaos, coverage: overlaySlice(page.orgaos.coverage, slice) },
+    fornecedores: { ...page.fornecedores, coverage: overlaySlice(page.fornecedores.coverage, slice) },
+    items: { ...page.items, coverage: overlaySlice(page.items.coverage, slice) },
+  }
+}
+
 export const api: ExplorerClient = {
   listOrgaos: (req) => getClient().listOrgaos(req).then(withSlice),
   getOrgao: (id) => getClient().getOrgao(id),
@@ -62,6 +78,7 @@ export const api: ExplorerClient = {
   listItems: (req) => getClient().listItems(req).then(withSlice),
   getItem: (id) => getClient().getItem(id),
   getCobertura: () => getClient().getCobertura(),
+  search: (req) => getClient().search(req).then(withSearch),
 }
 
 export async function safeDetail<T>(load: () => Promise<T>): Promise<T | null> {

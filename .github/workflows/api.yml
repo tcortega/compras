@@ -7,6 +7,21 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      meilisearch:
+        image: getmeili/meilisearch:v1.11
+        env:
+          MEILI_MASTER_KEY: test-meili-master-key-32chars-ok
+        ports:
+          - 7700:7700
+        options: >-
+          --health-cmd "wget -qO- http://127.0.0.1:7700/health || exit 1"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      MEILI_URL: http://127.0.0.1:7700
+      MEILI_MASTER_KEY: test-meili-master-key-32chars-ok
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4

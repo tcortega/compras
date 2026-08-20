@@ -122,6 +122,16 @@ export type CoberturaPayload = {
   coverage: Coverage
 }
 
+export type SearchSource = 'meilisearch' | 'unset' | 'unavailable' | 'warehouse'
+
+export type SearchPage = {
+  orgaos: SkipTakePage<Orgao>
+  fornecedores: SkipTakePage<Fornecedor>
+  items: SkipTakePage<Item>
+  coverage: Coverage
+  source: SearchSource
+}
+
 export type ExplorerClient = {
   listOrgaos: (req: PageRequest) => Promise<SkipTakePage<Orgao>>
   getOrgao: (id: string) => Promise<Orgao>
@@ -132,6 +142,7 @@ export type ExplorerClient = {
   listItems: (req: PageRequest) => Promise<SkipTakePage<Item>>
   getItem: (id: string) => Promise<Item>
   getCobertura: () => Promise<CoberturaPayload>
+  search: (req: PageRequest) => Promise<SearchPage>
 }
 
 export function isPublished<T extends { suspended?: boolean }>(row: T): boolean {

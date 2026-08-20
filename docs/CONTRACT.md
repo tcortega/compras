@@ -277,6 +277,14 @@ No ranking.
 - `GET /api/contratacoes/{id}`
 - `GET /api/items`
 - `GET /api/items/{id}`
+- `GET /api/busca` reads the Meilisearch index of `item.descricao`, `fornecedor.razaoSocial`, and `orgao.razaoSocial`.
+Documents are factual text only.
+The document primary key is `{kind}_{entityId}` so re-sync is idempotent and Meilisearch accepts the identifier.
+No flag fields, no detector scores, no adjacency, and no CPF.
+Empty `q` keeps the slice coverage denominator and invents no hits.
+A mixed-UF search leaves `coverage.uf` empty.
+When `MEILI_URL` is unset or Meilisearch is down the handler returns empty pages and `source` is `unset` or `unavailable`.
+It does not invent hits.
 - `GET /api/cobertura` returns municípios ingeridos (nome, uf, ibge), years, row counts, live CATMAT exact-integer catalog join (`catmatCoveragePercent`, `nCoded`, `nItems`), per-source landing freshness (`compras_gov`, `receita_cnpj`, `ocds`, `pncp_consulta`, `tce_sp`, `tce_rs`, `cgu_ceis_cnep`), and the coverage denominator.
 A mixed-UF slice leaves `coverage.uf` empty.
 It is not a national total.

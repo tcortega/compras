@@ -177,6 +177,19 @@ public sealed record ItemPage
 	public int Total { get; init; }
 }
 
+public sealed record SearchPage
+{
+	public required OrgaoPage Orgaos { get; init; }
+
+	public required FornecedorPage Fornecedores { get; init; }
+
+	public required ItemPage Items { get; init; }
+
+	public required Coverage Coverage { get; init; }
+
+	public required string Source { get; init; }
+}
+
 public sealed record ContratacaoDetail
 {
 	public required ContratacaoRecord Contratacao { get; init; }

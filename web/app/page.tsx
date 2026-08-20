@@ -2,6 +2,7 @@ import { SearchForm } from '@/components/SearchForm'
 import { Shell } from '@/components/Shell'
 import { api } from '@/lib/api'
 import { copy, SLICE_LABEL } from '@/lib/copy'
+import { coverageParts } from '@/lib/coverage'
 import { formatNumber } from '@/lib/format'
 import { routes } from '@/lib/routes'
 
@@ -30,24 +31,26 @@ export default async function HomePage() {
         <p className="lede">
           Busca, listagem e ficha de órgão, fornecedor, contratação e item.
           Cada agregado traz o denominador da cobertura.
-          Sem ranking e sem juízo.
+          Sem classificação de órgãos ou fornecedores, sem pontuação e sem juízo.
         </p>
         <SearchForm />
         <div className="notice">
-          <p>{copy.coverageIncomplete}</p>
           <p>{copy.coverageExempt}</p>
         </div>
       </section>
       <section className="index-grid" aria-label="Totais do recorte">
-        {cards.map((card) => (
-          <a key={card.href} className="index-card" href={card.href}>
-            <p className="kicker">{card.kicker}</p>
-            <strong>{formatNumber(card.total)}</strong>
-            <span>
-              n={card.coverage.n} · {card.coverage.uf ?? 'UF mista'} · metodologia {card.coverage.methodologyVersion}
-            </span>
-          </a>
-        ))}
+        {cards.map((card) => {
+          const parts = coverageParts(card.coverage)
+          return (
+            <a key={card.href} className="index-card" href={card.href}>
+              <p className="kicker">{card.kicker}</p>
+              <strong>{formatNumber(card.total)}</strong>
+              <span>
+                {parts.n} · {parts.geo} · {parts.when} · {parts.method}
+              </span>
+            </a>
+          )
+        })}
       </section>
     </Shell>
   )

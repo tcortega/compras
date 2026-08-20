@@ -47,9 +47,16 @@ export function formatDate(iso: string | null | undefined): string {
 
 export function formatQuarter(quarter: string | null): string {
   if (!quarter) return 'vários trimestres'
-  const m = /^(\d{4})-Q([1-4])$/.exec(quarter)
-  if (!m) return quarter
-  return `${m[2]}º trim. ${m[1]}`
+  const q = /^(\d{4})-Q([1-4])$/.exec(quarter)
+  if (q) return `${q[2]}º trim. ${q[1]}`
+  if (/^\d{4}$/.test(quarter)) return `${quarter} (vários trimestres)`
+  return quarter
+}
+
+export function formatSource(source: string): string {
+  if (source === 'pncp') return 'PNCP'
+  if (source === 'compras.gov.br') return 'Compras.gov.br'
+  return source
 }
 
 export function formatEsfera(esfera: string): string {
@@ -66,10 +73,4 @@ export function formatPoder(poder: string): string {
     judiciario: 'Judiciário',
   }
   return map[poder] ?? poder
-}
-
-export function yearFromQuarter(quarter: string | null): string | null {
-  if (!quarter) return null
-  const m = /^(\d{4})/.exec(quarter)
-  return m?.[1] ?? null
 }

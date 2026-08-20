@@ -1,6 +1,6 @@
 import { METHOD_VERSION } from '@/lib/copy'
 import type { Coverage, Item } from '@/lib/types'
-import { formatQuarter, yearFromQuarter } from '@/lib/format'
+import { formatQuarter } from '@/lib/format'
 
 export function emptyCoverage(): Coverage {
   return {
@@ -15,10 +15,11 @@ export function coverageFromItems(items: Item[]): Coverage {
   if (items.length === 0) return emptyCoverage()
   const ufs = [...new Set(items.map((i) => i.uf))]
   const quarters = [...new Set(items.map((i) => i.quarter))]
+  const years = [...new Set(quarters.map((q) => q.slice(0, 4)))]
   return {
     n: items.length,
     uf: ufs.length === 1 ? (ufs[0] ?? null) : null,
-    quarter: quarters.length === 1 ? (quarters[0] ?? null) : null,
+    quarter: quarters.length === 1 ? (quarters[0] ?? null) : years.length === 1 ? (years[0] ?? null) : null,
     methodologyVersion: items[0]?.methodologyVersion ?? METHOD_VERSION,
   }
 }
@@ -39,14 +40,10 @@ export function readCoverage(raw: unknown): Coverage {
 }
 
 export function coverageParts(c: Coverage): { n: string; geo: string; when: string; method: string } {
-  const year = yearFromQuarter(c.quarter)
-  let when = 'período misto'
-  if (c.quarter) when = formatQuarter(c.quarter)
-  else if (year) when = `${year} (vários trimestres)`
   return {
     n: `n=${c.n}`,
-    geo: c.uf ? `UF ${c.uf}` : 'UF mista',
-    when,
+    geo: c.n === 0 ? 'filtro sem registros' : c.uf ? `UF ${c.uf}` : 'UF mista',
+    when: c.n === 0 ? 'neste recorte' : c.quarter ? formatQuarter(c.quarter) : 'vários trimestres',
     method: `metodologia ${c.methodologyVersion}`,
   }
 }

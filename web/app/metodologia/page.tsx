@@ -12,7 +12,7 @@ export default function MetodologiaPage() {
       <p className="kicker">Versão {METHOD_VERSION}</p>
       <h1>Metodologia do explorador</h1>
       <div className="prose">
-        <p>Fase 2: busca, listagem e ficha. Sem pontuação, sem ranking e sem publicação de flags.</p>
+        <p>Fase 2: busca, listagem e ficha. Sem pontuação, sem classificação de órgãos ou fornecedores e sem alertas públicos.</p>
         <p>As rotas lidas são GET /api/orgaos, /api/fornecedores, /api/contratacoes e /api/items, com detalhe por id.</p>
         <p>Listas usam PageRequest com skip e take no servidor. Não há ordenação por score.</p>
         <p>Páginas de entidade são geradas com ISR (revalidate 3600) para caber atrás de CDN.</p>

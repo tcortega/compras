@@ -20,7 +20,7 @@ export default async function OrgaosPage({ searchParams }: { searchParams: Promi
     <Shell coverage={page.coverage} current={routes.orgaos}>
       <p className="kicker">Coleção</p>
       <h1>Órgãos</h1>
-      <p className="lede">Compradores do recorte publicado. Atribuição institucional, sem ranking.</p>
+      <p className="lede">Compradores do recorte publicado. Atribuição institucional, sem classificação de órgãos ou fornecedores.</p>
       <ListFilters
         action={routes.orgaos}
         q={req.q}

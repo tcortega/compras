@@ -23,10 +23,11 @@ export function DataTable<T extends { id: string }>({
 }) {
   if (rows.length === 0) {
     return (
-      <div>
+      <div className="table-wrap">
         <p className="empty">{copy.empty}</p>
         <div className="table-foot">
           <CoverageChip coverage={coverage} />
+          {footer}
         </div>
       </div>
     )

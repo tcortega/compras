@@ -1,6 +1,6 @@
 import { Money } from '@/components/Money'
 import type { Column } from '@/components/DataTable'
-import { formatCnpj, formatDate, formatEsfera, formatNumber } from '@/lib/format'
+import { formatCnpj, formatDate, formatEsfera, formatNumber, formatSource } from '@/lib/format'
 import { routes } from '@/lib/routes'
 import type { Contratacao, Fornecedor, Item, Orgao } from '@/lib/types'
 
@@ -80,7 +80,7 @@ export const contratacaoColumns: Column<Contratacao>[] = [
   {
     key: 'fonte',
     header: 'Fonte',
-    cell: (row) => row.source,
+    cell: (row) => formatSource(row.source),
   },
 ]
 

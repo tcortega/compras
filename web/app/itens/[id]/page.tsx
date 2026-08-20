@@ -5,7 +5,7 @@ import { Shell } from '@/components/Shell'
 import { SourceLine } from '@/components/SourceLine'
 import { Stat } from '@/components/Stat'
 import { api, safeDetail } from '@/lib/api'
-import { formatCnpj, formatDecimal, formatNumber, formatQuarter } from '@/lib/format'
+import { formatCnpj, formatMoney, formatNumber, formatQuarter } from '@/lib/format'
 import { routes } from '@/lib/routes'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
@@ -67,8 +67,8 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
       />
       <div className="stats">
         <Stat
-          label="Quantidade"
-          value={`${formatNumber(row.quantidade)} ${row.unidadeMedida}`}
+          label={`Quantidade (${row.unidadeMedida})`}
+          value={formatNumber(row.quantidade)}
           coverage={row.coverage}
         />
         <Stat label="Valor unitário" value={<Money value={row.valorUnitario} />} coverage={row.coverage} />
@@ -76,7 +76,7 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
       </div>
       <p className="source">
         <span>
-          Quantidade × unitário = {formatDecimal(row.quantidade)} × {row.valorUnitario ?? 'n/d'} = {row.valorTotal ?? 'n/d'}.
+          Quantidade × unitário = {formatNumber(row.quantidade)} × {formatMoney(row.valorUnitario)} = {formatMoney(row.valorTotal)}.
         </span>
         <span>
           O denominador acima (n, UF, trimestre) conta itens do mesmo UF e trimestre neste recorte, não o país.

@@ -1,5 +1,5 @@
 import { SNAPSHOT_ID } from '@/lib/copy'
-import { formatDate } from '@/lib/format'
+import { formatDate, formatSource } from '@/lib/format'
 
 export function SourceLine({
   source,
@@ -14,7 +14,7 @@ export function SourceLine({
 }) {
   return (
     <p className="source">
-      <span>Fonte: {source ?? 'recorte ingerido'}</span>
+        <span>Fonte: {source ? formatSource(source) : 'recorte ingerido'}</span>
       <span>
         Snapshot {snapshotId}
         {publishedAt ? ` · publicado em ${formatDate(publishedAt)}` : ''}

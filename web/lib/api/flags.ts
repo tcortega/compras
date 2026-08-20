@@ -43,6 +43,7 @@ function readFlag(raw: unknown): FlagRecord {
     state,
     detectedAt: typeof o.detectedAt === 'string' ? o.detectedAt : '',
     notifiedAt: typeof o.notifiedAt === 'string' ? o.notifiedAt : null,
+    notifyArtifact: typeof o.notifyArtifact === 'string' ? o.notifyArtifact : null,
     publishAfter: typeof o.publishAfter === 'string' ? o.publishAfter : null,
     publishedAt: typeof o.publishedAt === 'string' ? o.publishedAt : null,
     delta: typeof o.delta === 'string' ? o.delta : '',
@@ -134,11 +135,15 @@ export async function createFlag(body: CreateFlagBody): Promise<FlagRecord> {
   )
 }
 
+const STAGING_NOTIFY_ARTIFACT = 'aviso-interno.txt'
+
 export async function applyFlagAction(id: string, action: FlagAction): Promise<FlagRecord> {
   if (usesStubApi()) return applyStoredAction(id, action)
   return readFlag(
     await apiJson<unknown>(`/api/internal/flags/${id}/${action}`, {
       method: 'POST',
+      headers: action === 'notify' ? { 'content-type': 'application/json' } : undefined,
+      body: action === 'notify' ? JSON.stringify({ artifact: STAGING_NOTIFY_ARTIFACT }) : undefined,
     }),
   )
 }

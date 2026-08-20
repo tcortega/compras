@@ -31,6 +31,7 @@ export type FlagRecord = {
   state: FlagState
   detectedAt: string
   notifiedAt: string | null
+  notifyArtifact: string | null
   publishAfter: string | null
   publishedAt: string | null
   delta: string
@@ -116,8 +117,10 @@ export const triageCopy = {
   precision: 'A precisão da Fase 0 é 9%. Alertas públicos permanecem fechados.',
   empty: 'Nenhum indício neste filtro.',
   holdConflict: 'A carência de 7 dias ainda não passou.',
+  transitionConflict: 'Não foi possível aplicar a transição.',
   labeled: 'Rótulo gravado em triage-labels.csv.',
   evidence: 'Documento de origem',
+  notifyArtifact: 'Registro de aviso',
   audit: 'Trilha de estados',
   timestamps: 'Marcas de tempo',
   labels: 'Rótulo da rubrica',

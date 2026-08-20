@@ -65,8 +65,8 @@ internal static class FlagAuditAt
 		if (long.TryParse(raw, out var ticks))
 			return Instant.FromUnixTimeTicks(ticks);
 
-		var text = raw.Trim().Replace(' ', 'T', StringComparison.Ordinal);
-		if (text.Length >= 3 && (text[^3] is '+' or '-') && text[^3..].Contains(':', StringComparison.Ordinal) is false)
+		var text = raw.Trim().Replace(' ', 'T');
+		if (text.Length >= 3 && (text[^3] is '+' or '-') && !text[^3..].Contains(':', StringComparison.Ordinal))
 			text = $"{text}:00";
 
 		var instant = InstantPattern.ExtendedIso.Parse(text);

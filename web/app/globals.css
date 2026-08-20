@@ -852,6 +852,33 @@ table.data a:hover {
   margin-top: 20px;
 }
 
+.triage-actions form {
+  margin: 0;
+}
+
+.triage-label-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn:disabled,
+.btn-ghost:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.btn:disabled:hover,
+.btn-ghost:disabled:hover {
+  background: var(--forest);
+  color: var(--forest-ink);
+}
+
+.btn-ghost:disabled:hover {
+  background: transparent;
+  color: var(--ink);
+}
+
 @media (max-width: 860px) {
   .wrap {
     width: min(var(--max), calc(100% - 32px));

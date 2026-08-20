@@ -22,16 +22,18 @@ export function DataTable<T extends { id: string }>({
   columns,
   coverage,
   footer,
+  empty,
 }: {
   rows: T[]
   columns: Column<T>[]
   coverage: Coverage
   footer?: ReactNode
+  empty?: string
 }) {
   if (rows.length === 0) {
     return (
       <div className="table-wrap">
-        <p className="empty">{copy.empty}</p>
+        <p className="empty">{empty ?? copy.empty}</p>
         <div className="table-foot">
           <CoverageChip coverage={coverage} />
           {footer}

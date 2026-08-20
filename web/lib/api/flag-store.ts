@@ -1,19 +1,31 @@
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import path from 'node:path'
 import { ApiError, ApiNotFoundError } from '@/lib/types'
-import {
-  FLAG_FRAMING,
-  type CreateFlagBody,
-  type FlagAction,
-  type FlagAuditRecord,
-  type FlagRecord,
-  type FlagState,
-} from '@/lib/flags'
+import { FLAG_FRAMING, type CreateFlagBody, type FlagAction, type FlagAuditRecord, type FlagRecord } from '@/lib/flags'
 
 type Stored = {
   flag: FlagRecord
   audit: FlagAuditRecord[]
 }
 
-const rows = new Map<string, Stored>()
+function storePath(): string {
+  return process.env.TRIAGE_FLAGS_PATH?.trim() || path.join('/tmp', 'compras-triage-flags.json')
+}
+
+function load(): Map<string, Stored> {
+  try {
+    const raw = JSON.parse(readFileSync(storePath(), 'utf8')) as Stored[]
+    return new Map(raw.map((row) => [row.flag.id, row]))
+  } catch {
+    return new Map()
+  }
+}
+
+function save(rows: Map<string, Stored>): void {
+  const file = storePath()
+  mkdirSync(path.dirname(file), { recursive: true })
+  writeFileSync(file, JSON.stringify([...rows.values()]), 'utf8')
+}
 
 function nowIso(): string {
   return new Date().toISOString()
@@ -37,7 +49,7 @@ function writeAudit(stored: Stored, fromState: string | null, toState: string, a
 }
 
 export function listStoredFlags(filter: { kind?: string; state?: string; itemId?: string }): FlagRecord[] {
-  return [...rows.values()]
+  return [...load().values()]
     .map((row) => row.flag)
     .filter((flag) => !filter.kind || flag.kind === filter.kind)
     .filter((flag) => !filter.state || flag.state === filter.state)
@@ -46,13 +58,13 @@ export function listStoredFlags(filter: { kind?: string; state?: string; itemId?
 }
 
 export function getStoredFlag(id: string): FlagRecord {
-  const row = rows.get(id)
+  const row = load().get(id)
   if (!row) throw new ApiNotFoundError('indicio', id)
   return row.flag
 }
 
 export function listStoredAudit(id: string): FlagAuditRecord[] {
-  const row = rows.get(id)
+  const row = load().get(id)
   if (!row) throw new ApiNotFoundError('indicio', id)
   return row.audit
 }
@@ -69,6 +81,7 @@ export function createStoredFlag(body: CreateFlagBody): FlagRecord {
     state: 'detected',
     detectedAt: at,
     notifiedAt: null,
+    notifyArtifact: null,
     publishAfter: null,
     publishedAt: null,
     delta: body.delta,
@@ -82,11 +95,14 @@ export function createStoredFlag(body: CreateFlagBody): FlagRecord {
   }
   const stored: Stored = { flag, audit: [] }
   writeAudit(stored, null, 'detected', at, body.delta)
+  const rows = load()
   rows.set(flag.id, stored)
+  save(rows)
   return flag
 }
 
 export function applyStoredAction(id: string, action: FlagAction): FlagRecord {
+  const rows = load()
   const stored = rows.get(id)
   if (!stored) throw new ApiNotFoundError('indicio', id)
   const at = nowIso()
@@ -94,6 +110,7 @@ export function applyStoredAction(id: string, action: FlagAction): FlagRecord {
   const next = transition(stored.flag, action, at)
   stored.flag = next
   writeAudit(stored, from, next.state, at)
+  save(rows)
   return next
 }
 
@@ -104,7 +121,13 @@ function transition(flag: FlagRecord, action: FlagAction, at: string): FlagRecor
   }
   if (action === 'notify') {
     if (flag.state !== 'internal_review') throw new ApiError(409, 'O indício não está em revisão interna.')
-    return { ...flag, state: 'notified', notifiedAt: at, publishAfter: addDays(at, 7) }
+    return {
+      ...flag,
+      state: 'notified',
+      notifiedAt: at,
+      publishAfter: addDays(at, 7),
+      notifyArtifact: 'aviso-interno.txt',
+    }
   }
   if (action === 'publish') {
     if (flag.state !== 'notified') throw new ApiError(409, 'O indício não está em notificado.')
@@ -122,10 +145,5 @@ function transition(flag: FlagRecord, action: FlagAction, at: string): FlagRecor
     if (flag.state !== 'published') throw new ApiError(409, 'O indício não está em publicado.')
     return { ...flag, state: 'retracted' }
   }
-  throw new ApiError(400, 'Pedido inválido')
-}
-
-export function parseAction(raw: string): FlagAction {
-  if (raw === 'review' || raw === 'notify' || raw === 'publish' || raw === 'resolve' || raw === 'retract') return raw
   throw new ApiError(400, 'Pedido inválido')
 }

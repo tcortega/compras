@@ -20,15 +20,22 @@ from compras_ingest.official import (
     PNCP_ITENS_PATH,
     PNCP_PUBLICACAO_PATH,
     RFB_SHARE_URL,
+    TCE_RS_EXAMPLE_URL,
+    TCE_RS_HOSTS,
+    TCE_RS_LEIAUTE_URL,
     TCE_SP_HOSTS,
     TCE_SP_LISTING_URL,
     PncpOfficial,
     assert_official_host,
+    ckan_zip_from_package,
     licitacao_zip_from_listing,
     resolve_ocds_feed,
     resolve_pncp_consulta,
     resolve_receita_index,
+    resolve_tce_rs_licitacon,
     resolve_tce_sp_licitacao,
+    tce_rs_ckan_url,
+    tce_rs_portal_url,
 )
 from compras_ingest.pipeline import _collect_landing_records, land_second_snapshot, run_compras_slice
 from compras_ingest.settings import Settings
@@ -42,6 +49,9 @@ from compras_ingest.sources.pncp_consulta import (
     land_pncp_consulta,
 )
 from compras_ingest.sources.receita_cnpj import cnpj_basicos_from_frame, land_receita_cnpj
+from compras_ingest.sources.tce_rs_licitacon import SOURCE as TCE_RS_SOURCE
+from compras_ingest.sources.tce_rs_licitacon import TABLE_COL as TCE_RS_TABLE
+from compras_ingest.sources.tce_rs_licitacon import land_tce_rs_licitacon
 from compras_ingest.sources.tce_sp_licitacao import SOURCE as TCE_SP_SOURCE
 from compras_ingest.sources.tce_sp_licitacao import land_tce_sp_licitacao
 from compras_ingest.warehouse import (
@@ -64,11 +74,31 @@ from compras_normalize.text import fold, parse_decimal
 ORGAO_CNPJ = "29477000000180"
 PNCP_ID = "29477000000180-1-2024-000001"
 RAW_CPF = "12345678901"
-LANDED_SOURCES = ("compras_gov", "ocds", "receita_cnpj", "receita_cnpj_socios", "pncp_consulta", TCE_SP_SOURCE)
+LANDED_SOURCES = (
+    "compras_gov",
+    "ocds",
+    "receita_cnpj",
+    "receita_cnpj_socios",
+    "pncp_consulta",
+    TCE_SP_SOURCE,
+    TCE_RS_SOURCE,
+)
 TCE_WINNER_CNPJ = "34.914.897/0001-80"
 TCE_LOSER_CNPJ = "11.021.249/0001-08"
 TCE_OTHER_CNPJ = "00.000.000/0001-91"
 TCE_LOSER_PROPOSTA = "32250,0"
+TCE_RS_WINNER_CNPJ = "03722885000120"
+TCE_RS_LOSER_CNPJ = "91549055000100"
+TCE_RS_LOSER_PROPOSTA = "5493164,86"
+TCE_RS_TABLES = {
+    "LICITANTE",
+    "PROPOSTA",
+    "LOTE_PROPOSTA",
+    "ITEM_PROPOSTA",
+    "LICITACAO",
+    "LOTE",
+    "ITEM",
+}
 PNCP_COMPRA_1 = "29477000000180-1-000001/2024"
 PNCP_COMPRA_2 = "29477000000180-1-000002/2024"
 EXTRA_ORGAOS = (
@@ -86,8 +116,10 @@ def main() -> int:
     _assert_landing(settings, result.landing.sha256)
     _assert_tier_a_landing(settings, result.ocds_report)
     _assert_tce_sp_landing(settings)
+    _assert_tce_rs_landing(settings)
     _assert_write_once(settings)
     _assert_tce_sp_not_public(settings)
+    _assert_tce_rs_not_public(settings)
     orgao = fetch_one_orgao(settings, ORGAO_CNPJ)
     if orgao is None:
         raise SystemExit(f"missing orgao {ORGAO_CNPJ}")
@@ -144,6 +176,7 @@ def main() -> int:
     print(f"official_rfb={official['rfb_index']}")
     print(f"official_pncp={official['pncp_consulta']}")
     print(f"official_tce_sp={official['tce_sp_zip']}")
+    print(f"official_tce_rs={official['tce_rs_zip']}")
     print(f"orgao={orgao['cnpj']} contratacao={contratacao['pncpId']} items={len(items)}")
     print(f"flags={sorted(kinds)}")
     return 0
@@ -318,6 +351,25 @@ def _assert_official_urls(settings: Settings) -> dict:
     if f"licitacao-{settings.tce_sp_year}-{settings.tce_sp_month:02d}" not in tce.zip_url:
         raise SystemExit(f"TCE-SP zip is not the requested year/month: {tce.zip_url}")
     _assert_tce_sp_host_refused()
+    try:
+        tce_rs = resolve_tce_rs_licitacon(settings.tce_rs_year, fetch=False)
+    except Exception as exc:
+        raise SystemExit(f"official URL resolve failed: {exc}") from exc
+    if tce_rs.portal_url != tce_rs_portal_url(settings.tce_rs_year):
+        raise SystemExit(f"TCE-RS portal URL is not official: {tce_rs.portal_url}")
+    if tce_rs.ckan_url != tce_rs_ckan_url(settings.tce_rs_year):
+        raise SystemExit(f"TCE-RS CKAN URL is not official: {tce_rs.ckan_url}")
+    if tce_rs.example_url != TCE_RS_EXAMPLE_URL:
+        raise SystemExit(f"TCE-RS example remessa URL is not official: {tce_rs.example_url}")
+    if tce_rs.leiaute_url != TCE_RS_LEIAUTE_URL:
+        raise SystemExit(f"TCE-RS leiaute URL is not official: {tce_rs.leiaute_url}")
+    if tce_rs.zip_url != TCE_RS_EXAMPLE_URL:
+        raise SystemExit(f"default TCE-RS zip is not the official example remessa: {tce_rs.zip_url}")
+    if "dados.tce.rs.gov.br" not in tce_rs.ckan_url:
+        raise SystemExit(f"TCE-RS CKAN host is not official: {tce_rs.ckan_url}")
+    if "tcers.tc.br" not in tce_rs.example_url or "tcers.tc.br" not in tce_rs.leiaute_url:
+        raise SystemExit("TCE-RS example or leiaute host is not official")
+    _assert_tce_rs_host_refused()
     return {
         "ocds_jsonl": ocds.jsonl_url,
         "rfb_index": rfb.index_url,
@@ -325,6 +377,7 @@ def _assert_official_urls(settings: Settings) -> dict:
         "pncp_consulta": pncp.consulta_base,
         "pncp_openapi": pncp.consulta_openapi,
         "tce_sp_zip": tce.zip_url,
+        "tce_rs_zip": tce_rs.zip_url,
     }
 
 
@@ -410,6 +463,12 @@ def _assert_write_once(settings: Settings) -> None:
     land_tce_sp_licitacao(settings, store)
     if len(store.list_parquet(TCE_SP_SOURCE)) != len(tce_first):
         raise SystemExit("tce_sp_licitacao reland wrote a second parquet")
+    tce_rs_first = store.list_parquet(TCE_RS_SOURCE)
+    ref, _ = land_tce_rs_licitacon(settings, store)
+    if ref.key not in tce_rs_first:
+        raise SystemExit("tce_rs_licitacon reland produced a new content-hashed key")
+    if len(store.list_parquet(TCE_RS_SOURCE)) != len(tce_rs_first):
+        raise SystemExit("tce_rs_licitacon reland wrote a second parquet")
 
 
 class _RecordSleep:
@@ -616,6 +675,130 @@ def _assert_tce_sp_not_public(settings: Settings) -> None:
     leaked = [token for token in (TCE_LOSER_CNPJ, TCE_WINNER_CNPJ, TCE_LOSER_PROPOSTA) if token in " ".join(blobs)]
     if leaked:
         raise SystemExit(f"TCE-SP participant proposal leaked into warehouse: {leaked}")
+
+
+def _assert_tce_rs_host_refused() -> None:
+    try:
+        assert_official_host("https://example.com/licitacoes-consolidado-2025.csv.zip", TCE_RS_HOSTS)
+    except RuntimeError:
+        pass
+    else:
+        raise SystemExit("TCE-RS allowlist accepted a non-official host")
+    try:
+        ckan_zip_from_package(
+            {
+                "result": {
+                    "resources": [
+                        {
+                            "name": "licitacoes-consolidado-2025.csv.zip",
+                            "url": "https://evil.example/licitacoes-consolidado-2025.csv.zip",
+                        }
+                    ]
+                }
+            },
+            2025,
+        )
+    except RuntimeError as exc:
+        if "refusing non-official host" not in str(exc):
+            raise SystemExit(f"TCE-RS CKAN parser failed for the wrong reason: {exc}") from exc
+    else:
+        raise SystemExit("TCE-RS CKAN parser accepted a non-official host")
+
+
+def _assert_tce_rs_landing(settings: Settings) -> None:
+    if settings.tce_rs_path is None:
+        raise SystemExit("TCE_RS_PATH fixture is missing")
+    _assert_tce_rs_fixture_propostas_not_winner_only(settings)
+    store = LandingStore(settings)
+    keys = [k for k in store.list_parquet(TCE_RS_SOURCE) if k.endswith(".parquet")]
+    if not keys:
+        raise SystemExit("no tce_rs_licitacon parquet in landing")
+    hashes = set()
+    for key in keys:
+        if "date=" not in key:
+            raise SystemExit(f"tce_rs_licitacon not partitioned by date: {key}")
+        digest = Path(key).stem
+        if len(digest) != 64:
+            raise SystemExit(f"tce_rs_licitacon key is not content-hashed sha256: {key}")
+        hashes.add(digest)
+        df = store.read_parquet(key)
+        if df.is_empty():
+            raise SystemExit("tce_rs_licitacon landed empty from fixture")
+        blobs = [str(v) for col in df.columns for v in df[col].to_list()]
+        joined = " ".join(blobs)
+        assert_no_raw_cpf(blobs)
+        if RAW_CPF in joined:
+            raise SystemExit("tce_rs_licitacon stored a raw 11-digit CPF")
+        if mask_cpf(RAW_CPF) not in joined:
+            raise SystemExit("tce_rs_licitacon missing masked CPF")
+        if TCE_RS_WINNER_CNPJ not in joined:
+            raise SystemExit("tce_rs_licitacon dropped participant CNPJ")
+        if TCE_RS_LOSER_CNPJ not in joined:
+            raise SystemExit("tce_rs_licitacon dropped loser CNPJ")
+        if TCE_RS_TABLE not in df.columns:
+            raise SystemExit("tce_rs_licitacon missing _table")
+        have = {str(v) for v in df[TCE_RS_TABLE].to_list()}
+        missing = TCE_RS_TABLES - have
+        if missing:
+            raise SystemExit(f"tce_rs_licitacon missing tables {sorted(missing)}")
+        _assert_tce_rs_propostas_not_winner_only(df, "tce_rs_licitacon landing")
+    if len(hashes) != 1:
+        raise SystemExit(f"tce_rs_licitacon hash is not stable: {hashes}")
+
+
+def _assert_tce_rs_fixture_propostas_not_winner_only(settings: Settings) -> None:
+    path = settings.tce_rs_path
+    if path is None:
+        raise SystemExit("TCE_RS_PATH fixture is missing")
+    proposta = path if path.is_file() and "proposta" in path.name.lower() else next(iter(sorted(path.glob("PROPOSTA*"))), None)
+    if proposta is None:
+        raise SystemExit("TCE-RS fixture PROPOSTA is missing")
+    text = proposta.read_text(encoding="utf-8")
+    if TCE_RS_WINNER_CNPJ not in text or TCE_RS_LOSER_CNPJ not in text:
+        raise SystemExit("TCE-RS fixture PROPOSTA is winner-only")
+    if TCE_RS_LOSER_PROPOSTA not in text:
+        raise SystemExit(f"TCE-RS fixture missing loser VL_TOTAL_PROPOSTA {TCE_RS_LOSER_PROPOSTA}")
+    if "|D|" not in text or "|C|" not in text:
+        raise SystemExit("TCE-RS fixture PROPOSTA missing C and D results")
+
+
+def _assert_tce_rs_propostas_not_winner_only(df, label: str) -> None:
+    if TCE_RS_TABLE not in df.columns:
+        raise SystemExit(f"{label} missing {TCE_RS_TABLE}")
+    rows = [r for r in df.iter_rows(named=True) if str(r.get(TCE_RS_TABLE) or "") == "PROPOSTA"]
+    if not rows:
+        raise SystemExit(f"{label} has no PROPOSTA rows")
+    result_col = _require_col(df, "tp_resultado_proposta")
+    value_col = _require_col(df, "vl_total_proposta")
+    winners = 0
+    losers = 0
+    for row in rows:
+        value = str(row.get(value_col) or "").strip()
+        if not value:
+            continue
+        result = fold(str(row.get(result_col) or ""))
+        if result == "c":
+            winners += 1
+        elif result == "d":
+            losers += 1
+    if winners < 1:
+        raise SystemExit(f"{label} has no classificado VL_TOTAL_PROPOSTA")
+    if losers < 1:
+        raise SystemExit(f"VL_TOTAL_PROPOSTA is winner-only in {label}")
+    joined = " ".join(str(row.get(value_col) or "") for row in rows)
+    if TCE_RS_LOSER_PROPOSTA not in joined:
+        raise SystemExit(f"{label} missing loser VL_TOTAL_PROPOSTA {TCE_RS_LOSER_PROPOSTA}")
+
+
+def _assert_tce_rs_not_public(settings: Settings) -> None:
+    blobs = fetch_raw_text_blobs(settings)
+    leaked = [
+        token
+        for token in (TCE_RS_LOSER_CNPJ, TCE_RS_WINNER_CNPJ, TCE_RS_LOSER_PROPOSTA)
+        if token in " ".join(blobs)
+    ]
+    if leaked:
+        raise SystemExit(f"TCE-RS participant proposal leaked into warehouse: {leaked}")
 
 
 def _require_col(df, needle: str) -> str:

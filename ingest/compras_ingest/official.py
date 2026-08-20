@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import time
 from dataclasses import dataclass
 from html import unescape
 from urllib.parse import unquote, urljoin
@@ -34,6 +35,13 @@ PNCP_HOSTS = frozenset({"pncp.gov.br"})
 # BUILD_SPEC Tier B source 6. Listing verified 2026-08-20. Cubo SQL is not this extract.
 TCE_SP_LISTING_URL = "https://transparencia.tce.sp.gov.br/conjunto-de-dados"
 TCE_SP_HOSTS = frozenset({"transparencia.tce.sp.gov.br"})
+# BUILD_SPEC Tier B source 6. Portal and leiaute verified 2026-08-20 in docs/tce-probe.md.
+TCE_RS_PORTAL_BASE = "https://dados.tce.rs.gov.br/dataset/licitacoes-consolidado"
+TCE_RS_CKAN_PACKAGE = "https://dados.tce.rs.gov.br/api/3/action/package_show?id=licitacoes-consolidado-{year}"
+TCE_RS_LEIAUTE_URL = "https://tcers.tc.br/repo/cex/licitacon/cpt/eValidador_LicitaCon_Manual_Leiaute_1.4.pdf"
+TCE_RS_EXAMPLE_URL = "https://tcers.tc.br/repo/cex/licitacon/cpt/eValidador-licitacon-exemplos-1.4.zip"
+TCE_RS_HOSTS = frozenset({"dados.tce.rs.gov.br", "tcers.tc.br"})
+TCE_RS_FETCH_ATTEMPTS = 4
 USER_AGENT = "compras-ingest/0.1"
 _MONTH = re.compile(r"^\d{4}-\d{2}$")
 _PROP_NAME = re.compile(r"<d:displayname>([^<]+)</d:displayname>")
@@ -83,6 +91,17 @@ class TceSpOfficial:
     zip_url: str
     year: int
     month: int
+
+
+@dataclass(frozen=True)
+class TceRsOfficial:
+    portal_url: str
+    ckan_url: str
+    zip_url: str
+    example_url: str
+    leiaute_url: str
+    year: int
+    via: str
 
 
 def http_client(timeout: float = 45.0) -> httpx.Client:
@@ -155,6 +174,65 @@ def resolve_tce_sp_licitacao(year: int, month: int) -> TceSpOfficial:
     return TceSpOfficial(TCE_SP_LISTING_URL, zip_url, year, month)
 
 
+def tce_rs_portal_url(year: int) -> str:
+    return f"{TCE_RS_PORTAL_BASE}-{year}"
+
+
+def tce_rs_ckan_url(year: int) -> str:
+    return TCE_RS_CKAN_PACKAGE.format(year=year)
+
+
+def resolve_tce_rs_licitacon(year: int, fetch: bool = False) -> TceRsOfficial:
+    """Resolve official TCE-RS LicitaCon URLs. Live CKAN is fetch-only."""
+    if year < 2014:
+        raise RuntimeError(f"TCE-RS year out of range: {year}")
+    portal = tce_rs_portal_url(year)
+    ckan = tce_rs_ckan_url(year)
+    assert_official_host(portal, TCE_RS_HOSTS)
+    assert_official_host(ckan, TCE_RS_HOSTS)
+    assert_official_host(TCE_RS_EXAMPLE_URL, TCE_RS_HOSTS)
+    assert_official_host(TCE_RS_LEIAUTE_URL, TCE_RS_HOSTS)
+    zip_url = TCE_RS_EXAMPLE_URL
+    via = "example"
+    if fetch:
+        try:
+            zip_url = _ckan_zip_with_retry(ckan, year)
+            via = "ckan"
+        except Exception:
+            zip_url = TCE_RS_EXAMPLE_URL
+            via = "example"
+    return TceRsOfficial(portal, ckan, zip_url, TCE_RS_EXAMPLE_URL, TCE_RS_LEIAUTE_URL, year, via)
+
+
+def ckan_zip_from_package(payload: dict, year: int) -> str:
+    """Pick licitacoes-consolidado-YYYY zip. Refuse non-official hosts."""
+    result = payload.get("result") if isinstance(payload, dict) else None
+    resources = result.get("resources") if isinstance(result, dict) else None
+    if not isinstance(resources, list) or not resources:
+        raise RuntimeError("TCE-RS CKAN package has no resources")
+    want = f"licitacoes-consolidado-{year}"
+    zips: list[str] = []
+    for raw in resources:
+        if not isinstance(raw, dict):
+            continue
+        url = str(raw.get("url") or "")
+        name = f"{raw.get('name') or ''} {url}"
+        if not url:
+            continue
+        folded = name.lower()
+        if want not in folded:
+            continue
+        if not url.lower().split("?", 1)[0].endswith(".zip"):
+            continue
+        assert_official_host(url, TCE_RS_HOSTS)
+        zips.append(url)
+    if not zips:
+        raise RuntimeError(f"TCE-RS CKAN package has no {want} zip")
+    chosen = zips[0]
+    assert_official_host(chosen, TCE_RS_HOSTS)
+    return chosen
+
+
 def licitacao_zip_from_listing(html: str, year: int, month: int, listing_url: str) -> str:
     """Pick the official licitacao-YYYY-MM zip. Refuse cubo SQL and non-official hosts."""
     monthly: list[str] = []
@@ -224,6 +302,29 @@ def download_to(
         dest.flush()
 
 
+def download_to_retry(
+    client: httpx.Client,
+    url: str,
+    dest,
+    allowed: frozenset[str],
+    auth: tuple[str, str] | None = None,
+    attempts: int = TCE_RS_FETCH_ATTEMPTS,
+) -> None:
+    last: Exception | None = None
+    for i in range(max(1, attempts)):
+        try:
+            if hasattr(dest, "seek"):
+                dest.seek(0)
+                dest.truncate()
+            download_to(client, url, dest, allowed, auth=auth)
+            return
+        except Exception as exc:
+            last = exc
+            if i + 1 < attempts:
+                time.sleep(0.25 * (2**i))
+    raise RuntimeError(f"official download failed after {attempts} tries: {url}") from last
+
+
 def _ocp_jsonl_from_page(html: str, year: int) -> str:
     found: list[str] = []
     for raw in _JSONL.findall(html):
@@ -285,6 +386,26 @@ def _modalidade_ids(client: httpx.Client) -> tuple[int, ...]:
     if not ids:
         raise RuntimeError("PNCP modalidades have no ids")
     return tuple(ids)
+
+
+def _ckan_zip_with_retry(ckan_url: str, year: int) -> str:
+    last: Exception | None = None
+    with httpx.Client(
+        timeout=httpx.Timeout(12.0, connect=4.0),
+        headers={"User-Agent": USER_AGENT, "Accept": "*/*"},
+        follow_redirects=True,
+    ) as client:
+        for i in range(TCE_RS_FETCH_ATTEMPTS):
+            try:
+                payload = _require_json(client, ckan_url, TCE_RS_HOSTS)
+                zip_url = ckan_zip_from_package(payload, year)
+                _require_zip_reachable(client, zip_url, TCE_RS_HOSTS)
+                return zip_url
+            except Exception as exc:
+                last = exc
+                if i + 1 < TCE_RS_FETCH_ATTEMPTS:
+                    time.sleep(0.25 * (2**i))
+    raise RuntimeError(f"TCE-RS CKAN resolve failed after {TCE_RS_FETCH_ATTEMPTS} tries") from last
 
 
 def _prefer_month_zip(urls: list[str]) -> str:

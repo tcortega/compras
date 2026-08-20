@@ -11,13 +11,13 @@ from compras_detect.data_error import (
     fixture_items_path,
 )
 from compras_detect.tier1 import run_tier1
-from compras_ingest.csvio import read_csv
 from compras_ingest.landing import LandingRef, LandingStore
 from compras_ingest.settings import Settings
 from compras_ingest.sources.catalogo_cnbs import land_catalogo_cnbs
 from compras_ingest.sources.compras_gov import land_compras_gov
 from compras_ingest.sources.ocds import land_ocds
 from compras_ingest.sources.pncp_consulta import land_pncp_consulta
+from compras_ingest.sources.cgu_ceis_cnep import land_cgu_ceis_cnep, load_landed_sanctions
 from compras_ingest.sources.receita_cnpj import cnpj_basicos_from_frame, land_receita_cnpj
 from compras_ingest.sources.tce_rs_licitacon import land_tce_rs_licitacon
 from compras_ingest.sources.tce_sp_licitacao import land_tce_sp_licitacao
@@ -52,6 +52,7 @@ def run_compras_slice(settings: Settings, store: LandingStore | None = None) -> 
     land_pncp_consulta(settings, store)
     land_tce_sp_licitacao(settings, store)
     land_tce_rs_licitacon(settings, store)
+    land_cgu_ceis_cnep(settings, store)
     items, warehouse = warehouse_from_landing(
         settings,
         store,
@@ -144,7 +145,7 @@ def run_tier1_and_write_flags(
     items: pl.DataFrame,
 ) -> tuple[pl.DataFrame, int]:
     """Run internal Tier 1 detectors and persist flags. Does not land or normalize."""
-    sanctions = _load_sanctions(settings)
+    sanctions = load_landed_sanctions(store)
     landing_records = _collect_landing_records(store, "compras_gov")
     flags = run_tier1(items, landing_records=landing_records, sanctions=sanctions)
     return flags, write_flags(settings, flags, items)
@@ -164,16 +165,6 @@ def _read_optional_landing(store: LandingStore, ref: dict | None) -> pl.DataFram
         return None
     df = store.read_parquet(str(ref["key"]))
     return None if df.is_empty() else df
-
-
-def _load_sanctions(settings: Settings) -> pl.DataFrame | None:
-    directory = settings.sanctions_dir
-    if directory is None:
-        return None
-    frames = [read_csv(p) for p in sorted(directory.glob("*.csv"))]
-    if not frames:
-        return None
-    return pl.concat(frames, how="diagonal_relaxed")
 
 
 def _collect_landing_records(store: LandingStore, source: str) -> pl.DataFrame:

@@ -157,6 +157,12 @@ Participant documents and proposal values stay in landing parquet.
 The explorer does not read this source.
 Live CKAN is gated by `TCE_RS_FETCH`.
 
+CGU CEIS and CNEP bulk CSVs land under `cgu_ceis_cnep/date=`.
+That source is internal.
+Sanction windows stay in landing parquet.
+The explorer does not read this source.
+Live Portal da Transparência download is gated by `SANCTIONS_FETCH`.
+
 ## Explorer API
 
 Shared `PageRequest` / `SkipTake`.

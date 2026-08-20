@@ -1040,6 +1040,48 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Coverage = s_marabaOrgaoCoverage,
 	};
 
+	private static readonly Coverage s_varzeaGrandeOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "MT",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_varzeaGrande = new()
+	{
+		Id = SliceIds.OrgaoVarzeaGrande,
+		Cnpj = "03507548000110",
+		RazaoSocial = "Municipio de Varzea Grande",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "MT",
+		MunicipioIbge = "5108402",
+		MunicipioNome = "Varzea Grande",
+		Coverage = s_varzeaGrandeOrgaoCoverage,
+	};
+
+	private static readonly Coverage s_jiParanaOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "RO",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_jiParana = new()
+	{
+		Id = SliceIds.OrgaoJiParana,
+		Cnpj = "04092672000125",
+		RazaoSocial = "Municipio de Ji-Parana",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "RO",
+		MunicipioIbge = "1100122",
+		MunicipioNome = "Ji-Parana",
+		Coverage = s_jiParanaOrgaoCoverage,
+	};
+
 	private static readonly ItemRecord s_itemDourados = new()
 	{
 		Id = SliceIds.ItemDourados,
@@ -1087,6 +1129,58 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		{
 			N = 1,
 			Uf = "PA",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
+	private static readonly ItemRecord s_itemVarzeaGrande = new()
+	{
+		Id = SliceIds.ItemVarzeaGrande,
+		ContratacaoId = SliceIds.ContratacaoVarzeaGrande,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Microcomputador",
+		Catmat = "606229",
+		Catser = null,
+		Quantidade = 2m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 26021m,
+		ValorTotal = 52042m,
+		Uf = "MT",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "MT",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
+	private static readonly ItemRecord s_itemJiParana = new()
+	{
+		Id = SliceIds.ItemJiParana,
+		ContratacaoId = SliceIds.ContratacaoJiParana,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Assinatura de banco de imagens",
+		Catmat = "30130",
+		Catser = null,
+		Quantidade = 1m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 38540m,
+		ValorTotal = 38540m,
+		Uf = "RO",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "RO",
 			Quarter = SliceIds.Quarter,
 			MethodologyVersion = SliceIds.Methodology,
 		},
@@ -1305,6 +1399,32 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(new[] { s_maraba }, marabaPage.Items);
 		await ValidateOrgao(client, s_maraba);
 
+		var varzeaGrandePage = await client.ListOrgaos(municipioIbge: "5108402", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			varzeaGrandePage.Coverage);
+		Assert.Equal(new[] { s_varzeaGrande }, varzeaGrandePage.Items);
+		await ValidateOrgao(client, s_varzeaGrande);
+
+		var jiParanaPage = await client.ListOrgaos(uf: "RO", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "RO",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			jiParanaPage.Coverage);
+		Assert.Equal(new[] { s_jiParana }, jiParanaPage.Items);
+		await ValidateOrgao(client, s_jiParana);
+
 		var mixed = await client.ListOrgaos(quarter: SliceIds.Quarter);
 		Assert.Equal("", mixed.Coverage.Uf);
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3306305", StringComparison.Ordinal));
@@ -1324,6 +1444,8 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "2700300", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "5003702", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "1504208", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "5108402", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "1100122", StringComparison.Ordinal));
 
 		var spItems = await client.ListItems(uf: "SP", quarter: SliceIds.Quarter);
 		Assert.Equal(
@@ -1540,6 +1662,33 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 			OrgaoRazaoSocial = "Municipio de Dourados",
 			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
 			ContratacaoPncpId = "20267427000168-1-000043/2024",
+		});
+		var roItems = await client.ListItems(uf: "RO", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "RO",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			roItems.Coverage);
+		Assert.Equal(new[] { s_itemJiParana }, roItems.Items);
+		await ValidateItem(client, new()
+		{
+			Item = s_itemJiParana,
+			OrgaoId = SliceIds.OrgaoJiParana,
+			OrgaoRazaoSocial = "Municipio de Ji-Parana",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "04092672000125-1-000139/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemVarzeaGrande,
+			OrgaoId = SliceIds.OrgaoVarzeaGrande,
+			OrgaoRazaoSocial = "Municipio de Varzea Grande",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "03507548000110-1-000073/2024",
 		});
 
 		var empty = new Coverage

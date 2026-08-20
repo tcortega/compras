@@ -20,10 +20,33 @@ const imperatrizName = /Munic[ií]pio de Imperatriz/i
 const arapiracaName = /Munic[ií]pio de Arapiraca/i
 const douradosName = /Dourados/i
 const marabaName = /Munic[ií]pio de Marab[aá]/i
+const varzeaName = /Munic[ií]pio de V[aá]rzea Grande/i
+const jiParanaName = /Munic[ií]pio de Ji-Paran[aá]/i
+
+const publishedNames = [
+  niteroiName,
+  bauruName,
+  caxiasName,
+  joinvilleName,
+  uberlandiaName,
+  londrinaName,
+  feiraName,
+  caruaruName,
+  anapolisName,
+  vilaVelhaName,
+  campinaName,
+  caucaiaName,
+  imperatrizName,
+  arapiracaName,
+  douradosName,
+  marabaName,
+  varzeaName,
+  jiParanaName,
+]
 
 async function assertCoverageAndBan(page: Page) {
   await expect(page.getByText(/n=\d+/).first()).toBeVisible()
-  await expect(page.getByText(/UF RJ|UF SP|UF RS|UF SC|UF MG|UF PR|UF BA|UF PE|UF GO|UF ES|UF PB|UF CE|UF MA|UF AL|UF MS|UF PA|UF mista|filtro sem registros/).first()).toBeVisible()
+  await expect(page.getByText(/UF RJ|UF SP|UF RS|UF SC|UF MG|UF PR|UF BA|UF PE|UF GO|UF ES|UF PB|UF CE|UF MA|UF AL|UF MS|UF PA|UF MT|UF RO|UF mista|filtro sem registros/).first()).toBeVisible()
   await expect(page.getByText(/trimestre|trim\./i).first()).toBeVisible()
   await expect(page.getByText(/metodologia/i).first()).toBeVisible()
   await expect(page.locator('body')).not.toHaveText(banned)
@@ -32,14 +55,57 @@ async function assertCoverageAndBan(page: Page) {
   }
 }
 
+async function assertOrgaoIbge(
+  page: Page,
+  ibge: string,
+  present: RegExp,
+  absent: RegExp,
+  uf: string,
+  heading: RegExp = present,
+) {
+  await page.goto(`/orgaos?municipioIbge=${ibge}`)
+  const table = page.locator('table.data')
+  await expect(table.getByRole('link', { name: present })).toBeVisible()
+  await expect(table.getByRole('link', { name: absent })).toHaveCount(0)
+  await expect(table.getByRole('link', { name: voltaName })).toHaveCount(0)
+  await expect(page.getByText(/n=1/).first()).toBeVisible()
+  await expect(page.getByText(new RegExp(`UF ${uf}`)).first()).toBeVisible()
+  await table.getByRole('link', { name: present }).click()
+  await expect(page.getByRole('heading', { name: heading })).toBeVisible()
+  await expect(page.getByText(ibge, { exact: true })).toBeVisible()
+  await assertCoverageAndBan(page)
+}
+
+async function assertOrgaoUf(page: Page, uf: string, present: RegExp, absent: RegExp) {
+  await page.goto(`/orgaos?uf=${uf}`)
+  const table = page.locator('table.data')
+  await expect(table.getByRole('link', { name: present })).toBeVisible()
+  await expect(table.getByRole('link', { name: absent })).toHaveCount(0)
+  await expect(table.getByRole('link', { name: voltaName })).toHaveCount(0)
+  await expect(page.getByText(/n=1/).first()).toBeVisible()
+  await expect(page.getByText(new RegExp(`UF ${uf}`)).first()).toBeVisible()
+  await assertCoverageAndBan(page)
+}
+
+async function assertItensUf(page: Page, uf: string, stubName?: RegExp, stubN = '1') {
+  await page.goto(`/itens?uf=${uf}`)
+  await expect(page.getByText(new RegExp(`UF ${uf}`)).first()).toBeVisible()
+  await expect(page.locator('table.data tbody tr').first()).toBeVisible()
+  if (!againstCompose && stubName) {
+    await expect(page.getByRole('link', { name: stubName })).toBeVisible()
+    await expect(page.getByText(new RegExp(`n=${stubN}`)).first()).toBeVisible()
+  }
+  await assertCoverageAndBan(page)
+}
+
 test('home cards usam o n da coleção, não o n de itens', async ({ page }) => {
   await page.goto('/')
   await expect(page.getByRole('strong').filter({ hasText: 'Cobertura incompleta' })).toBeVisible()
   await expect(page.getByText(/UF mista/).first()).toBeVisible()
-  await expect(page.getByText(/Caxias do Sul \(RS\), Joinville \(SC\), Uberlândia \(MG\), Londrina \(PR\), Feira de Santana \(BA\), Caruaru \(PE\), Anápolis \(GO\), Vila Velha \(ES\), Campina Grande \(PB\), Caucaia \(CE\), Imperatriz \(MA\), Arapiraca \(AL\), Dourados \(MS\) e Marabá \(PA\)/).first()).toBeVisible()
+  await expect(page.getByText(/Caxias do Sul \(RS\), Joinville \(SC\), Uberlândia \(MG\), Londrina \(PR\), Feira de Santana \(BA\), Caruaru \(PE\), Anápolis \(GO\), Vila Velha \(ES\), Campina Grande \(PB\), Caucaia \(CE\), Imperatriz \(MA\), Arapiraca \(AL\), Dourados \(MS\), Marabá \(PA\), Várzea Grande \(MT\) e Ji-Paraná \(RO\)/).first()).toBeVisible()
   const brand = page.locator('.brand-kicker')
-  await expect(brand).toHaveText(/dezessete municípios · 2024/i)
-  await expect(brand).not.toHaveText(/Caxias do Sul|Uberlândia|Londrina|Feira de Santana|Caruaru|Anápolis|Vila Velha|Campina Grande|Caucaia|Imperatriz|Arapiraca|Dourados|Marabá/)
+  await expect(brand).toHaveText(/dezenove municípios · 2024/i)
+  await expect(brand).not.toHaveText(/Caxias do Sul|Uberlândia|Londrina|Feira de Santana|Caruaru|Anápolis|Vila Velha|Campina Grande|Caucaia|Imperatriz|Arapiraca|Dourados|Marabá|Várzea Grande|Ji-Paraná/)
   const brandBox = await brand.boundingBox()
   const masthead = await page.locator('.masthead-inner').boundingBox()
   expect(brandBox).toBeTruthy()
@@ -60,8 +126,8 @@ test('home cards usam o n da coleção, não o n de itens', async ({ page }) => 
   await expect(itens.getByText(new RegExp(`n=${itensN}`))).toBeVisible()
   expect(orgaosN).not.toEqual(itensN)
   if (!againstCompose) {
-    await expect(orgaos.getByRole('strong')).toHaveText('20')
-    await expect(itens.getByRole('strong')).toHaveText('44')
+    await expect(orgaos.getByRole('strong')).toHaveText('22')
+    await expect(itens.getByRole('strong')).toHaveText('46')
   }
 
   if (againstCompose) {
@@ -89,7 +155,7 @@ test('home cards usam o n da coleção, não o n de itens', async ({ page }) => 
 })
 
 test('órgão para contratação com denominador visível', async ({ page }) => {
-  await page.goto('/orgaos')
+  await page.goto('/orgaos?take=50')
   await page.locator('table.data').getByRole('link', { name: voltaName }).click()
   await expect(page.getByText(/volta redonda/i).first()).toBeVisible()
   await expect(page.locator('.stats .kicker', { hasText: 'Contratações' })).toBeVisible()
@@ -117,28 +183,18 @@ test('órgão para contratação com denominador visível', async ({ page }) => 
   await assertCoverageAndBan(page)
 })
 
-test('filtra município IBGE e UF e mantém cobertura no vazio', async ({ page }) => {
-  await page.goto('/orgaos')
+test('lista o recorte publicado com UF mista', async ({ page }) => {
+  await page.goto('/orgaos?take=50')
   const publishedTable = page.locator('table.data')
-  await expect(publishedTable.getByRole('link', { name: niteroiName })).toBeVisible()
-  await expect(publishedTable.getByRole('link', { name: bauruName })).toBeVisible()
-  await expect(publishedTable.getByRole('link', { name: caxiasName })).toBeVisible()
-  await expect(publishedTable.getByRole('link', { name: joinvilleName })).toBeVisible()
-  await expect(publishedTable.getByRole('link', { name: uberlandiaName })).toBeVisible()
-  await expect(publishedTable.getByRole('link', { name: londrinaName })).toBeVisible()
-  await expect(publishedTable.getByRole('link', { name: feiraName })).toBeVisible()
-  await expect(publishedTable.getByRole('link', { name: caruaruName })).toBeVisible()
-  await expect(publishedTable.getByRole('link', { name: anapolisName })).toBeVisible()
-  await expect(publishedTable.getByRole('link', { name: vilaVelhaName })).toBeVisible()
-  await expect(publishedTable.getByRole('link', { name: campinaName })).toBeVisible()
-  await expect(publishedTable.getByRole('link', { name: caucaiaName })).toBeVisible()
-  await expect(publishedTable.getByRole('link', { name: imperatrizName })).toBeVisible()
-  await expect(publishedTable.getByRole('link', { name: arapiracaName })).toBeVisible()
-  await expect(publishedTable.getByRole('link', { name: douradosName })).toBeVisible()
-  await expect(publishedTable.getByRole('link', { name: marabaName })).toBeVisible()
+  for (const name of publishedNames) {
+    await expect(publishedTable.getByRole('link', { name })).toBeVisible()
+  }
   await expect(page.getByText(/UF mista/).first()).toBeVisible()
   await assertCoverageAndBan(page)
+})
 
+test('filtra Niterói por IBGE no formulário', async ({ page }) => {
+  await page.goto('/orgaos?take=50')
   await page.locator('input[name="municipioIbge"]').fill('3303302')
   await page.getByRole('button', { name: 'Filtrar' }).click()
   const niteroiTable = page.locator('table.data')
@@ -151,236 +207,62 @@ test('filtra município IBGE e UF e mantém cobertura no vazio', async ({ page }
   await expect(page.getByRole('heading', { name: /Niter[oó]i/i })).toBeVisible()
   await expect(page.getByText('3303302', { exact: true })).toBeVisible()
   await assertCoverageAndBan(page)
-  await page.goto('/orgaos?municipioIbge=3303302')
+})
 
-  await page.goto('/orgaos?uf=SP')
-  const bauruTable = page.locator('table.data')
-  await expect(bauruTable.getByRole('link', { name: bauruName })).toBeVisible()
-  await expect(bauruTable.getByRole('link', { name: niteroiName })).toHaveCount(0)
-  await expect(bauruTable.getByRole('link', { name: voltaName })).toHaveCount(0)
-  await expect(page.getByText(/n=1/).first()).toBeVisible()
-  await expect(page.getByText(/UF SP/).first()).toBeVisible()
-  await assertCoverageAndBan(page)
+test('filtra Bauru por UF SP e itens SP', async ({ page }) => {
+  await assertOrgaoUf(page, 'SP', bauruName, niteroiName)
+  await assertItensUf(page, 'SP', /Papel A4 75 g/, '2')
+})
 
-  await page.goto('/itens?uf=SP')
-  await expect(page.getByText(/UF SP/).first()).toBeVisible()
-  await expect(page.locator('table.data tbody tr').first()).toBeVisible()
-  if (!againstCompose) {
-    await expect(page.getByRole('link', { name: /Papel A4 75 g/ })).toBeVisible()
-    await expect(page.getByText(/n=2/).first()).toBeVisible()
-  }
-  await assertCoverageAndBan(page)
+test('filtra Caxias do Sul por IBGE e Joinville por UF SC', async ({ page }) => {
+  await assertOrgaoIbge(page, '4305108', caxiasName, joinvilleName, 'RS')
+  await assertOrgaoUf(page, 'SC', joinvilleName, caxiasName)
+  await assertItensUf(page, 'SC', /Leitora c[oó]digo/)
+})
 
-  await page.goto('/orgaos?municipioIbge=4305108')
-  const caxiasTable = page.locator('table.data')
-  await expect(caxiasTable.getByRole('link', { name: caxiasName })).toBeVisible()
-  await expect(caxiasTable.getByRole('link', { name: joinvilleName })).toHaveCount(0)
-  await expect(caxiasTable.getByRole('link', { name: voltaName })).toHaveCount(0)
-  await expect(page.getByText(/n=1/).first()).toBeVisible()
-  await expect(page.getByText(/UF RS/).first()).toBeVisible()
-  await caxiasTable.getByRole('link', { name: caxiasName }).click()
-  await expect(page.getByRole('heading', { name: caxiasName })).toBeVisible()
-  await expect(page.getByText('4305108', { exact: true })).toBeVisible()
-  await assertCoverageAndBan(page)
+test('filtra Uberlândia por IBGE e Londrina por UF PR', async ({ page }) => {
+  await assertOrgaoIbge(page, '3170206', uberlandiaName, londrinaName, 'MG')
+  await assertOrgaoUf(page, 'PR', londrinaName, uberlandiaName)
+  await assertItensUf(page, 'PR', /Clindamicina/)
+})
 
-  await page.goto('/orgaos?uf=SC')
-  const joinvilleTable = page.locator('table.data')
-  await expect(joinvilleTable.getByRole('link', { name: joinvilleName })).toBeVisible()
-  await expect(joinvilleTable.getByRole('link', { name: caxiasName })).toHaveCount(0)
-  await expect(joinvilleTable.getByRole('link', { name: voltaName })).toHaveCount(0)
-  await expect(page.getByText(/n=1/).first()).toBeVisible()
-  await expect(page.getByText(/UF SC/).first()).toBeVisible()
-  await assertCoverageAndBan(page)
+test('filtra Feira de Santana por IBGE e Caruaru por UF PE', async ({ page }) => {
+  await assertOrgaoIbge(page, '2910800', feiraName, caruaruName, 'BA')
+  await assertOrgaoUf(page, 'PE', caruaruName, feiraName)
+  await assertItensUf(page, 'PE', /Placa sinalizadora/)
+})
 
-  await page.goto('/itens?uf=SC')
-  await expect(page.getByText(/UF SC/).first()).toBeVisible()
-  await expect(page.locator('table.data tbody tr').first()).toBeVisible()
-  if (!againstCompose) {
-    await expect(page.getByRole('link', { name: /Leitora c[oó]digo/ })).toBeVisible()
-    await expect(page.getByText(/n=1/).first()).toBeVisible()
-  }
-  await assertCoverageAndBan(page)
+test('filtra Anápolis por IBGE e Vila Velha por UF ES', async ({ page }) => {
+  await assertOrgaoIbge(page, '5201108', anapolisName, vilaVelhaName, 'GO')
+  await assertOrgaoUf(page, 'ES', vilaVelhaName, anapolisName)
+  await assertItensUf(page, 'ES', /Revelador Radiol/)
+})
 
-  await page.goto('/orgaos?municipioIbge=3170206')
-  const uberlandiaTable = page.locator('table.data')
-  await expect(uberlandiaTable.getByRole('link', { name: uberlandiaName })).toBeVisible()
-  await expect(uberlandiaTable.getByRole('link', { name: londrinaName })).toHaveCount(0)
-  await expect(uberlandiaTable.getByRole('link', { name: voltaName })).toHaveCount(0)
-  await expect(page.getByText(/n=1/).first()).toBeVisible()
-  await expect(page.getByText(/UF MG/).first()).toBeVisible()
-  await uberlandiaTable.getByRole('link', { name: uberlandiaName }).click()
-  await expect(page.getByRole('heading', { name: uberlandiaName })).toBeVisible()
-  await expect(page.getByText('3170206', { exact: true })).toBeVisible()
-  await assertCoverageAndBan(page)
+test('filtra Campina Grande por IBGE e Caucaia por UF CE', async ({ page }) => {
+  await assertOrgaoIbge(page, '2504009', campinaName, caucaiaName, 'PB')
+  await assertOrgaoUf(page, 'CE', caucaiaName, campinaName)
+  await assertItensUf(page, 'CE', /Bloco receitu/)
+})
 
-  await page.goto('/orgaos?uf=PR')
-  const londrinaTable = page.locator('table.data')
-  await expect(londrinaTable.getByRole('link', { name: londrinaName })).toBeVisible()
-  await expect(londrinaTable.getByRole('link', { name: uberlandiaName })).toHaveCount(0)
-  await expect(londrinaTable.getByRole('link', { name: voltaName })).toHaveCount(0)
-  await expect(page.getByText(/n=1/).first()).toBeVisible()
-  await expect(page.getByText(/UF PR/).first()).toBeVisible()
-  await assertCoverageAndBan(page)
+test('filtra Imperatriz por IBGE e Arapiraca por UF AL', async ({ page }) => {
+  await assertOrgaoIbge(page, '2105302', imperatrizName, arapiracaName, 'MA')
+  await assertOrgaoUf(page, 'AL', arapiracaName, imperatrizName)
+  await assertItensUf(page, 'AL', /Lamotrigina/)
+})
 
-  await page.goto('/itens?uf=PR')
-  await expect(page.getByText(/UF PR/).first()).toBeVisible()
-  await expect(page.locator('table.data tbody tr').first()).toBeVisible()
-  if (!againstCompose) {
-    await expect(page.getByRole('link', { name: /Clindamicina/ })).toBeVisible()
-    await expect(page.getByText(/n=1/).first()).toBeVisible()
-  }
-  await assertCoverageAndBan(page)
+test('filtra Dourados por IBGE e Marabá por UF PA', async ({ page }) => {
+  await assertOrgaoIbge(page, '5003702', douradosName, marabaName, 'MS')
+  await assertOrgaoUf(page, 'PA', marabaName, douradosName)
+  await assertItensUf(page, 'PA', /Fog[aã]o/)
+})
 
-  await page.goto('/orgaos?municipioIbge=2910800')
-  const feiraTable = page.locator('table.data')
-  await expect(feiraTable.getByRole('link', { name: feiraName })).toBeVisible()
-  await expect(feiraTable.getByRole('link', { name: caruaruName })).toHaveCount(0)
-  await expect(feiraTable.getByRole('link', { name: voltaName })).toHaveCount(0)
-  await expect(page.getByText(/n=1/).first()).toBeVisible()
-  await expect(page.getByText(/UF BA/).first()).toBeVisible()
-  await feiraTable.getByRole('link', { name: feiraName }).click()
-  await expect(page.getByRole('heading', { name: feiraName })).toBeVisible()
-  await expect(page.getByText('2910800', { exact: true })).toBeVisible()
-  await assertCoverageAndBan(page)
+test('filtra Várzea Grande por IBGE e Ji-Paraná por UF RO', async ({ page }) => {
+  await assertOrgaoIbge(page, '5108402', varzeaName, jiParanaName, 'MT')
+  await assertOrgaoUf(page, 'RO', jiParanaName, varzeaName)
+  await assertItensUf(page, 'RO', /Assinatura de banco/)
+})
 
-  await page.goto('/orgaos?uf=PE')
-  const caruaruTable = page.locator('table.data')
-  await expect(caruaruTable.getByRole('link', { name: caruaruName })).toBeVisible()
-  await expect(caruaruTable.getByRole('link', { name: feiraName })).toHaveCount(0)
-  await expect(caruaruTable.getByRole('link', { name: voltaName })).toHaveCount(0)
-  await expect(page.getByText(/n=1/).first()).toBeVisible()
-  await expect(page.getByText(/UF PE/).first()).toBeVisible()
-  await assertCoverageAndBan(page)
-
-  await page.goto('/itens?uf=PE')
-  await expect(page.getByText(/UF PE/).first()).toBeVisible()
-  await expect(page.locator('table.data tbody tr').first()).toBeVisible()
-  if (!againstCompose) {
-    await expect(page.getByRole('link', { name: /Placa sinalizadora/ })).toBeVisible()
-    await expect(page.getByText(/n=1/).first()).toBeVisible()
-  }
-  await assertCoverageAndBan(page)
-
-  await page.goto('/orgaos?municipioIbge=5201108')
-  const anapolisTable = page.locator('table.data')
-  await expect(anapolisTable.getByRole('link', { name: anapolisName })).toBeVisible()
-  await expect(anapolisTable.getByRole('link', { name: vilaVelhaName })).toHaveCount(0)
-  await expect(anapolisTable.getByRole('link', { name: voltaName })).toHaveCount(0)
-  await expect(page.getByText(/n=1/).first()).toBeVisible()
-  await expect(page.getByText(/UF GO/).first()).toBeVisible()
-  await anapolisTable.getByRole('link', { name: anapolisName }).click()
-  await expect(page.getByRole('heading', { name: anapolisName })).toBeVisible()
-  await expect(page.getByText('5201108', { exact: true })).toBeVisible()
-  await assertCoverageAndBan(page)
-
-  await page.goto('/orgaos?uf=ES')
-  const vilaVelhaTable = page.locator('table.data')
-  await expect(vilaVelhaTable.getByRole('link', { name: vilaVelhaName })).toBeVisible()
-  await expect(vilaVelhaTable.getByRole('link', { name: anapolisName })).toHaveCount(0)
-  await expect(vilaVelhaTable.getByRole('link', { name: voltaName })).toHaveCount(0)
-  await expect(page.getByText(/n=1/).first()).toBeVisible()
-  await expect(page.getByText(/UF ES/).first()).toBeVisible()
-  await assertCoverageAndBan(page)
-
-  await page.goto('/itens?uf=ES')
-  await expect(page.getByText(/UF ES/).first()).toBeVisible()
-  await expect(page.locator('table.data tbody tr').first()).toBeVisible()
-  if (!againstCompose) {
-    await expect(page.getByRole('link', { name: /Revelador Radiol/ })).toBeVisible()
-    await expect(page.getByText(/n=1/).first()).toBeVisible()
-  }
-  await assertCoverageAndBan(page)
-
-  await page.goto('/orgaos?municipioIbge=2504009')
-  const campinaTable = page.locator('table.data')
-  await expect(campinaTable.getByRole('link', { name: campinaName })).toBeVisible()
-  await expect(campinaTable.getByRole('link', { name: caucaiaName })).toHaveCount(0)
-  await expect(campinaTable.getByRole('link', { name: voltaName })).toHaveCount(0)
-  await expect(page.getByText(/n=1/).first()).toBeVisible()
-  await expect(page.getByText(/UF PB/).first()).toBeVisible()
-  await campinaTable.getByRole('link', { name: campinaName }).click()
-  await expect(page.getByRole('heading', { name: campinaName })).toBeVisible()
-  await expect(page.getByText('2504009', { exact: true })).toBeVisible()
-  await assertCoverageAndBan(page)
-
-  await page.goto('/orgaos?uf=CE')
-  const caucaiaTable = page.locator('table.data')
-  await expect(caucaiaTable.getByRole('link', { name: caucaiaName })).toBeVisible()
-  await expect(caucaiaTable.getByRole('link', { name: campinaName })).toHaveCount(0)
-  await expect(caucaiaTable.getByRole('link', { name: voltaName })).toHaveCount(0)
-  await expect(page.getByText(/n=1/).first()).toBeVisible()
-  await expect(page.getByText(/UF CE/).first()).toBeVisible()
-  await assertCoverageAndBan(page)
-
-  await page.goto('/itens?uf=CE')
-  await expect(page.getByText(/UF CE/).first()).toBeVisible()
-  await expect(page.locator('table.data tbody tr').first()).toBeVisible()
-  if (!againstCompose) {
-    await expect(page.getByRole('link', { name: /Bloco receitu/ })).toBeVisible()
-    await expect(page.getByText(/n=1/).first()).toBeVisible()
-  }
-  await assertCoverageAndBan(page)
-
-  await page.goto('/orgaos?municipioIbge=2105302')
-  const imperatrizTable = page.locator('table.data')
-  await expect(imperatrizTable.getByRole('link', { name: imperatrizName })).toBeVisible()
-  await expect(imperatrizTable.getByRole('link', { name: arapiracaName })).toHaveCount(0)
-  await expect(imperatrizTable.getByRole('link', { name: voltaName })).toHaveCount(0)
-  await expect(page.getByText(/n=1/).first()).toBeVisible()
-  await expect(page.getByText(/UF MA/).first()).toBeVisible()
-  await imperatrizTable.getByRole('link', { name: imperatrizName }).click()
-  await expect(page.getByRole('heading', { name: imperatrizName })).toBeVisible()
-  await expect(page.getByText('2105302', { exact: true })).toBeVisible()
-  await assertCoverageAndBan(page)
-
-  await page.goto('/orgaos?uf=AL')
-  const arapiracaTable = page.locator('table.data')
-  await expect(arapiracaTable.getByRole('link', { name: arapiracaName })).toBeVisible()
-  await expect(arapiracaTable.getByRole('link', { name: imperatrizName })).toHaveCount(0)
-  await expect(arapiracaTable.getByRole('link', { name: voltaName })).toHaveCount(0)
-  await expect(page.getByText(/n=1/).first()).toBeVisible()
-  await expect(page.getByText(/UF AL/).first()).toBeVisible()
-  await assertCoverageAndBan(page)
-
-  await page.goto('/itens?uf=AL')
-  await expect(page.getByText(/UF AL/).first()).toBeVisible()
-  await expect(page.locator('table.data tbody tr').first()).toBeVisible()
-  if (!againstCompose) {
-    await expect(page.getByRole('link', { name: /Lamotrigina/ })).toBeVisible()
-    await expect(page.getByText(/n=1/).first()).toBeVisible()
-  }
-  await assertCoverageAndBan(page)
-
-  await page.goto('/orgaos?municipioIbge=5003702')
-  const douradosTable = page.locator('table.data')
-  await expect(douradosTable.getByRole('link', { name: douradosName })).toBeVisible()
-  await expect(douradosTable.getByRole('link', { name: marabaName })).toHaveCount(0)
-  await expect(douradosTable.getByRole('link', { name: voltaName })).toHaveCount(0)
-  await expect(page.getByText(/n=1/).first()).toBeVisible()
-  await expect(page.getByText(/UF MS/).first()).toBeVisible()
-  await douradosTable.getByRole('link', { name: douradosName }).click()
-  await expect(page.getByRole('heading', { name: douradosName })).toBeVisible()
-  await expect(page.getByText('5003702', { exact: true })).toBeVisible()
-  await assertCoverageAndBan(page)
-
-  await page.goto('/orgaos?uf=PA')
-  const marabaTable = page.locator('table.data')
-  await expect(marabaTable.getByRole('link', { name: marabaName })).toBeVisible()
-  await expect(marabaTable.getByRole('link', { name: douradosName })).toHaveCount(0)
-  await expect(marabaTable.getByRole('link', { name: voltaName })).toHaveCount(0)
-  await expect(page.getByText(/n=1/).first()).toBeVisible()
-  await expect(page.getByText(/UF PA/).first()).toBeVisible()
-  await assertCoverageAndBan(page)
-
-  await page.goto('/itens?uf=PA')
-  await expect(page.getByText(/UF PA/).first()).toBeVisible()
-  await expect(page.locator('table.data tbody tr').first()).toBeVisible()
-  if (!againstCompose) {
-    await expect(page.getByRole('link', { name: /Fog[aã]o/ })).toBeVisible()
-    await expect(page.getByText(/n=1/).first()).toBeVisible()
-  }
-  await assertCoverageAndBan(page)
-
+test('mantém cobertura no filtro vazio e no vazio com UF', async ({ page }) => {
   await page.goto('/orgaos?q=zzzz-sem-registro')
   await expect(page.getByText('Nenhum registro neste recorte para o filtro atual.')).toBeVisible()
   await expect(page.getByText(/n=0/).first()).toBeVisible()
@@ -496,6 +378,8 @@ test('vazio, 404 e páginas estáticas mantêm cobertura e o banimento', async (
   await expect(page.getByText(/2700300/).first()).toBeVisible()
   await expect(page.getByText(/5003702/).first()).toBeVisible()
   await expect(page.getByText(/1504208/).first()).toBeVisible()
+  await expect(page.getByText(/5108402/).first()).toBeVisible()
+  await expect(page.getByText(/1100122/).first()).toBeVisible()
   await expect(page.getByText(/não é um total nacional/).first()).toBeVisible()
   await expect(page.getByText(/UF mista/).first()).toBeVisible()
   await assertCoverageAndBan(page)

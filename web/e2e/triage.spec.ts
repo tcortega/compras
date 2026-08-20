@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 
-const bannedPublic = /fraude|corrupto|roubo|\bflag\b|ranking|adjacenc|shared_qsa|shared_partner/i
+const bannedPublic = /fraude|corrupto|roubo|\bflag\b|ranking|adjacenc|shared_qsa|shared_partner|cover[_-]?bidd|bid_variance|winner_rotation|co[_-]?bid/i
 
 function estado(page: Page) {
   return page.locator('.fields div', { has: page.getByText('Estado', { exact: true }) })

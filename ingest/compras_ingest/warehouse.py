@@ -13,7 +13,16 @@ import psycopg
 from psycopg.rows import dict_row
 
 from compras_ingest.cpf import assert_no_raw_cpf, is_cnpj
-from compras_ingest.ids import contratacao_id, flag_id, fornecedor_id, item_id, orgao_id, socio_id
+from compras_ingest.ids import (
+    cobid_screen_id,
+    contratacao_id,
+    flag_id,
+    fornecedor_id,
+    item_id,
+    orgao_id,
+    participante_id,
+    socio_id,
+)
 from compras_ingest.landing import LandingStore
 from compras_ingest.settings import Settings
 from compras_normalize.text import parse_date, parse_datetime, parse_decimal
@@ -473,6 +482,216 @@ def write_adjacencies(settings: Settings, edges: pl.DataFrame) -> int:
     return len(rows)
 
 
+def write_participants(settings: Settings, rows: pl.DataFrame) -> int:
+    if rows.is_empty():
+        return 0
+    now = _NOW()
+    payload = []
+    for row in rows.iter_rows(named=True):
+        lid = str(row.get("licitacaoId") or "")
+        part = str(row.get("participante") or "")
+        source = str(row.get("source") or "")
+        uf = str(row.get("uf") or "").upper()
+        if not lid or not part or source not in {"tce_sp", "tce_rs"} or uf not in {"SP", "RS"}:
+            continue
+        item = str(row.get("itemLote") or "")
+        payload.append(
+            {
+                "id": participante_id(lid, item, part, source),
+                "licitacaoId": lid,
+                "uf": uf,
+                "orgao": str(row.get("orgao") or ""),
+                "classe": str(row.get("classe") or ""),
+                "itemLote": item,
+                "participante": part,
+                "proposta": parse_decimal(row.get("proposta")),
+                "winner": bool(row.get("winner")),
+                "source": source,
+                "snapshotId": str(row.get("snapshot_id") or row.get("snapshotId") or ""),
+                "methodologyVersion": str(
+                    row.get("methodology_version") or row.get("methodologyVersion") or ""
+                ),
+            }
+        )
+    if not payload:
+        return 0
+    sql = """
+    INSERT INTO licitacao_participante (
+      id, "licitacaoId", uf, orgao, classe, "itemLote", participante, proposta,
+      winner, source, "snapshotId", "methodologyVersion", "createdAt"
+    ) VALUES (
+      %(id)s, %(licitacaoId)s, %(uf)s, %(orgao)s, %(classe)s, %(itemLote)s,
+      %(participante)s, %(proposta)s, %(winner)s, %(source)s, %(snapshotId)s,
+      %(methodologyVersion)s, %(now)s
+    )
+    ON CONFLICT ("licitacaoId", "itemLote", participante, source) DO UPDATE SET
+      uf = EXCLUDED.uf,
+      orgao = EXCLUDED.orgao,
+      classe = EXCLUDED.classe,
+      proposta = EXCLUDED.proposta,
+      winner = EXCLUDED.winner,
+      "snapshotId" = EXCLUDED."snapshotId",
+      "methodologyVersion" = EXCLUDED."methodologyVersion"
+    """
+    with psycopg.connect(settings.postgres_dsn) as conn:
+        for row in payload:
+            conn.execute(sql, {**row, "now": now})
+        conn.commit()
+    return len(payload)
+
+
+def write_cobid_edges(settings: Settings, edges: pl.DataFrame) -> int:
+    if edges.is_empty():
+        return 0
+    now = _NOW()
+    payload = []
+    for row in edges.iter_rows(named=True):
+        left = str(row.get("leftCnpj") or "")
+        right = str(row.get("rightCnpj") or "")
+        if not is_cnpj(left) or not is_cnpj(right) or left == right:
+            continue
+        left_prop = parse_decimal(row.get("leftProposta"))
+        right_prop = parse_decimal(row.get("rightProposta"))
+        if left > right:
+            left, right = right, left
+            left_prop, right_prop = right_prop, left_prop
+        payload.append(
+            {
+                "kind": str(row.get("kind") or "co_bid"),
+                "leftCnpj": left,
+                "rightCnpj": right,
+                "licitacaoId": str(row.get("licitacaoId") or ""),
+                "itemLote": str(row.get("itemLote") or ""),
+                "leftProposta": left_prop,
+                "rightProposta": right_prop,
+                "winner": str(row.get("winner") or ""),
+                "snapshotId": str(row.get("snapshot_id") or row.get("snapshotId") or ""),
+                "methodologyVersion": str(
+                    row.get("methodology_version") or row.get("methodologyVersion") or ""
+                ),
+            }
+        )
+    if not payload:
+        return 0
+    sql = """
+    INSERT INTO co_bid_edge (
+      kind, "leftCnpj", "rightCnpj", "licitacaoId", "itemLote",
+      "leftProposta", "rightProposta", winner, "snapshotId",
+      "methodologyVersion", "createdAt"
+    ) VALUES (
+      %(kind)s, %(leftCnpj)s, %(rightCnpj)s, %(licitacaoId)s, %(itemLote)s,
+      %(leftProposta)s, %(rightProposta)s, %(winner)s, %(snapshotId)s,
+      %(methodologyVersion)s, %(now)s
+    )
+    ON CONFLICT (kind, "leftCnpj", "rightCnpj", "licitacaoId", "itemLote") DO UPDATE SET
+      "leftProposta" = EXCLUDED."leftProposta",
+      "rightProposta" = EXCLUDED."rightProposta",
+      winner = EXCLUDED.winner,
+      "snapshotId" = EXCLUDED."snapshotId",
+      "methodologyVersion" = EXCLUDED."methodologyVersion"
+    """
+    with psycopg.connect(settings.postgres_dsn) as conn:
+        for row in payload:
+            conn.execute(sql, {**row, "now": now})
+        conn.commit()
+    return len(payload)
+
+
+def write_cobid_screens(settings: Settings, screens: pl.DataFrame) -> int:
+    if screens.is_empty():
+        return 0
+    now = _NOW()
+    payload = []
+    for row in screens.iter_rows(named=True):
+        kind = str(row.get("kind") or "")
+        subject = str(row.get("subjectId") or "")
+        snap = str(row.get("snapshot_id") or row.get("snapshotId") or "")
+        if not kind or not subject:
+            continue
+        payload.append(
+            {
+                "id": cobid_screen_id(kind, subject, snap),
+                "kind": kind,
+                "state": str(row.get("state") or "detected"),
+                "subjectId": subject,
+                "licitacaoId": str(row.get("licitacaoId") or ""),
+                "evidence": str(row.get("evidence") or ""),
+                "snapshotId": snap,
+                "methodologyVersion": str(
+                    row.get("methodology_version") or row.get("methodologyVersion") or ""
+                ),
+            }
+        )
+    if not payload:
+        return 0
+    sql = """
+    INSERT INTO co_bid_screen (
+      id, kind, state, "subjectId", "licitacaoId", evidence, "snapshotId",
+      "methodologyVersion", "createdAt", "updatedAt"
+    ) VALUES (
+      %(id)s, %(kind)s, %(state)s, %(subjectId)s, %(licitacaoId)s, %(evidence)s,
+      %(snapshotId)s, %(methodologyVersion)s, %(now)s, %(now)s
+    )
+    ON CONFLICT (kind, "subjectId", "snapshotId") DO UPDATE SET
+      state = EXCLUDED.state,
+      "licitacaoId" = EXCLUDED."licitacaoId",
+      evidence = EXCLUDED.evidence,
+      "methodologyVersion" = EXCLUDED."methodologyVersion",
+      "updatedAt" = EXCLUDED."updatedAt"
+    """
+    with psycopg.connect(settings.postgres_dsn) as conn:
+        for row in payload:
+            conn.execute(sql, {**row, "now": now})
+        conn.commit()
+    return len(payload)
+
+
+def fetch_participants(
+    settings: Settings,
+    *,
+    uf: str | None = None,
+    source: str | None = None,
+    licitacao_id: str | None = None,
+) -> list[dict]:
+    clauses: list[str] = []
+    params: dict = {}
+    if uf:
+        clauses.append("uf = %(uf)s")
+        params["uf"] = uf
+    if source:
+        clauses.append("source = %(source)s")
+        params["source"] = source
+    if licitacao_id:
+        clauses.append('"licitacaoId" = %(licitacao_id)s')
+        params["licitacao_id"] = licitacao_id
+    where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+    sql = f'SELECT * FROM licitacao_participante {where} ORDER BY "licitacaoId", "itemLote", participante'
+    with psycopg.connect(settings.postgres_dsn, row_factory=dict_row) as conn:
+        return list(conn.execute(sql, params).fetchall())
+
+
+def fetch_cobid_edges(settings: Settings) -> list[dict]:
+    sql = 'SELECT * FROM co_bid_edge ORDER BY kind, "leftCnpj", "rightCnpj", "licitacaoId"'
+    with psycopg.connect(settings.postgres_dsn, row_factory=dict_row) as conn:
+        return list(conn.execute(sql).fetchall())
+
+
+def fetch_cobid_screens(
+    settings: Settings,
+    *,
+    kind: str | None = None,
+) -> list[dict]:
+    clauses: list[str] = []
+    params: dict = {}
+    if kind:
+        clauses.append("kind = %(kind)s")
+        params["kind"] = kind
+    where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+    sql = f'SELECT * FROM co_bid_screen {where} ORDER BY kind, "subjectId"'
+    with psycopg.connect(settings.postgres_dsn, row_factory=dict_row) as conn:
+        return list(conn.execute(sql, params).fetchall())
+
+
 def fetch_adjacencies(
     settings: Settings,
     *,
@@ -508,6 +727,9 @@ def fetch_counts(settings: Settings) -> dict[str, int]:
             "fornecedor_adjacency",
             "cnae",
             "fornecedor_socio",
+            "licitacao_participante",
+            "co_bid_edge",
+            "co_bid_screen",
         ):
             counts[table] = conn.execute(f"SELECT count(*) AS n FROM {table}").fetchone()["n"]
     return counts
@@ -715,22 +937,39 @@ def fetch_landing_sources(settings: Settings) -> list[dict]:
         return list(conn.execute('SELECT name, "lastUpdate", n, "snapshotId" FROM landing_source ORDER BY name').fetchall())
 
 
+EXPLORER_TABLES = (
+    "orgao",
+    "fornecedor",
+    "contratacao",
+    "item",
+    "flag",
+    "catalog_code",
+    "landing_source",
+    "cnae",
+    "fornecedor_socio",
+)
+
+INTERNAL_TABLES = (
+    "item_exclusion",
+    "fornecedor_adjacency",
+    "licitacao_participante",
+    "co_bid_edge",
+    "co_bid_screen",
+)
+
+
 def fetch_raw_text_blobs(settings: Settings) -> list[str]:
+    return _table_blobs(settings, EXPLORER_TABLES + INTERNAL_TABLES)
+
+
+def fetch_explorer_text_blobs(settings: Settings) -> list[str]:
+    return _table_blobs(settings, EXPLORER_TABLES)
+
+
+def _table_blobs(settings: Settings, tables: tuple[str, ...]) -> list[str]:
     blobs: list[str] = []
     with psycopg.connect(settings.postgres_dsn, row_factory=dict_row) as conn:
-        for table in (
-            "orgao",
-            "fornecedor",
-            "contratacao",
-            "item",
-            "flag",
-            "item_exclusion",
-            "catalog_code",
-            "landing_source",
-            "fornecedor_adjacency",
-            "cnae",
-            "fornecedor_socio",
-        ):
+        for table in tables:
             for row in conn.execute(f"SELECT * FROM {table}").fetchall():
                 blobs.extend(str(v) for v in row.values() if v is not None)
     return blobs

@@ -2,6 +2,8 @@
 
 Internal only.
 The explorer does not read this landing.
+Participant rows persist in internal warehouse table `licitacao_participante`.
+The explorer does not read that table.
 Participant proposal values do not appear on public routes.
 
 Source: annual licitacoes-consolidado ZIP from https://dados.tce.rs.gov.br/

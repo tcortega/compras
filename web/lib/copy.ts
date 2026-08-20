@@ -39,12 +39,14 @@ export const SLICE_MUNICIPIOS = [
   { nome: 'Santa Maria', uf: 'RS', ibge: '4316907' },
   { nome: 'Montes Claros', uf: 'MG', ibge: '3143302' },
   { nome: 'Governador Valadares', uf: 'MG', ibge: '3127701' },
+  { nome: 'Canoas', uf: 'RS', ibge: '4304606' },
+  { nome: 'Lages', uf: 'SC', ibge: '4209300' },
 ] as const
 
-export const SLICE_BRAND = 'Trinta e um municípios · 2024'
+export const SLICE_BRAND = 'Trinta e três municípios · 2024'
 
 export const SLICE_LABEL =
-  'Volta Redonda e Niterói (RJ), Bauru (SP), Caxias do Sul (RS), Joinville (SC), Uberlândia (MG), Londrina (PR), Feira de Santana (BA), Caruaru (PE), Anápolis (GO), Vila Velha (ES), Campina Grande (PB), Caucaia (CE), Imperatriz (MA), Arapiraca (AL), Dourados (MS), Marabá (PA), Várzea Grande (MT), Ji-Paraná (RO), Parnamirim (RN), Cruzeiro do Sul (AC), Santana (AP), Rorainópolis (RR), Maringá (PR), Taubaté (SP), Cascavel (PR), Juiz de Fora (MG), Foz do Iguaçu (PR), Santa Maria (RS), Montes Claros (MG) e Governador Valadares (MG) · 2024'
+  'Volta Redonda e Niterói (RJ), Bauru (SP), Caxias do Sul (RS), Joinville (SC), Uberlândia (MG), Londrina (PR), Feira de Santana (BA), Caruaru (PE), Anápolis (GO), Vila Velha (ES), Campina Grande (PB), Caucaia (CE), Imperatriz (MA), Arapiraca (AL), Dourados (MS), Marabá (PA), Várzea Grande (MT), Ji-Paraná (RO), Parnamirim (RN), Cruzeiro do Sul (AC), Santana (AP), Rorainópolis (RR), Maringá (PR), Taubaté (SP), Cascavel (PR), Juiz de Fora (MG), Foz do Iguaçu (PR), Santa Maria (RS), Montes Claros (MG), Governador Valadares (MG), Canoas (RS) e Lages (SC) · 2024'
 
 export const copy = {
   coverageIncomplete:

@@ -124,6 +124,10 @@ namespace Api.Persistence.Migrations
                     b.Property<Instant?>("NotifiedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("NotifyArtifact")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
                     b.Property<Instant?>("PublishAfter")
                         .HasColumnType("timestamp with time zone");
 

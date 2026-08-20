@@ -67,11 +67,13 @@ def _normalize_row(
     fornecedor_cnpj = _digits(_first(row, "codfornecedor", "nifornecedor", "fornecedor_cnpj"))
     opened_on = None
     cnae = None
+    cnae_sec = None
     razao_forn = _first(row, "nomefornecedor", "fornecedor_razao")
     if len(fornecedor_cnpj) == 14 and fornecedor_cnpj in cnpj_by:
         info = cnpj_by[fornecedor_cnpj]
         opened_on = info.get("opened_on")
         cnae = info.get("cnae")
+        cnae_sec = info.get("cnae_secundaria")
         razao_forn = razao_forn or info.get("razao_social")
     esfera = _ESFERA.get(fold(_first(row, "orgaoentidadeesferaid", "esfera")), "municipal")
     return {
@@ -86,6 +88,7 @@ def _normalize_row(
         "fornecedor_razao": razao_forn or "",
         "opened_on": opened_on.isoformat() if opened_on else "",
         "cnae": cnae or "",
+        "cnae_secundaria": cnae_sec or "",
         "pncp_id": _first(row, "numerocontrolepncp", "idcontratacaopncp", "pncp_id") or "",
         "modalidade": _first(row, "modalidadenome", "modalidade") or "",
         "modalidade_codigo": _first(row, "codigomodalidade", "modalidade_codigo") or "",
@@ -145,6 +148,9 @@ def _cnpj_index(cnpj: pl.DataFrame | None) -> dict[str, dict]:
         out[full] = {
             "opened_on": opened,
             "cnae": str(folded.get("cnae_fiscal_principal") or folded.get("cnae") or ""),
+            "cnae_secundaria": str(
+                folded.get("cnae_fiscal_secundaria") or folded.get("cnae_secundaria") or ""
+            ),
             "razao_social": str(folded.get("razao_social") or folded.get("nome_fantasia") or ""),
         }
     return out

@@ -246,6 +246,15 @@ Participant documents and proposal values stay in landing parquet.
 The explorer does not read this source.
 Live CKAN is gated by `TCE_RS_FETCH`.
 
+PNCP consulta lands under `pncp_consulta/date=` with a resumable `_cursor.json` or `_gaps_cursor.json`.
+A background Dagster job (`pncp_consulta_gaps_run`, America/Sao_Paulo) fetches only gaps for the already covered 59 IBGE codes.
+A gap is a consulta compra, item, or later page that the Compras.gov.br bulk does not already give that IBGE.
+Complete compras.gov rows are not re-fetched.
+Warehouse reads those gap rows as normal itens and contratacoes.
+The explorer does not label them as gaps.
+Live HTTP stays on `pncp.gov.br` with 1s spacing and exponential backoff on 429/5xx.
+Fixture mode never calls `resolve_pncp_consulta`.
+
 CGU CEIS and CNEP bulk CSVs land under `cgu_ceis_cnep/date=`.
 That source is internal.
 Sanction windows stay in landing parquet.

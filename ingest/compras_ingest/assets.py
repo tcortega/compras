@@ -3,9 +3,11 @@ from dagster import AssetExecutionContext, Definitions, ScheduleDefinition, asse
 from compras_ingest.landing import LandingStore
 from compras_ingest.pipeline import (
     run_adjacency_and_write,
+    run_pncp_consulta_gaps,
     run_tier1_and_write_flags,
     warehouse_from_landing,
 )
+from compras_ingest.pncp_ids import live_ibge_targets
 from compras_ingest.refetch import (
     JOB_NAME,
     REFETCH_SOURCES,
@@ -20,7 +22,7 @@ from compras_ingest.settings import Settings
 from compras_ingest.sources.catalogo_cnbs import land_catalogo_cnbs
 from compras_ingest.sources.compras_gov import land_compras_gov
 from compras_ingest.sources.ocds import land_ocds
-from compras_ingest.sources.pncp_consulta import land_pncp_consulta
+from compras_ingest.sources.pncp_consulta import GAPS_CURSOR_KEY, land_pncp_consulta
 from compras_ingest.sources.cgu_ceis_cnep import land_cgu_ceis_cnep
 from compras_ingest.sources.receita_cnpj import cnpj_basicos_from_frame, land_receita_cnpj
 from compras_ingest.sources.tce_rs_licitacon import land_tce_rs_licitacon
@@ -78,6 +80,29 @@ def pncp_consulta(context: AssetExecutionContext) -> dict:
     return {**ref.as_dict(), **report}
 
 
+GAPS_JOB_NAME = "pncp_consulta_gaps_run"
+GAPS_SCHEDULE_NAME = "pncp_consulta_gaps_daily"
+GAPS_SCHEDULE_CRON = "30 4 * * *"
+GAPS_SCHEDULE_TZ = "America/Sao_Paulo"
+GAPS_ASSET_NAME = "pncp_consulta_gaps"
+
+
+@asset(
+    name=GAPS_ASSET_NAME,
+    group_name="tier_b",
+    description="PNCP consulta gaps for the covered 59. Skip complete compras.gov rows. 1s spacing. America/Sao_Paulo.",
+)
+def pncp_consulta_gaps(context: AssetExecutionContext) -> dict:
+    settings = _settings()
+    store = LandingStore(settings)
+    ref, df, report = run_pncp_consulta_gaps(settings, store)
+    context.log.info(
+        f"pncp_consulta_gaps rows={df.height} sha={ref.sha256} "
+        f"targets={len(live_ibge_targets())} cursor={GAPS_CURSOR_KEY} report={report}"
+    )
+    return {**ref.as_dict(), **report}
+
+
 @asset(
     group_name="tier_b",
     description="TCE-SP monthly licitacao CSV. Participant proposals. Internal only. Bauru slice. Not cubo SQL.",
@@ -124,13 +149,14 @@ def warehouse_entities(
     cgu_ceis_cnep: dict,
 ) -> dict:
     _ = ocds_crosscheck
-    _ = pncp_consulta
     _ = tce_sp_licitacao
     _ = tce_rs_licitacon
     _ = cgu_ceis_cnep
     settings = _settings()
     store = LandingStore(settings)
-    items, summary = warehouse_from_landing(settings, store, compras_gov, catalogo_cnbs, receita_cnpj)
+    items, summary = warehouse_from_landing(
+        settings, store, compras_gov, catalogo_cnbs, receita_cnpj, pncp_consulta
+    )
     context.log.info(
         f"normalized={items.height} entities={summary['entities']} facts={summary['facts']} exclusions={summary.get('exclusions')} pool={summary.get('anomaly_pool_n')} items_key={summary['items_key']}"
     )
@@ -219,6 +245,19 @@ trailing_window_refetch_schedule = ScheduleDefinition(
     execution_timezone=SCHEDULE_TZ,
 )
 
+pncp_consulta_gaps_job = define_asset_job(
+    name=GAPS_JOB_NAME,
+    selection=[GAPS_ASSET_NAME],
+    description="Daily PNCP consulta gaps for the covered 59 municipios.",
+)
+
+pncp_consulta_gaps_schedule = ScheduleDefinition(
+    name=GAPS_SCHEDULE_NAME,
+    job=pncp_consulta_gaps_job,
+    cron_schedule=GAPS_SCHEDULE_CRON,
+    execution_timezone=GAPS_SCHEDULE_TZ,
+)
+
 defs = Definitions(
     assets=[
         catalogo_cnbs,
@@ -226,6 +265,7 @@ defs = Definitions(
         compras_gov,
         ocds_crosscheck,
         pncp_consulta,
+        pncp_consulta_gaps,
         tce_sp_licitacao,
         tce_rs_licitacon,
         cgu_ceis_cnep,
@@ -234,8 +274,8 @@ defs = Definitions(
         tier1_flags,
         *REFETCH_ASSETS,
     ],
-    jobs=[trailing_window_refetch_job],
-    schedules=[trailing_window_refetch_schedule],
+    jobs=[trailing_window_refetch_job, pncp_consulta_gaps_job],
+    schedules=[trailing_window_refetch_schedule, pncp_consulta_gaps_schedule],
 )
 
 
@@ -246,6 +286,7 @@ def required_asset_keys() -> set[str]:
         "compras_gov",
         "ocds_crosscheck",
         "pncp_consulta",
+        GAPS_ASSET_NAME,
         "tce_sp_licitacao",
         "tce_rs_licitacon",
         "cgu_ceis_cnep",
@@ -281,6 +322,10 @@ def required_ocds_parents() -> set[str]:
     return {"compras_gov"}
 
 
+def required_gaps_parents() -> set[str]:
+    return set()
+
+
 def required_detect_parents() -> set[str]:
     return {"warehouse_entities"}
 
@@ -306,12 +351,16 @@ def assert_asset_graph() -> list[str]:
         ("ocds_crosscheck", required_ocds_parents()),
         ("tier1_flags", required_detect_parents()),
         ("fornecedor_adjacency", required_adjacency_parents()),
+        (GAPS_ASSET_NAME, required_gaps_parents()),
     )
     for name, need in checks:
         have = parents(name)
         if not need.issubset(have):
             raise RuntimeError(f"{name} missing parents {need - have}")
+        if name == GAPS_ASSET_NAME and have:
+            raise RuntimeError(f"{name} must not rematerialize upstream {have}")
     assert_refetch_schedule()
+    assert_gaps_schedule()
     return keys
 
 
@@ -332,6 +381,26 @@ def assert_refetch_schedule() -> None:
     need = required_refetch_asset_keys()
     if selected and not need.issubset(selected):
         raise RuntimeError(f"{JOB_NAME} missing refetch assets {need - selected}")
+
+
+def assert_gaps_schedule() -> None:
+    if GAPS_SCHEDULE_TZ != "America/Sao_Paulo":
+        raise RuntimeError(f"PNCP gaps tz is {GAPS_SCHEDULE_TZ}")
+    schedules = list(defs.schedules or [])
+    found = next((s for s in schedules if s.name == GAPS_SCHEDULE_NAME), None)
+    if found is None:
+        raise RuntimeError(f"dagster defs missing schedule {GAPS_SCHEDULE_NAME}")
+    if not found.cron_schedule:
+        raise RuntimeError("PNCP gaps schedule missing cron")
+    if found.execution_timezone != GAPS_SCHEDULE_TZ:
+        raise RuntimeError(f"PNCP gaps tz is {found.execution_timezone} not {GAPS_SCHEDULE_TZ}")
+    target = found.job_name or getattr(found.job, "name", "")
+    if target != GAPS_JOB_NAME:
+        raise RuntimeError(f"gaps schedule does not target {GAPS_JOB_NAME}: {target}")
+    job = defs.resolve_job_def(GAPS_JOB_NAME)
+    selected = _job_asset_keys(job)
+    if selected and GAPS_ASSET_NAME not in selected:
+        raise RuntimeError(f"{GAPS_JOB_NAME} missing {GAPS_ASSET_NAME}")
 
 
 def _job_asset_keys(job) -> set[str]:

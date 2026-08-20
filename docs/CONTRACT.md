@@ -276,7 +276,9 @@ The public CATMAT percent is the warehouse catalog join, not the Phase 0 VR 81.7
 
 Internal publication routes exist and are tested.
 `GET /api/internal/flags` lists warehouse facts by kind, state, itemId, skip, and take.
+`GET /api/internal/flags/{id}/audit` reads `flag_audit` for that row.
 That list is not linked from the explorer.
+Staging triage UI lives at `/interno/triagem` and is not in the public shell nav.
 No explorer route may return a flag field.
 No explorer route may return an exclusion reason.
 No explorer route may return adjacency or a shared-partner count.

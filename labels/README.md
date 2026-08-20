@@ -8,3 +8,5 @@ Do not publish flags until that number exists.
 A3 is a second labeled sample in labels/a3-bauru-2024/.
 A3 uses Bauru SP 2024, not this Volta Redonda set.
 A3 does not rewrite the Phase 0 9 percent or 81.75 percent numbers.
+Internal triage appends new rows to labels/triage-labels.csv.
+Do not edit this labels.csv or labels/a3-bauru-2024/* from that queue.

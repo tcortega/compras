@@ -305,6 +305,30 @@ public sealed record FlagRecord
 	public required string Framing { get; init; }
 }
 
+public sealed record FlagAuditRecord
+{
+	public required string Id { get; init; }
+
+	public required Guid FlagId { get; init; }
+
+	public string? FromState { get; init; }
+
+	public required string ToState { get; init; }
+
+	public required Instant At { get; init; }
+
+	public required string Actor { get; init; }
+
+	public string? Reason { get; init; }
+
+	public string? Delta { get; init; }
+}
+
+public sealed record FlagAuditPage
+{
+	public required IReadOnlyList<FlagAuditRecord> Items { get; init; }
+}
+
 public sealed record CreateFlagRequest
 {
 	public required Guid ItemId { get; init; }

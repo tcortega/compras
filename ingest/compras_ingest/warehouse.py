@@ -94,6 +94,9 @@ def write_entities(settings: Settings, items: pl.DataFrame) -> dict[str, int]:
                 "unidadeCanonica": row.get("unidade_canonica") or None,
                 "valorUnitario": parse_decimal(row.get("valor_unitario")),
                 "valorTotal": parse_decimal(row.get("valor_total")),
+                "valorPorUnidadeCanonica": parse_decimal(
+                    row.get("valor_por_unidade_canonica") or row.get("valor_unitario_base")
+                ),
                 "uf": row.get("uf_item") or row.get("uf") or "",
                 "quarter": row.get("quarter") or "",
                 "snapshotId": row.get("snapshot_id") or "",
@@ -134,6 +137,7 @@ def write_facts(settings: Settings, items: pl.DataFrame) -> int:
         "valor_unitario",
         "valor_total",
         "valor_unitario_base",
+        "valor_por_unidade_canonica",
         "uf",
         "quarter",
         "snapshot_id",
@@ -163,7 +167,8 @@ def write_facts(settings: Settings, items: pl.DataFrame) -> int:
                 row.get("unidade_canonica") or None,
                 _f(parse_decimal(row.get("valor_unitario"))),
                 _f(parse_decimal(row.get("valor_total"))),
-                _f(parse_decimal(row.get("valor_unitario_base"))),
+                _f(parse_decimal(row.get("valor_por_unidade_canonica") or row.get("valor_unitario_base"))),
+                _f(parse_decimal(row.get("valor_por_unidade_canonica") or row.get("valor_unitario_base"))),
                 row.get("uf_item") or row.get("uf") or "",
                 row.get("quarter") or "",
                 row.get("snapshot_id") or "",
@@ -252,6 +257,48 @@ def fetch_orgaos(settings: Settings) -> list[dict]:
 def fetch_contratacao(settings: Settings, pncp_id: str) -> dict | None:
     with psycopg.connect(settings.postgres_dsn, row_factory=dict_row) as conn:
         return conn.execute('SELECT * FROM contratacao WHERE "pncpId" = %s', (pncp_id,)).fetchone()
+
+
+def fetch_all_items(settings: Settings) -> list[dict]:
+    with psycopg.connect(settings.postgres_dsn, row_factory=dict_row) as conn:
+        return list(conn.execute("SELECT * FROM item ORDER BY descricao, id").fetchall())
+
+
+def item_columns(settings: Settings) -> set[str]:
+    with psycopg.connect(settings.postgres_dsn, row_factory=dict_row) as conn:
+        rows = conn.execute(
+            """
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_schema = 'public' AND table_name = 'item'
+            """
+        ).fetchall()
+    return {str(row["column_name"]) for row in rows}
+
+
+def fetch_item_facts(settings: Settings) -> list[dict]:
+    ch = _ch(settings)
+    result = ch.query(
+        f"""
+        SELECT
+          unidade_medida,
+          unidade_canonica,
+          valor_unitario,
+          valor_unitario_base,
+          valor_por_unidade_canonica
+        FROM {settings.clickhouse_database}.item_fact
+        FINAL
+        """
+    )
+    return [dict(zip(result.column_names, row, strict=True)) for row in result.result_rows]
+
+
+def fact_columns(settings: Settings) -> set[str]:
+    ch = _ch(settings)
+    result = ch.query(f"DESCRIBE TABLE {settings.clickhouse_database}.item_fact")
+    names = result.column_names
+    name_idx = names.index("name") if "name" in names else 0
+    return {str(row[name_idx]) for row in result.result_rows}
 
 
 def fetch_items_for(settings: Settings, contratacao_uuid: str) -> list[dict]:
@@ -365,11 +412,13 @@ def _upsert_items(conn, rows: list[dict], now) -> None:
     INSERT INTO item (
       id, "contratacaoId", "fornecedorId", descricao, catmat, catser,
       quantidade, "unidadeMedida", "unidadeCanonica", "valorUnitario", "valorTotal",
+      "valorPorUnidadeCanonica",
       uf, quarter, "snapshotId", "methodologyVersion",
       suspended, "createdAt", "updatedAt"
     ) VALUES (
       %(id)s, %(contratacaoId)s, %(fornecedorId)s, %(descricao)s, %(catmat)s, %(catser)s,
       %(quantidade)s, %(unidadeMedida)s, %(unidadeCanonica)s, %(valorUnitario)s, %(valorTotal)s,
+      %(valorPorUnidadeCanonica)s,
       %(uf)s, %(quarter)s, %(snapshotId)s, %(methodologyVersion)s,
       false, %(now)s, %(now)s
     )
@@ -383,6 +432,7 @@ def _upsert_items(conn, rows: list[dict], now) -> None:
       "unidadeCanonica" = EXCLUDED."unidadeCanonica",
       "valorUnitario" = EXCLUDED."valorUnitario",
       "valorTotal" = EXCLUDED."valorTotal",
+      "valorPorUnidadeCanonica" = EXCLUDED."valorPorUnidadeCanonica",
       uf = EXCLUDED.uf,
       quarter = EXCLUDED.quarter,
       "snapshotId" = EXCLUDED."snapshotId",

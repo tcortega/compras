@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS item (
   "unidadeCanonica" text,
   "valorUnitario" numeric(18, 6),
   "valorTotal" numeric(18, 6),
+  "valorPorUnidadeCanonica" numeric(18, 6),
   uf text NOT NULL,
   quarter text NOT NULL,
   "snapshotId" text NOT NULL,
@@ -89,3 +90,5 @@ CREATE INDEX IF NOT EXISTS contratacao_orgao_idx ON contratacao ("orgaoId");
 CREATE INDEX IF NOT EXISTS flag_item_idx ON flag ("itemId");
 CREATE INDEX IF NOT EXISTS flag_state_idx ON flag (state);
 CREATE INDEX IF NOT EXISTS flag_kind_idx ON flag (kind);
+
+ALTER TABLE item ADD COLUMN IF NOT EXISTS "valorPorUnidadeCanonica" numeric(18, 6);

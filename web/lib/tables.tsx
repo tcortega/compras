@@ -108,7 +108,8 @@ export const itemColumns: Column<Item>[] = [
   {
     key: 'un',
     header: 'Unidade',
-    cell: (row) => row.unidadeCanonica ?? row.unidadeMedida,
+    cell: (row) =>
+      row.unidadeCanonica ? `${row.unidadeMedida} · ${row.unidadeCanonica}` : row.unidadeMedida,
   },
   {
     key: 'unit',

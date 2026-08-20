@@ -34,3 +34,4 @@ include = ["compras_ingest*", "compras_normalize*", "compras_detect*"]
 
 [tool.setuptools.package-data]
 compras_normalize = ["data/*.csv"]
+compras_detect = ["data/*.csv"]

@@ -103,7 +103,11 @@ No public explorer route reads this until the Phase 0 precision number exists an
 `kind` is a detector name.
 `cnpj_age` is the flag tier when `award_date` minus `opened_on` is under 90 days.
 `cnpj_age_info` is the info tier when that age is at least 90 days and under 365 days.
-Both stay `state=detected` and are not public alerts.
+`fracionamento` is the Art. 75 §1 same-object annual aggregate when every dispensa purchase in the órgão+CATMAT-class+year group stays under the year+kind threshold and the sum exceeds it.
+`fracionamento_cluster` is the sprint cluster: at least three dispensas in that group, each in the last tenth under the limit, all award dates inside a 90-day window.
+The aggregate key prefers `codigo_classe`, then `codigo_grupo`, then the CATMAT/CATSER class/group join, then the item code.
+Threshold amounts live in `detect/compras_detect/data/dispensa_thresholds.csv` and are not Python literals.
+All of these kinds stay `state=detected` and are not public alerts.
 `id` uuid.
 `itemId` uuid.
 `kind` text.

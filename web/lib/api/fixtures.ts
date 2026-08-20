@@ -26,6 +26,8 @@ export const ids = {
   orgaoArapiraca: '7c2e1f40-2700-4050-9a01-000000000018',
   orgaoDourados: '7c2e1f40-5003-4050-9a01-000000000019',
   orgaoMaraba: '7c2e1f40-1504-4050-9a01-000000000020',
+  orgaoVarzeaGrande: '7c2e1f40-5108-4050-9a01-000000000021',
+  orgaoJiParana: '7c2e1f40-1100-4050-9a01-000000000022',
   fornFarma: '8d3f2a51-3306-4050-9a02-000000000001',
   fornAlim: '8d3f2a51-3306-4050-9a02-000000000002',
   fornComb: '8d3f2a51-3306-4050-9a02-000000000003',
@@ -59,6 +61,8 @@ export const ids = {
   ctArapiraca: '9e4a3b62-2700-4050-9a03-000000000024',
   ctDourados: '9e4a3b62-5003-4050-9a03-000000000025',
   ctMaraba: '9e4a3b62-1504-4050-9a03-000000000026',
+  ctVarzeaGrande: '9e4a3b62-5108-4050-9a03-000000000027',
+  ctJiParana: '9e4a3b62-1100-4050-9a03-000000000028',
 } as const
 
 function orgao(
@@ -286,6 +290,26 @@ export const orgaos: Orgao[] = [
     'PA',
     '1504208',
     'Marabá',
+  ),
+  orgao(
+    ids.orgaoVarzeaGrande,
+    '03507548000110',
+    'Município de Várzea Grande',
+    'executivo',
+    T2,
+    'MT',
+    '5108402',
+    'Várzea Grande',
+  ),
+  orgao(
+    ids.orgaoJiParana,
+    '04092672000125',
+    'Município de Ji-Paraná',
+    'executivo',
+    T2,
+    'RO',
+    '1100122',
+    'Ji-Paraná',
   ),
 ]
 
@@ -678,6 +702,28 @@ export const contratacoes: Contratacao[] = [
     '2024-10-15T14:09:45.000Z',
     'compras.gov.br',
   ),
+  ct(
+    ids.ctVarzeaGrande,
+    '03507548000110-1-000073/2024',
+    ids.orgaoVarzeaGrande,
+    'dispensa',
+    'O objeto do presente procedimento é a escolha da proposta mais vantajosa para a Contratação de empresa para o fornecimento de equipamentos permanentes de informática para atender às necessidades do Município de Várzea Grande - MT, conforme condições, quantidades e exigências estabelecidas neste Aviso de Contratação Direta e seus anexos.',
+    2024,
+    52_042.0,
+    '2024-11-27T09:10:32.000Z',
+    'compras.gov.br',
+  ),
+  ct(
+    ids.ctJiParana,
+    '04092672000125-1-000139/2024',
+    ids.orgaoJiParana,
+    'inexigibilidade',
+    'Contratação de empresa especializada em fornecimento de assinatura anual de banco de dados de pesquisa de preços via web, ',
+    2024,
+    38_540.0,
+    '2024-10-18T09:52:16.000Z',
+    'compras.gov.br',
+  ),
 ]
 
 function item(
@@ -763,4 +809,6 @@ export const items: Item[] = [
   item(42, ids.ctArapiraca, ids.fornPapel, 'Lamotrigina', '602451', 18, 'Comprimido', 'comprimido', 16.0, 'AL', '2024-Q4', T2),
   item(43, ids.ctDourados, ids.fornPapel, 'Reagente Para Diagnóstico Clínico', '333587', 12, 'Unidade', 'un', 126.0, 'MS', '2024-Q4', T2),
   item(44, ids.ctMaraba, ids.fornPapel, 'Fogão Gás', '425200', 4, 'Unidade', 'un', 849.99, 'PA', '2024-Q4', T2),
+  item(45, ids.ctVarzeaGrande, ids.fornPapel, 'Microcomputador', '606229', 2, 'Unidade', 'un', 26021.0, 'MT', '2024-Q4', T2),
+  item(46, ids.ctJiParana, ids.fornPapel, 'Assinatura de banco de imagens', '30130', 1, 'Unidade', 'un', 38540.0, 'RO', '2024-Q4', T2),
 ]

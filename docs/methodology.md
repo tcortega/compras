@@ -1,6 +1,6 @@
 # Metodologia
 
-Versão 0.1.
+Versão 0.2.
 
 Este documento é a metodologia pública carimbada na linha de fonte do explorador.
 
@@ -56,3 +56,64 @@ Unidade desconhecida não inventa preço comparável.
 `specConcentracao`, `specDosagem` e `specTamanho` guardam o token extraído da descrição.
 Ausência de token permanece nula.
 Esses campos não aparecem no explorador público.
+
+## Sinais internos Tier 1
+
+A versão 0.2 descreve os sinais internos já embarcados.
+Nenhum destes sinais aparece no explorador público.
+O estado permanece `detected`.
+O texto de um sinal, se existir, é só um indício que pede verificação.
+
+### Quantidade e exclusões de qualidade de dado
+
+`qty_unit_price_neq_total` marca o item quando quantidade vezes preço unitário diverge do total além de 0,02 ou 0,2%.
+O mesmo critério vira exclusão `item_exclusion` e tira o item do pool de anomalia de preço.
+Outras exclusões de qualidade são `decimal_shift`, `qty_eq_1_collapse`, `zero_or_negative`, `duplicate_row` e `catalog_magnitude`.
+Exclusão não é alerta público.
+O item permanece no explorador.
+
+### CEIS e CNEP na janela da homologação
+
+`sanctioned_ceis_cnep` cruza o CNPJ do fornecedor com o CEIS e o CNEP da CGU.
+O sinal só nasce quando a data de homologação cai dentro da vigência da sanção.
+Fonte e janela ficam no landing interno.
+O explorador não lê essa fonte.
+
+### Idade do CNPJ
+
+`cnpj_age` nasce quando a homologação ocorre em menos de 90 dias após a abertura do CNPJ.
+`cnpj_age_info` nasce quando essa idade está entre 90 e 365 dias.
+Idade maior que 365 dias não gera sinal.
+Datas ausentes ou invertidas são ignoradas.
+
+### Fracionamento
+
+`fracionamento` agrega dispensas do mesmo órgão, mesma classe CATMAT e mesmo ano.
+O sinal nasce quando cada compra fica abaixo do limiar do decreto daquele ano e a soma ultrapassa o Art. 75.
+`fracionamento_cluster` pede ao menos três dispensas na última décima do limiar, com datas em janela de 90 dias.
+Os valores do limiar vêm de `detect/compras_detect/data/dispensa_thresholds.csv`.
+Em juízo, o fracionamento da contratação exige dolo específico.
+Este detector é um indício de agregado anual do mesmo objeto frente aos limiares do decreto, não um veredito.
+
+### Edição retroativa
+
+`retroactive_edit` compara snapshots do mesmo registro no landing.
+O sinal nasce quando preço, quantidade ou fornecedor muda depois da publicação ou da homologação.
+Mudança só de descrição não gera sinal.
+Snapshot anterior à publicação não gera sinal.
+
+## Ressalvas legais
+
+Estas frases são ressalvas, não acusações.
+Sócios em comum não são, por si sós, ilícitos, conforme os Acórdãos 297/2009, 1.793/2011 e 2.803/2016 do TCU.
+Um desvio de preço não é, por si só, um ilícito.
+A precisão do método ingênuo da Fase 0 neste recorte é 9%.
+Sinais públicos permanecem fechados.
+
+## Carimbo 0.2
+
+Sinais internos novos gravados pelo pipeline recebem methodologyVersion 0.2.
+O agregado de cobertura do explorador usa a mesma versão.
+Uma linha já persistida em `flag` mantém o carimbo anterior, porque o conflito de escrita atualiza só o delta.
+Os fixtures FullCycle da API permanecem em 0.1.
+Os arquivos de rótulo da Fase 0 e do A3 permanecem em phase1-0.1.0.

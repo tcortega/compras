@@ -406,8 +406,11 @@ def main() -> int:
             raise SystemExit("warehouse flag missing delta")
         if not row.get("snapshotId"):
             raise SystemExit("warehouse flag missing snapshotId")
-        if not row.get("methodologyVersion"):
-            raise SystemExit("warehouse flag missing methodologyVersion")
+        if str(row.get("methodologyVersion") or "") != settings.methodology_version:
+            raise SystemExit(
+                f"warehouse flag methodologyVersion {row.get('methodologyVersion')!r} "
+                f"!= {settings.methodology_version!r}"
+            )
         if str(row.get("state") or "") != "detected":
             raise SystemExit(f"warehouse flag state is not detected: {row.get('state')}")
     blobs = fetch_raw_text_blobs(settings)

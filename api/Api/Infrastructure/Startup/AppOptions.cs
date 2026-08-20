@@ -8,7 +8,7 @@ public sealed class AppOptions
 
 	public string ConnectionString { get; set; } = "";
 
-	public string MethodologyVersion { get; set; } = "0.1";
+	public string MethodologyVersion { get; set; } = "0.2";
 
 	public bool ApplyMigrations { get; set; }
 }

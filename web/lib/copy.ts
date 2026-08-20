@@ -76,9 +76,9 @@ export const SLICE_CITIES =
 
 export function sliceYearSpan(years: readonly number[]): string {
   const known = [...years].filter((year) => Number.isFinite(year)).sort((a, b) => a - b)
-  if (!known.length) return String(SLICE_YEAR)
   const min = known[0]
-  const max = known[known.length - 1]
+  const max = known.at(-1)
+  if (min === undefined || max === undefined) return String(SLICE_YEAR)
   if (min === max) return String(min)
   if (max >= 2026) return `${min}-${max} YTD`
   return `${min}-${max}`

@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import os
+
 import codecs
 import csv
 import io
 from datetime import date
 from pathlib import Path
 from tempfile import TemporaryDirectory
+import time
 
 import httpx
 import polars as pl
@@ -29,7 +32,7 @@ _IBGE_NAMES = ("unidadeorgaocodigoibge", "codibgeunidadecompradora", "municipioi
 _ESFERA_NAMES = ("orgaoentidadeesferaid", "esferacompradora", "esfera")
 _PODER_NAMES = ("orgaoentidadepoderid", "podercomprador", "poder")
 _ID_NAMES = ("idcompra",)
-_ANO_NAMES = ("anocomprapncp", "ano")
+_ANO_NAMES = ("anocomprapncp", "anocompra", "ano")
 _READ_CHUNK = 256 * 1024
 
 
@@ -80,28 +83,49 @@ def _fixture_year_frames(settings: Settings) -> dict[int, pl.DataFrame]:
 def _fetch_incremental_or_year_frames(settings: Settings, store: LandingStore) -> dict[int, pl.DataFrame]:
     # Incremental: diario COMPRA+ITEM for trailing day if both exist, else mensal.
     # Missing D1 years with no year= parquet still backfill from oficial anual.
+    # If today has no diario/mensal yet, skip incremental and land oficial anual.
     day = settings.trailing_window_as_of or date.today()
-    official = resolve_compras_gov_incremental(day, settings.compras_gov_base.rstrip("/"))
-    parts = _stream_official_pair(settings, official)
+    parts: dict[int, pl.DataFrame] = {}
+    try:
+        official = resolve_compras_gov_incremental(day, settings.compras_gov_base.rstrip("/"))
+        parts = _stream_official_pair(settings, official)
+    except RuntimeError as exc:
+        if "COMPRA+ITEM missing" not in str(exc):
+            raise
+        parts = {}
     existing = _landed_years(store)
     missing = [year for year in settings.compras_gov_years if year not in parts and year not in existing]
     for year in missing:
         anual = fixture_compras_gov_official(year, settings.compras_gov_base.rstrip("/"))
+        print(f"compras_gov anual backfill year={year} compra={anual.compra_url}", flush=True)
         extra = _stream_official_pair(settings, anual)
+        if year in extra:
+            parts[year] = extra[year]
         for key, frame in extra.items():
-            parts[key] = frame
+            if key not in parts:
+                parts[key] = frame
+    for year in settings.compras_gov_years:
+        if year not in parts and year in existing:
+            print(f"compras_gov reuse landed year={year}", flush=True)
+            parts[year] = _read_landed_year(store, year)
     return parts
 
 
 def _stream_official_pair(settings: Settings, official) -> dict[int, pl.DataFrame]:
+    raw_root = Path(os.environ.get("COMPRAS_GOV_RAW_DIR", "/tmp/compras-gov-raw"))
+    raw_root.mkdir(parents=True, exist_ok=True)
     with TemporaryDirectory(prefix="compras-gov-fetch-") as tmp:
         tmp_path = Path(tmp)
         compra_f = tmp_path / f"compra-{official.cadence}-{official.year}.csv"
         item_f = tmp_path / f"item-{official.cadence}-{official.year}.csv"
-        _stream_http_csv_filter(official.compra_url, compra_f, _keep_compra_row)
+        compra_raw = raw_root / f"{official.cadence}-{official.year}-compra.csv"
+        item_raw = raw_root / f"{official.cadence}-{official.year}-item.csv"
+        _download_official_csv(official.compra_url, compra_raw)
+        _filter_local_csv(compra_raw, compra_f, _keep_compra_row)
         keep_ids = _collect_compra_ids(compra_f)
-        _stream_http_csv_filter(
-            official.item_url,
+        _download_official_csv(official.item_url, item_raw)
+        _filter_local_csv(
+            item_raw,
             item_f,
             lambda header, row, ids=keep_ids: _keep_item_row(header, row, ids),
         )
@@ -112,7 +136,21 @@ def _stream_official_pair(settings: Settings, official) -> dict[int, pl.DataFram
         item_f.unlink(missing_ok=True)
     if not joined.height:
         return {}
+    # Anual official files are the year extract. Do not rebucket by anocomprapncp
+    # or 2024 municipal rows land under 2025/2026 and get overwritten.
+    if official.cadence == "anual":
+        print(f"compras_gov anual joined year={official.year} rows={joined.height}", flush=True)
+        return {official.year: joined}
     return _split_by_year(joined, settings.compras_gov_years)
+
+
+
+def _read_landed_year(store: LandingStore, year: int) -> pl.DataFrame:
+    keys = [key for key in store.year_partition_keys("compras_gov") if f"year={year}" in Path(key).parts]
+    if not keys:
+        raise RuntimeError(f"compras.gov year={year} missing from landing")
+    frames = [store.read_parquet(key) for key in keys]
+    return pl.concat(frames, how="diagonal_relaxed")
 
 
 def _landed_years(store: LandingStore) -> set[int]:
@@ -279,7 +317,127 @@ def _sniff_delim(path: Path) -> str:
     return ","
 
 
+
+
+def _official_content_length(url: str) -> int | None:
+    assert_official_host(url, COMPRAS_GOV_HOSTS)
+    try:
+        with httpx.Client(
+            timeout=httpx.Timeout(30.0, connect=15.0),
+            headers={"User-Agent": USER_AGENT, "Accept": "*/*"},
+            follow_redirects=True,
+        ) as client:
+            resp = client.head(url)
+            resp.raise_for_status()
+            raw = resp.headers.get("content-length")
+            return int(raw) if raw and raw.isdigit() else None
+    except Exception as exc:
+        print(f"compras_gov head skip err={type(exc).__name__}: {exc} url={url}", flush=True)
+        return None
+
+
+def _download_official_csv(url: str, dest: Path) -> None:
+    assert_official_host(url, COMPRAS_GOV_HOSTS)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    last: Exception | None = None
+    expected = _official_content_length(url)
+    have0 = dest.stat().st_size if dest.exists() else 0
+    if expected and have0 >= expected:
+        print(f"compras_gov download cached bytes={have0} expected={expected} url={url}", flush=True)
+        return
+    for attempt in range(1, 9):
+        have = dest.stat().st_size if dest.exists() else 0
+        headers = {"User-Agent": USER_AGENT, "Accept": "*/*"}
+        if have:
+            headers["Range"] = f"bytes={have}-"
+        try:
+            with httpx.Client(
+                timeout=httpx.Timeout(120.0, connect=30.0),
+                headers=headers,
+                follow_redirects=True,
+            ) as client:
+                with client.stream("GET", url) as resp:
+                    if resp.status_code == 416:
+                        print(f"compras_gov download already complete bytes={have} url={url}", flush=True)
+                        return
+                    resp.raise_for_status()
+                    assert_official_host(str(resp.url), COMPRAS_GOV_HOSTS)
+                    if have and resp.status_code == 206:
+                        mode = "ab"
+                    else:
+                        mode = "wb"
+                        have = 0
+                    cl = resp.headers.get("content-length", "?")
+                    print(
+                        f"compras_gov download start status={resp.status_code} have={have} cl={cl} url={url}",
+                        flush=True,
+                    )
+                    written = have
+                    last_log = written
+                    with dest.open(mode) as raw:
+                        for chunk in resp.iter_bytes(_READ_CHUNK):
+                            raw.write(chunk)
+                            written += len(chunk)
+                            if written - last_log >= 50 * 1024 * 1024:
+                                print(f"compras_gov download bytes={written} url={url}", flush=True)
+                                last_log = written
+                    print(f"compras_gov download done bytes={written} url={url}", flush=True)
+                    return
+        except (httpx.HTTPError, httpx.StreamError) as exc:
+            last = exc
+            print(
+                f"compras_gov download retry attempt={attempt} have={dest.stat().st_size if dest.exists() else 0} err={type(exc).__name__}: {exc} url={url}",
+                flush=True,
+            )
+            time.sleep(min(30, 2 * attempt))
+    if last is not None:
+        raise last
+    raise RuntimeError(f"compras_gov download failed url={url}")
+
+
+def _filter_local_csv(src: Path, dest: Path, keep_row) -> None:
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    with src.open("r", encoding="utf-8", newline="", errors="replace") as raw_in:
+        sample = raw_in.readline()
+        raw_in.seek(0)
+        delim = ";" if sample.count(";") >= sample.count(",") else ","
+        reader = csv.reader(raw_in, delimiter=delim)
+        header = next(reader, None)
+        if header is None:
+            dest.write_text("", encoding="utf-8")
+            print(f"compras_gov filter empty src={src}", flush=True)
+            return
+        kept = 0
+        seen = 0
+        with dest.open("w", encoding="utf-8", newline="") as raw_out:
+            writer = csv.writer(raw_out, delimiter=delim)
+            writer.writerow(header)
+            print(f"compras_gov filter start src={src} delim={delim} cols={len(header)}", flush=True)
+            for row in reader:
+                seen += 1
+                if keep_row(header, row):
+                    writer.writerow(row)
+                    kept += 1
+                if seen % 500000 == 0:
+                    print(f"compras_gov filter rows={seen} kept={kept} src={src}", flush=True)
+    print(f"compras_gov filter done rows={seen} kept={kept} src={src}", flush=True)
+
+
 def _stream_http_csv_filter(url: str, dest: Path, keep_row) -> None:
+    last: Exception | None = None
+    for attempt in range(1, 6):
+        try:
+            _stream_http_csv_filter_once(url, dest, keep_row)
+            return
+        except (httpx.HTTPError, httpx.StreamError) as exc:
+            last = exc
+            print(f"compras_gov stream retry attempt={attempt} err={type(exc).__name__}: {exc} url={url}", flush=True)
+            time.sleep(min(30, 3 * attempt))
+    if last is not None:
+        raise last
+
+
+def _stream_http_csv_filter_once(url: str, dest: Path, keep_row) -> None:
     assert_official_host(url, COMPRAS_GOV_HOSTS)
     dest.parent.mkdir(parents=True, exist_ok=True)
     decoder = codecs.getincrementaldecoder("utf-8")("replace")
@@ -295,6 +453,8 @@ def _stream_http_csv_filter(url: str, dest: Path, keep_row) -> None:
         with client.stream("GET", url) as resp:
             resp.raise_for_status()
             assert_official_host(str(resp.url), COMPRAS_GOV_HOSTS)
+            kept = 0
+            seen = 0
             with dest.open("w", encoding="utf-8", newline="") as raw_out:
                 for chunk in resp.iter_bytes(_READ_CHUNK):
                     buf += decoder.decode(chunk)
@@ -302,18 +462,29 @@ def _stream_http_csv_filter(url: str, dest: Path, keep_row) -> None:
                         line, buf = buf.split("\n", 1)
                         if line.endswith("\r"):
                             line = line[:-1]
+                        if not line.strip():
+                            continue
+                        parsed = next(csv.reader(io.StringIO(line), delimiter=delim if header else (";" if line.count(";") >= line.count(",") else ",")), None)
+                        if parsed is None:
+                            continue
                         if header is None:
                             delim = ";" if line.count(";") >= line.count(",") else ","
-                            header = next(csv.reader(io.StringIO(line), delimiter=delim))
+                            header = parsed
                             writer = csv.writer(raw_out, delimiter=delim)
                             writer.writerow(header)
+                            print(f"compras_gov stream start url={url} delim={delim} cols={len(header)}", flush=True)
                             continue
-                        row = next(csv.reader(io.StringIO(line), delimiter=delim))
-                        if keep_row(header, row) and writer is not None:
-                            writer.writerow(row)
+                        seen += 1
+                        if keep_row(header, parsed) and writer is not None:
+                            writer.writerow(parsed)
+                            kept += 1
+                        if seen % 500000 == 0:
+                            print(f"compras_gov stream rows={seen} kept={kept} url={url}", flush=True)
                 tail = decoder.decode(b"", final=True)
                 buf += tail
                 if buf.strip() and header is not None and writer is not None:
-                    row = next(csv.reader(io.StringIO(buf), delimiter=delim))
-                    if keep_row(header, row):
-                        writer.writerow(row)
+                    parsed = next(csv.reader(io.StringIO(buf), delimiter=delim), None)
+                    if parsed is not None and keep_row(header, parsed):
+                        writer.writerow(parsed)
+                        kept += 1
+            print(f"compras_gov stream done rows={seen} kept={kept} url={url}", flush=True)

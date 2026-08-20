@@ -4,6 +4,12 @@ from dataclasses import dataclass, field
 
 import polars as pl
 
+from compras_detect.data_error import (
+    anomaly_pool,
+    catalog_reference_prices,
+    detect_data_errors,
+    fixture_items_path,
+)
 from compras_detect.tier1 import run_tier1
 from compras_ingest.csvio import read_csv
 from compras_ingest.landing import LandingRef, LandingStore
@@ -15,7 +21,7 @@ from compras_ingest.sources.pncp_consulta import land_pncp_consulta
 from compras_ingest.sources.receita_cnpj import cnpj_basicos_from_frame, land_receita_cnpj
 from compras_ingest.sources.tce_rs_licitacon import land_tce_rs_licitacon
 from compras_ingest.sources.tce_sp_licitacao import land_tce_sp_licitacao
-from compras_ingest.warehouse import apply_schema, write_entities, write_facts, write_flags
+from compras_ingest.warehouse import apply_schema, write_entities, write_exclusions, write_facts, write_flags
 from compras_normalize.catalog import load_catalog
 from compras_normalize.items import normalize_frame
 from compras_normalize.units import load_unit_table
@@ -28,6 +34,7 @@ class PipelineResult:
     entity_counts: dict[str, int]
     fact_rows: int
     flag_rows: int
+    exclusion_rows: int
     items: pl.DataFrame = field(repr=False)
     flags: pl.DataFrame = field(repr=False)
 
@@ -59,6 +66,7 @@ def run_compras_slice(settings: Settings, store: LandingStore | None = None) -> 
         warehouse["entities"],
         warehouse["facts"],
         flag_rows,
+        warehouse.get("exclusions") or 0,
         items,
         flags,
     )
@@ -71,7 +79,7 @@ def warehouse_from_landing(
     catalog: dict,
     receita: dict | None = None,
 ) -> tuple[pl.DataFrame, dict]:
-    """Normalize landed parquet and write warehouse rows. Does not land or detect."""
+    """Normalize landed parquet, write warehouse rows, persist data-error exclusions. Does not land or run B-track detectors."""
     apply_schema(settings)
     raw = store.read_parquet(_require_key(compras, "compras_gov"))
     catalog_df = store.read_parquet(_require_key(catalog, "catalogo_cnbs"))
@@ -91,12 +99,17 @@ def warehouse_from_landing(
     )
     entity_counts = write_entities(settings, items)
     fact_rows = write_facts(settings, items)
+    catalog_prices = catalog_reference_prices(catalog_df)
+    exclusions = detect_data_errors(items, catalog_prices=catalog_prices)
+    exclusion_rows = write_exclusions(settings, exclusions, items)
+    pool = anomaly_pool(items, exclusions)
     part = str(compras.get("partition_date") or "")
     if not part:
         from datetime import datetime, timezone
 
         part = datetime.now(timezone.utc).date().isoformat()
     items_ref = store.write_parquet("normalized_items", part, items)
+    pool_ref = store.write_parquet("anomaly_pool", part, pool)
     return items, {
         "landing": {
             "source": compras.get("source"),
@@ -107,9 +120,22 @@ def warehouse_from_landing(
         },
         "entities": entity_counts,
         "facts": fact_rows,
+        "exclusions": exclusion_rows,
+        "anomaly_pool_n": pool.height,
+        "anomaly_pool_key": pool_ref.key,
         "items_key": items_ref.key,
         "snapshot_id": snapshot_id,
     }
+
+
+def warehouse_data_error_fixture(settings: Settings) -> tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame]:
+    """Write golden data-error items, persist exclusions, return items/exclusions/pool."""
+    apply_schema(settings)
+    items = read_csv(fixture_items_path())
+    write_entities(settings, items)
+    exclusions = detect_data_errors(items)
+    write_exclusions(settings, exclusions, items)
+    return items, exclusions, anomaly_pool(items, exclusions)
 
 
 def run_tier1_and_write_flags(

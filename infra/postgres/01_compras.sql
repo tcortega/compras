@@ -84,11 +84,30 @@ CREATE TABLE IF NOT EXISTS flag (
   "updatedAt" timestamptz NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS item_exclusion (
+  "itemId" uuid NOT NULL REFERENCES item (id),
+  reason text NOT NULL CHECK (reason IN (
+    'qty_unit_price_neq_total',
+    'decimal_shift',
+    'qty_eq_1_collapse',
+    'zero_or_negative',
+    'duplicate_row',
+    'catalog_magnitude'
+  )),
+  detail text,
+  "snapshotId" text NOT NULL,
+  "methodologyVersion" text NOT NULL,
+  "createdAt" timestamptz NOT NULL,
+  PRIMARY KEY ("itemId", reason)
+);
+
 CREATE INDEX IF NOT EXISTS item_contratacao_idx ON item ("contratacaoId");
 CREATE INDEX IF NOT EXISTS item_peer_idx ON item (catmat, uf, quarter);
 CREATE INDEX IF NOT EXISTS contratacao_orgao_idx ON contratacao ("orgaoId");
 CREATE INDEX IF NOT EXISTS flag_item_idx ON flag ("itemId");
 CREATE INDEX IF NOT EXISTS flag_state_idx ON flag (state);
 CREATE INDEX IF NOT EXISTS flag_kind_idx ON flag (kind);
+CREATE INDEX IF NOT EXISTS item_exclusion_item_idx ON item_exclusion ("itemId");
+CREATE INDEX IF NOT EXISTS item_exclusion_reason_idx ON item_exclusion (reason);
 
 ALTER TABLE item ADD COLUMN IF NOT EXISTS "valorPorUnidadeCanonica" numeric(18, 6);

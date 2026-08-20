@@ -8,6 +8,7 @@ from pathlib import Path
 
 import httpx
 
+from compras_detect.data_error import anomaly_pool, detect_data_errors
 from compras_detect.tier1 import run_tier1
 from compras_ingest.cpf import assert_no_raw_cpf, mask_cpf
 from compras_ingest.landing import LandingStore
@@ -40,7 +41,12 @@ from compras_ingest.official import (
     tce_rs_ckan_url,
     tce_rs_portal_url,
 )
-from compras_ingest.pipeline import _collect_landing_records, land_second_snapshot, run_compras_slice
+from compras_ingest.pipeline import (
+    _collect_landing_records,
+    land_second_snapshot,
+    run_compras_slice,
+    warehouse_data_error_fixture,
+)
 from compras_ingest.settings import Settings
 from compras_ingest.sources.ocds import land_ocds
 from compras_ingest.sources.pncp_consulta import (
@@ -61,6 +67,7 @@ from compras_ingest.warehouse import (
     fact_columns,
     fetch_all_items,
     fetch_contratacao,
+    fetch_exclusions,
     fetch_flags,
     fetch_item_facts,
     fetch_items_for,
@@ -69,6 +76,7 @@ from compras_ingest.warehouse import (
     item_columns,
     write_flags,
 )
+from compras_ingest.ids import item_id
 from decimal import Decimal
 
 from compras_normalize.text import fold, parse_decimal
@@ -102,6 +110,21 @@ TCE_RS_TABLES = {
     "LOTE",
     "ITEM",
 }
+DATA_ERROR_SNAPSHOT = "data-error-golden"
+DATA_ERROR_EXPECTED = {
+    "de-mismatch": frozenset({"qty_unit_price_neq_total"}),
+    "de-shift": frozenset({"decimal_shift"}),
+    "de-collapse": frozenset({"qty_eq_1_collapse"}),
+    "de-zero-qty": frozenset({"zero_or_negative"}),
+    "de-neg-unit": frozenset({"zero_or_negative"}),
+    "de-dup-b": frozenset({"duplicate_row"}),
+    "de-dup-c": frozenset({"duplicate_row"}),
+    "de-catalog": frozenset({"catalog_magnitude"}),
+}
+DATA_ERROR_CLEAN = frozenset(
+    {"de-clean", "de-peer-2", "de-peer-3", "de-peer-4", "de-nearmiss", "de-dup-a"}
+)
+MAIN_MISMATCH_RECORD = "I-2024-000002"
 PNCP_COMPRA_1 = "29477000000180-1-000001/2024"
 PNCP_COMPRA_2 = "29477000000180-1-000002/2024"
 EXTRA_ORGAOS = (
@@ -178,6 +201,7 @@ def main() -> int:
         _assert_tce_sp_landing(settings)
         _assert_tce_rs_landing(settings)
         _assert_write_once(settings)
+        _assert_data_error_suite(settings, result.items)
     _assert_tce_sp_not_public(settings)
     _assert_tce_rs_not_public(settings)
     orgao = fetch_one_orgao(settings, ORGAO_CNPJ)
@@ -239,7 +263,87 @@ def main() -> int:
     print(f"official_tce_rs={official['tce_rs_zip']}")
     print(f"orgao={orgao['cnpj']} contratacao={contratacao['pncpId']} items={len(items)}")
     print(f"flags={sorted(kinds)}")
+    print(f"exclusions={result.exclusion_rows}")
     return 0
+
+
+def _reasons_by_record(exclusions) -> dict[str, set[str]]:
+    got: dict[str, set[str]] = {}
+    for row in exclusions.iter_rows(named=True):
+        rid = str(row.get("record_id") or "")
+        got.setdefault(rid, set()).add(str(row["reason"]))
+    return got
+
+
+def _assert_data_error_suite(settings: Settings, main_items) -> None:
+    items, exclusions, pool = warehouse_data_error_fixture(settings)
+    got = _reasons_by_record(exclusions)
+    expected_ids = set(DATA_ERROR_EXPECTED) | DATA_ERROR_CLEAN
+    have_ids = {str(v) for v in items["record_id"].to_list()}
+    if have_ids != expected_ids:
+        raise SystemExit(f"data-error fixture record_ids drifted: {sorted(have_ids)}")
+    extra = {rid: reasons for rid, reasons in got.items() if rid not in DATA_ERROR_EXPECTED}
+    missing = {
+        rid: DATA_ERROR_EXPECTED[rid]
+        for rid in DATA_ERROR_EXPECTED
+        if got.get(rid) != DATA_ERROR_EXPECTED[rid]
+    }
+    if extra or missing:
+        raise SystemExit(f"data-error tags mismatch extra={extra} missing={missing} got={got}")
+    for rid in DATA_ERROR_CLEAN:
+        if rid in got:
+            raise SystemExit(f"clean data-error row was tagged: {rid} {got[rid]}")
+    if "de-clean" in got:
+        raise SystemExit("clean row present in exclusions")
+
+    pool_ids = {str(v) for v in pool["record_id"].to_list()}
+    for rid in DATA_ERROR_EXPECTED:
+        if rid in pool_ids:
+            raise SystemExit(f"excluded {rid} still in anomaly_pool")
+    for rid in DATA_ERROR_CLEAN:
+        if rid not in pool_ids:
+            raise SystemExit(f"clean {rid} missing from anomaly_pool")
+    live_pool = anomaly_pool(items, exclusions)
+    if set(live_pool["record_id"].to_list()) != pool_ids:
+        raise SystemExit("anomaly_pool() drifted from warehouse fixture pool")
+
+    stored_items = fetch_all_items(settings)
+    stored_ids = {str(row["id"]) for row in stored_items}
+    for row in items.iter_rows(named=True):
+        iid = item_id(str(row.get("pncp_id") or ""), str(row.get("record_id") or ""))
+        if iid not in stored_ids:
+            raise SystemExit(f"data-error item missing from postgres item: {row.get('record_id')}")
+
+    id_to_rid = {
+        item_id(str(row.get("pncp_id") or ""), str(row.get("record_id") or "")): str(row.get("record_id") or "")
+        for row in items.iter_rows(named=True)
+    }
+    stored = fetch_exclusions(settings, snapshot_id=DATA_ERROR_SNAPSHOT)
+    stored_got: dict[str, set[str]] = {}
+    for row in stored:
+        rid = id_to_rid.get(str(row["itemId"]))
+        if not rid:
+            raise SystemExit(f"item_exclusion itemId not in golden fixture: {row['itemId']}")
+        stored_got.setdefault(rid, set()).add(str(row["reason"]))
+    if stored_got != {k: set(v) for k, v in DATA_ERROR_EXPECTED.items()}:
+        raise SystemExit(f"postgres item_exclusion tags mismatch got={stored_got}")
+
+    main_got = _reasons_by_record(detect_data_errors(main_items))
+    if "qty_unit_price_neq_total" not in main_got.get(MAIN_MISMATCH_RECORD, set()):
+        raise SystemExit("warehouse slice missed qty_unit_price_neq_total exclusion")
+    main_mismatch = None
+    for row in main_items.iter_rows(named=True):
+        if str(row.get("record_id") or "") == MAIN_MISMATCH_RECORD:
+            main_mismatch = row
+            break
+    if main_mismatch is None:
+        raise SystemExit(f"main slice missing {MAIN_MISMATCH_RECORD}")
+    main_iid = item_id(str(main_mismatch.get("pncp_id") or ""), MAIN_MISMATCH_RECORD)
+    main_stored = fetch_exclusions(settings, item_id=main_iid, reason="qty_unit_price_neq_total")
+    if not main_stored:
+        raise SystemExit("warehouse write path did not persist qty_unit_price_neq_total exclusion")
+    if main_iid not in stored_ids:
+        raise SystemExit("excluded main-slice item missing from postgres item")
 
 
 def _assert_units(settings, normalized) -> None:

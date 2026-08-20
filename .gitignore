@@ -5,6 +5,7 @@
 *.7z
 !labels/**/*.csv
 !ingest/fixtures/**/*.csv
+!detect/fixtures/**/*.csv
 !normalize/compras_normalize/data/*.csv
 .e2e-landing/
 .e2e-work/

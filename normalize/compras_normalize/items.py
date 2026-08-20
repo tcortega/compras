@@ -98,6 +98,10 @@ def _normalize_row(
         "unit_parse_confidence": unit.confidence,
         "valor_unitario": _dec_str(unit_price),
         "valor_total": _dec_str(total),
+        "valor_referencia": _dec_str(
+            parse_decimal(_first(row, "valor_referencia", "preco_referencia", "valor_referencia_catalogo"))
+        ),
+        "preco_referencia": _dec_str(parse_decimal(_first(row, "preco_referencia"))),
         "valor_por_unidade_canonica": _dec_str(price_base),
         "valor_unitario_base": _dec_str(price_base),
         "base_unit": unit.base_unit,

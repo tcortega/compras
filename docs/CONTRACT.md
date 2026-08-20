@@ -113,6 +113,22 @@ No public explorer route reads this until the Phase 0 precision number exists an
 Notify hold is 7 days: `publishAfter = notifiedAt + 7 days`.
 Replies store unedited.
 
+### item_exclusion (internal only)
+
+These are data-quality tags, not public alerts.
+Excluded items leave the price-anomaly pool and stay in `item`.
+They remain on GET /api/items.
+No explorer route may return an exclusion reason.
+Closed reason set: qty_unit_price_neq_total, decimal_shift, qty_eq_1_collapse, zero_or_negative, duplicate_row, catalog_magnitude.
+`itemId` uuid FK item.
+`reason` text.
+`detail` text.
+`snapshotId` text.
+`methodologyVersion` text.
+`createdAt` timestamptz.
+Python writes this table after normalize.
+C# does not run a detector.
+
 ## ClickHouse facts
 
 One wide item-fact table for later analytical reads.
@@ -162,6 +178,7 @@ Internal publication routes exist and are tested.
 `GET /api/internal/flags` lists warehouse facts by kind, state, itemId, skip, and take.
 That list is not linked from the explorer.
 No explorer route may return a flag field.
+No explorer route may return an exclusion reason.
 Phase 0 precision is 9 percent, so public flags stay gated.
 
 Flag copy, if a DTO exists, is "indicio requiring verification" only.

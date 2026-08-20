@@ -5,6 +5,7 @@ from decimal import Decimal
 import polars as pl
 
 from compras_normalize.catalog import Catalog
+from compras_normalize.specs import extract_specs
 from compras_normalize.text import fold, parse_date, parse_decimal, parse_datetime, quarter_of
 from compras_normalize.units import UnitMatch, UnitTable
 
@@ -50,6 +51,7 @@ def _normalize_row(
     codigo = _first(row, "coditemcatalogo", "codigoitemcatalogo", "coditem")
     tipo = _first(row, "materialouservico")
     hit = catalog.match(descricao, codigo, tipo)
+    spec = extract_specs(descricao)
     unit_raw = _first(row, "unidademedida", "nomeunidademedida", "siglaunidademedida") or ""
     unit = units.match(unit_raw)
     qty = parse_decimal(_first(row, "quantidaderesultado", "quantidade")) or Decimal("0")
@@ -94,6 +96,9 @@ def _normalize_row(
         "catmat": hit.catmat or "",
         "catser": hit.catser or "",
         "catmat_match_quality": hit.quality,
+        "spec_concentracao": spec.concentracao or "",
+        "spec_dosagem": spec.dosagem or "",
+        "spec_tamanho": spec.tamanho or "",
         "quantidade": _dec_str(qty),
         "unidade_medida": unit_raw,
         "unidade_canonica": unit.canonical,

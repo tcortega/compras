@@ -42,6 +42,7 @@ TCE_RS_LEIAUTE_URL = "https://tcers.tc.br/repo/cex/licitacon/cpt/eValidador_Lici
 TCE_RS_EXAMPLE_URL = "https://tcers.tc.br/repo/cex/licitacon/cpt/eValidador-licitacon-exemplos-1.4.zip"
 TCE_RS_HOSTS = frozenset({"dados.tce.rs.gov.br", "tcers.tc.br"})
 TCE_RS_FETCH_ATTEMPTS = 4
+OFFICIAL_HOSTS = OCDS_HOSTS | RFB_HOSTS | PNCP_HOSTS | TCE_SP_HOSTS | TCE_RS_HOSTS
 USER_AGENT = "compras-ingest/0.1"
 _MONTH = re.compile(r"^\d{4}-\d{2}$")
 _PROP_NAME = re.compile(r"<d:displayname>([^<]+)</d:displayname>")
@@ -184,6 +185,43 @@ def tce_rs_ckan_url(year: int) -> str:
 
 def resolve_tce_rs_licitacon(year: int, fetch: bool = False) -> TceRsOfficial:
     """Resolve official TCE-RS LicitaCon URLs. Live CKAN is fetch-only."""
+    official = fixture_tce_rs_official(year)
+    if not fetch:
+        return official
+    try:
+        zip_url = _ckan_zip_with_retry(official.ckan_url, year)
+        return TceRsOfficial(
+            official.portal_url,
+            official.ckan_url,
+            zip_url,
+            official.example_url,
+            official.leiaute_url,
+            year,
+            "ckan",
+        )
+    except Exception:
+        return official
+
+
+def fixture_ocds_official(year: int) -> OcdsOfficial:
+    return OcdsOfficial(
+        OCDS_OCP_REGISTRY_URL,
+        f"https://data.open-contracting.org/en/publication/157/download?name={year}.jsonl.gz",
+        year,
+    )
+
+
+def fixture_tce_sp_official(year: int, month: int) -> TceSpOfficial:
+    if month < 1 or month > 12:
+        raise RuntimeError(f"TCE-SP month out of range: {month}")
+    zip_url = (
+        "https://transparencia.tce.sp.gov.br/sites/default/files/"
+        f"conjunto-dados/licitacoes-contratos/licitacao-{year}-{month:02d}.zip"
+    )
+    return TceSpOfficial(TCE_SP_LISTING_URL, zip_url, year, month)
+
+
+def fixture_tce_rs_official(year: int) -> TceRsOfficial:
     if year < 2014:
         raise RuntimeError(f"TCE-RS year out of range: {year}")
     portal = tce_rs_portal_url(year)
@@ -192,16 +230,29 @@ def resolve_tce_rs_licitacon(year: int, fetch: bool = False) -> TceRsOfficial:
     assert_official_host(ckan, TCE_RS_HOSTS)
     assert_official_host(TCE_RS_EXAMPLE_URL, TCE_RS_HOSTS)
     assert_official_host(TCE_RS_LEIAUTE_URL, TCE_RS_HOSTS)
-    zip_url = TCE_RS_EXAMPLE_URL
-    via = "example"
-    if fetch:
-        try:
-            zip_url = _ckan_zip_with_retry(ckan, year)
-            via = "ckan"
-        except Exception:
-            zip_url = TCE_RS_EXAMPLE_URL
-            via = "example"
-    return TceRsOfficial(portal, ckan, zip_url, TCE_RS_EXAMPLE_URL, TCE_RS_LEIAUTE_URL, year, via)
+    return TceRsOfficial(
+        portal,
+        ckan,
+        TCE_RS_EXAMPLE_URL,
+        TCE_RS_EXAMPLE_URL,
+        TCE_RS_LEIAUTE_URL,
+        year,
+        "example",
+    )
+
+
+def fixture_pncp_official() -> PncpOfficial:
+    return PncpOfficial(
+        PNCP_CONSULTA_BASE,
+        PNCP_CONSULTA_OPENAPI,
+        PNCP_CONSULTA_SWAGGER,
+        PNCP_API_BASE,
+        PNCP_PUBLICACAO_PATH,
+        PNCP_COMPRA_PATH,
+        PNCP_ITENS_PATH,
+        PNCP_ITEM_RESULTADOS_PATH,
+        (8,),
+    )
 
 
 def ckan_zip_from_package(payload: dict, year: int) -> str:

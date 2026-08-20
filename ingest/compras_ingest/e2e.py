@@ -6,11 +6,14 @@ import tempfile
 from dataclasses import replace
 from pathlib import Path
 
+import httpx
+
 from compras_detect.tier1 import run_tier1
 from compras_ingest.cpf import assert_no_raw_cpf, mask_cpf
 from compras_ingest.landing import LandingStore
 from compras_ingest.official import (
     OCDS_OCP_REGISTRY_URL,
+    OFFICIAL_HOSTS,
     PNCP_API_BASE,
     PNCP_COMPRA_PATH,
     PNCP_CONSULTA_BASE,
@@ -111,13 +114,14 @@ def main() -> int:
     settings = Settings.from_env()
     _check_defs()
     official = _assert_official_urls(settings)
-    _assert_pncp_spacing_and_resume(settings)
-    result = run_compras_slice(settings)
-    _assert_landing(settings, result.landing.sha256)
-    _assert_tier_a_landing(settings, result.ocds_report)
-    _assert_tce_sp_landing(settings)
-    _assert_tce_rs_landing(settings)
-    _assert_write_once(settings)
+    with _official_hosts_blocked():
+        _assert_pncp_spacing_and_resume(settings)
+        result = run_compras_slice(settings)
+        _assert_landing(settings, result.landing.sha256)
+        _assert_tier_a_landing(settings, result.ocds_report)
+        _assert_tce_sp_landing(settings)
+        _assert_tce_rs_landing(settings)
+        _assert_write_once(settings)
     _assert_tce_sp_not_public(settings)
     _assert_tce_rs_not_public(settings)
     orgao = fetch_one_orgao(settings, ORGAO_CNPJ)
@@ -285,6 +289,35 @@ def _assert_units(settings, normalized) -> None:
     foobar_price = (fact_by_unit.get("foobar") or [{}])[0]
     if foobar_price.get("valor_por_unidade_canonica") is not None or foobar_price.get("valor_unitario_base") is not None:
         raise SystemExit("clickhouse invented a base price for unknown unit")
+
+
+class _official_hosts_blocked:
+    def __enter__(self):
+        self._client = httpx.Client
+
+        class Guarded(httpx.Client):
+            def request(self, method, url, *args, **kwargs):
+                _fail_if_official_host(url)
+                return super().request(method, url, *args, **kwargs)
+
+            def stream(self, method, url, *args, **kwargs):
+                _fail_if_official_host(url)
+                return super().stream(method, url, *args, **kwargs)
+
+        httpx.Client = Guarded
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        httpx.Client = self._client
+        if exc_type is RuntimeError and exc and "fixture mode hit official host" in str(exc):
+            raise SystemExit(str(exc)) from exc
+        return False
+
+
+def _fail_if_official_host(url) -> None:
+    host = httpx.URL(str(url)).host or ""
+    if host in OFFICIAL_HOSTS:
+        raise RuntimeError(f"fixture mode hit official host {host}")
 
 
 def _check_defs() -> None:

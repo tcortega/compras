@@ -18,6 +18,7 @@ from compras_ingest.official import (
     TCE_RS_LEIAUTE_URL,
     TceRsOfficial,
     download_to_retry,
+    fixture_tce_rs_official,
     http_client,
     resolve_tce_rs_licitacon,
     tce_rs_ckan_url,
@@ -124,7 +125,11 @@ def land_tce_rs_licitacon(
     official: TceRsOfficial | None = None,
 ) -> tuple[LandingRef, pl.DataFrame]:
     store = store or LandingStore(settings)
-    official = official or resolve_tce_rs_licitacon(settings.tce_rs_year, fetch=settings.tce_rs_fetch)
+    if official is None:
+        if settings.tce_rs_fetch:
+            official = resolve_tce_rs_licitacon(settings.tce_rs_year, fetch=True)
+        else:
+            official = fixture_tce_rs_official(settings.tce_rs_year)
     _assert_official(official)
     orgao = settings.tce_rs_orgao or SLICE_IBGE
     if settings.tce_rs_fetch:

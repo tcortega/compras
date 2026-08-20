@@ -197,6 +197,6 @@ $flag_state$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS flag_enforce_state ON flag;
 CREATE TRIGGER flag_enforce_state
-BEFORE INSERT OR UPDATE OF state ON flag
+AFTER INSERT OR UPDATE OF state ON flag
 FOR EACH ROW
 EXECUTE FUNCTION flag_enforce_state();

@@ -533,6 +533,43 @@ test('ficha de fornecedor não apresenta Homologado como total', async ({ page }
   await assertCoverageAndBan(page)
 })
 
+test('ficha de fornecedor mostra QSA factual e mascara CPF', async ({ page }) => {
+  await page.goto('/fornecedores')
+  await page.getByRole('searchbox').fill(againstCompose ? 'PAPELARIA NOVA' : 'Papelaria e Informática')
+  await page.getByRole('button', { name: 'Filtrar' }).click()
+  await page
+    .getByRole('link', { name: againstCompose ? /PAPELARIA NOVA/i : /Papelaria e Informática/i })
+    .click()
+  await expect(page.getByRole('heading', { name: 'Quadro de sócios e administradores' })).toBeVisible()
+  await expect(page.getByText('JOAO DA SILVA')).toBeVisible()
+  await expect(page.getByText('EDITORA EXEMPLO LTDA')).toBeVisible()
+  await expect(page.getByText('***.456.789-**')).toBeVisible()
+  await expect(page.getByText('Data de abertura')).toBeVisible()
+  await expect(page.getByText('Idade cadastral')).toBeVisible()
+  if (!againstCompose) {
+    await expect(page.getByText('7 anos e 4 meses (em 15/06/2024)')).toBeVisible()
+    await expect(page.getByText('Comércio varejista de livros, jornais, revistas e papelaria')).toBeVisible()
+  }
+  expect(await page.locator('body').innerText()).not.toContain('12345678901')
+  await expect(page.locator('.stats .kicker', { hasText: 'Homologado' })).toHaveCount(0)
+  await assertCoverageAndBan(page)
+})
+
+test('ficha de fornecedor sem QSA e honesta', async ({ page }) => {
+  await page.goto('/fornecedores')
+  await page.getByRole('searchbox').fill(againstCompose ? 'FINANCEIRA EXEMPLO' : 'Distribuidora de Medicamentos Serra')
+  await page.getByRole('button', { name: 'Filtrar' }).click()
+  await page
+    .getByRole('link', {
+      name: againstCompose ? /FINANCEIRA EXEMPLO/i : /Distribuidora de Medicamentos Serra/i,
+    })
+    .click()
+  await expect(page.getByText('sem QSA na base')).toBeVisible()
+  await expect(page.locator('.finding')).toHaveCount(0)
+  await expect(page.locator('.stats .kicker', { hasText: 'Homologado' })).toHaveCount(0)
+  await assertCoverageAndBan(page)
+})
+
 test('metodologia 0.2 cita ressalva de fracionamento e acórdãos do TCU', async ({ page }) => {
   await page.goto('/metodologia')
   await expect(page.getByRole('heading', { name: /Metodologia do explorador/ })).toBeVisible()

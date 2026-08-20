@@ -4593,6 +4593,46 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 	}
 
 	[Fact]
+	public async Task FullCycle_FornecedorReceitaFacts()
+	{
+		var http = fixture.CreateHttpClient();
+		var json = await http.GetStringAsync(
+			new Uri(http.BaseAddress!, $"/api/fornecedores/{SliceIds.Fornecedor}?uf={SliceIds.Uf}&quarter={SliceIds.Quarter}"));
+		using var doc = JsonDocument.Parse(json);
+		var root = doc.RootElement;
+		AssertNoFlagProperty(root);
+		Assert.False(root.TryGetProperty("shared_qsa", out _));
+		Assert.Equal("4761-0/01", root.GetProperty("cnae").GetString());
+		Assert.Equal(
+			"Comércio varejista de livros, jornais, revistas e papelaria",
+			root.GetProperty("cnaeDescricao").GetString());
+		Assert.Equal("1 ano e 5 meses", root.GetProperty("idadeCadastral").GetString());
+		Assert.Equal("2024-06-15", root.GetProperty("idadeAsOf").GetString());
+		var qsa = root.GetProperty("qsa");
+		Assert.Equal(2, qsa.GetArrayLength());
+		Assert.Equal("EDITORA EXEMPLO LTDA", qsa[0].GetProperty("nome").GetString());
+		Assert.Equal(JsonValueKind.Null, qsa[0].GetProperty("cpfMasked").ValueKind);
+		Assert.Equal("Sócio", qsa[0].GetProperty("qualificacao").GetString());
+		Assert.Equal("JOAO DA SILVA", qsa[1].GetProperty("nome").GetString());
+		Assert.Equal("***.456.789-**", qsa[1].GetProperty("cpfMasked").GetString());
+		Assert.Equal("Sócio-Administrador", qsa[1].GetProperty("qualificacao").GetString());
+		Assert.DoesNotContain("12345678901", json, StringComparison.Ordinal);
+
+		var extraJson = await http.GetStringAsync(
+			new Uri(http.BaseAddress!, $"/api/fornecedores/{SliceIds.FornecedorExtra}"));
+		using var extraDoc = JsonDocument.Parse(extraJson);
+		AssertNoFlagProperty(extraDoc.RootElement);
+		Assert.Equal(0, extraDoc.RootElement.GetProperty("qsa").GetArrayLength());
+		Assert.Equal("6 anos e 2 meses", extraDoc.RootElement.GetProperty("idadeCadastral").GetString());
+
+		var listJson = await http.GetStringAsync(new Uri(http.BaseAddress!, "/api/fornecedores?skip=0&take=50"));
+		using var listDoc = JsonDocument.Parse(listJson);
+		AssertNoFlagProperty(listDoc.RootElement);
+		foreach (var item in listDoc.RootElement.GetProperty("items").EnumerateArray())
+			Assert.False(item.TryGetProperty("qsa", out _));
+	}
+
+	[Fact]
 	public async Task PersistRawCpf_Rejected()
 	{
 		await Assert.ThrowsAsync<Api.Features.Shared.BadRequestException>(() => fixture.SeedAsync(db =>

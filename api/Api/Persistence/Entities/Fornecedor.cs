@@ -22,6 +22,8 @@ public sealed class Fornecedor : ITimestamped, ISuspendable
 
 	public List<Item> Items { get; } = [];
 
+	public List<FornecedorSocio> Socios { get; } = [];
+
 	public sealed class Configuration : IEntityTypeConfiguration<Fornecedor>
 	{
 		public void Configure(EntityTypeBuilder<Fornecedor> builder)

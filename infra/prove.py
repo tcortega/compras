@@ -528,8 +528,38 @@ def main() -> int:
     fornecedor_rows = fornecedores.get("items") or []
     if not fornecedor_rows:
         raise SystemExit("api /api/fornecedores returned no rows")
+    for item in fornecedor_rows:
+        if "qsa" in item:
+            raise SystemExit("api /api/fornecedores list carried qsa")
     fid = fornecedor_rows[0]["id"]
     prove_search(rows[0], items_page[0], fornecedor_rows[0], n)
+    papel = _lookup_fornecedor("PAPELARIA NOVA")
+    financeira = _lookup_fornecedor("FINANCEIRA EXEMPLO")
+    if "qsa" in papel or "qsa" in financeira:
+        raise SystemExit("api /api/fornecedores search list carried qsa")
+    papel_detail = get_json(f"{API}/api/fornecedores/{papel['id']}")
+    deny_flags(papel_detail, f"{API}/api/fornecedores/{{id}} papelaria")
+    deny_stub(json.dumps(papel_detail, ensure_ascii=False), "api get papelaria")
+    qsa = papel_detail.get("qsa") or []
+    names = {str(row.get("nome") or "") for row in qsa}
+    if names != {"JOAO DA SILVA", "EDITORA EXEMPLO LTDA"}:
+        raise SystemExit(f"api papelaria QSA {sorted(names)}")
+    joao = next(row for row in qsa if row.get("nome") == "JOAO DA SILVA")
+    if joao.get("cpfMasked") != "***.456.789-**":
+        raise SystemExit(f"api papelaria CPF not masked: {joao.get('cpfMasked')}")
+    blob = json.dumps(papel_detail, ensure_ascii=False)
+    if "12345678901" in blob:
+        raise SystemExit("api papelaria leaked raw CPF")
+    if not papel_detail.get("idadeCadastral"):
+        raise SystemExit("api papelaria missing idadeCadastral")
+    if not papel_detail.get("idadeAsOf"):
+        raise SystemExit("api papelaria missing idadeAsOf")
+    if not papel_detail.get("cnae"):
+        raise SystemExit("api papelaria missing cnae")
+    financeira_detail = get_json(f"{API}/api/fornecedores/{financeira['id']}")
+    deny_flags(financeira_detail, f"{API}/api/fornecedores/{{id}} financeira")
+    if financeira_detail.get("qsa"):
+        raise SystemExit("api financeira QSA is not empty")
 
     contratacoes = get_json(f"{API}/api/contratacoes?skip=0&take=50")
     deny_flags(contratacoes, f"{API}/api/contratacoes")
@@ -1529,6 +1559,22 @@ def main() -> int:
     assert_served_page(fornecedor_html, "web /fornecedores/{id}")
     if STAT_HOMOLOGADO.search(fornecedor_html):
         raise SystemExit("web /fornecedores/{id} used Homologado as a slice total")
+    papel_html = get_text(f"{WEB}/fornecedores/{papel['id']}")
+    assert_served_page(papel_html, "web /fornecedores/{id} papelaria")
+    if STAT_HOMOLOGADO.search(papel_html):
+        raise SystemExit("web papelaria used Homologado as a slice total")
+    if "JOAO DA SILVA" not in papel_html or "EDITORA EXEMPLO LTDA" not in papel_html:
+        raise SystemExit("web papelaria missing QSA names")
+    if "***.456.789-**" not in papel_html:
+        raise SystemExit("web papelaria missing masked CPF")
+    if "12345678901" in papel_html:
+        raise SystemExit("web papelaria leaked raw CPF")
+    financeira_html = get_text(f"{WEB}/fornecedores/{financeira['id']}")
+    assert_served_page(financeira_html, "web /fornecedores/{id} financeira")
+    if "sem QSA na base" not in financeira_html:
+        raise SystemExit("web financeira missing empty QSA copy")
+    if STAT_HOMOLOGADO.search(financeira_html):
+        raise SystemExit("web financeira used Homologado as a slice total")
 
     contratacao_html = get_text(f"{WEB}/contratacoes/{cid}")
     assert_served_page(contratacao_html, "web /contratacoes/{id}")
@@ -1927,6 +1973,15 @@ def meili_search(q: str) -> dict:
     if not isinstance(data, dict):
         raise SystemExit("meili search JSON is not an object")
     return data
+
+
+def _lookup_fornecedor(q: str) -> dict:
+    page = get_json(f"{API}/api/fornecedores?skip=0&take=50&q={urllib.parse.quote(q)}")
+    deny_flags(page, f"{API}/api/fornecedores?q={q}")
+    rows = page.get("items") or []
+    if not rows:
+        raise SystemExit(f"api /api/fornecedores?q={q} returned no rows")
+    return rows[0]
 
 
 def deny_stub(blob: str, where: str) -> None:

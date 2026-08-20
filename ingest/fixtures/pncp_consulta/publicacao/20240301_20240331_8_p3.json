@@ -1,7 +1,7 @@
 {
   "data": [
     {
-      "valorTotalHomologado": 25000.0,
+      "valorTotalHomologado": 80.0,
       "srp": false,
       "orgaoEntidade": {
         "cnpj": "29477000000180",
@@ -10,9 +10,9 @@
         "esferaId": "M"
       },
       "anoCompra": 2024,
-      "sequencialCompra": 2,
-      "dataPublicacaoPncp": "2024-03-16T00:00:00",
-      "numeroCompra": "2",
+      "sequencialCompra": 99,
+      "dataPublicacaoPncp": "2024-03-18T00:00:00",
+      "numeroCompra": "99",
       "unidadeOrgao": {
         "ufNome": "Rio de Janeiro",
         "codigoUnidade": "1",
@@ -21,18 +21,18 @@
         "municipioNome": "Volta Redonda",
         "codigoIbge": "3306305"
       },
-      "objetoCompra": "Aquisicao de caneta esferografica azul",
-      "numeroControlePNCP": "29477000000180-1-000002/2024",
+      "objetoCompra": "Aquisicao de grampeador de mesa",
+      "numeroControlePNCP": "29477000000180-1-000099/2024",
       "modalidadeId": 8,
       "modalidadeNome": "Dispensa",
       "situacaoCompraId": 1,
       "situacaoCompraNome": "Divulgada no PNCP",
-      "valorTotalEstimado": 25000.0
+      "valorTotalEstimado": 80.0
     }
   ],
   "totalRegistros": 3,
   "totalPaginas": 3,
-  "numeroPagina": 2,
-  "paginasRestantes": 1,
+  "numeroPagina": 3,
+  "paginasRestantes": 0,
   "empty": false
 }

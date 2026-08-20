@@ -1,0 +1,13 @@
+[
+  {
+    "numeroItem": 1,
+    "niFornecedor": "44555666000172",
+    "tipoPessoa": "PJ",
+    "nomeRazaoSocialFornecedor": "FINANCEIRA EXEMPLO SA",
+    "valorTotalHomologado": 80.0,
+    "quantidadeHomologada": 4.0,
+    "valorUnitarioHomologado": 20.0,
+    "sequencialResultado": 1,
+    "numeroControlePNCPCompra": "29477000000180-1-000099/2024"
+  }
+]

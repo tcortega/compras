@@ -6,8 +6,8 @@ const againstCompose = Boolean(process.env.PLAYWRIGHT_BASE_URL)
 const niteroiName = /Prefeitura Municipal de Niter[oó]i/i
 const bauruName = /Prefeitura Municipal de Bauru/i
 const voltaName = /Prefeitura Municipal de Volta Redonda/i
-const caxiasName = /Caxias do Sul/i
-const joinvilleName = /Joinville/i
+const caxiasName = /Munic[ií]pio de Caxias do Sul/i
+const joinvilleName = /Munic[ií]pio de Joinville/i
 
 async function assertCoverageAndBan(page: Page) {
   await expect(page.getByText(/n=\d+/).first()).toBeVisible()

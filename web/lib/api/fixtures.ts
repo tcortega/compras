@@ -36,6 +36,8 @@ export const ids = {
   orgaoTaubate: '7c2e1f40-3554-4050-9a01-000000000028',
   orgaoCascavel: '7c2e1f40-4104-4050-9a01-000000000029',
   orgaoJuizDeFora: '7c2e1f40-3136-4050-9a01-000000000030',
+  orgaoFoz: '7c2e1f40-4108-4050-9a01-000000000031',
+  orgaoSantaMaria: '7c2e1f40-4316-4050-9a01-000000000032',
   fornFarma: '8d3f2a51-3306-4050-9a02-000000000001',
   fornAlim: '8d3f2a51-3306-4050-9a02-000000000002',
   fornComb: '8d3f2a51-3306-4050-9a02-000000000003',
@@ -79,6 +81,8 @@ export const ids = {
   ctTaubate: '9e4a3b62-3554-4050-9a03-000000000034',
   ctCascavel: '9e4a3b62-4104-4050-9a03-000000000035',
   ctJuizDeFora: '9e4a3b62-3136-4050-9a03-000000000036',
+  ctFoz: '9e4a3b62-4108-4050-9a03-000000000037',
+  ctSantaMaria: '9e4a3b62-4316-4050-9a03-000000000038',
 } as const
 
 function orgao(
@@ -406,6 +410,26 @@ export const orgaos: Orgao[] = [
     'MG',
     '3136702',
     'Juiz de Fora',
+  ),
+  orgao(
+    ids.orgaoFoz,
+    '76206606000140',
+    'Município de Foz do Iguaçu',
+    'executivo',
+    T2,
+    'PR',
+    '4108304',
+    'Foz do Iguaçu',
+  ),
+  orgao(
+    ids.orgaoSantaMaria,
+    '88488366000100',
+    'Município de Santa Maria',
+    'executivo',
+    T2,
+    'RS',
+    '4316907',
+    'Santa Maria',
   ),
 ]
 
@@ -908,6 +932,28 @@ export const contratacoes: Contratacao[] = [
     '2024-09-13T14:21:10.000Z',
     'compras.gov.br',
   ),
+  ct(
+    ids.ctFoz,
+    '76206606000140-1-000362/2024',
+    ids.orgaoFoz,
+    'dispensa',
+    'Aquisição de fermento biológico',
+    2024,
+    41_175.0,
+    '2024-09-10T09:39:31.000Z',
+    'compras.gov.br',
+  ),
+  ct(
+    ids.ctSantaMaria,
+    '88488366000100-1-000435/2024',
+    ids.orgaoSantaMaria,
+    'pregao eletronico',
+    'RP - Medicamentos',
+    2024,
+    28_182.0,
+    '2024-10-15T07:06:03.000Z',
+    'compras.gov.br',
+  ),
 ]
 
 function item(
@@ -1003,4 +1049,6 @@ export const items: Item[] = [
   item(52, ids.ctTaubate, ids.fornPapel, 'Mapeamento Cerebral com Eletroencefalograma AQUISIÇÃO DE ELETRODOS PARA ELETROENCEFALOGRAMA.', '7021', 1, 'UNIDADE', 'un', 8250.0, 'SP', '2024-Q3', T2),
   item(53, ids.ctCascavel, ids.fornPapel, 'Motocicleta', '318890', 3, 'Unidade', 'un', 65370.0, 'PR', '2024-Q4', T2),
   item(54, ids.ctJuizDeFora, ids.fornPapel, 'Pembrolizumabe', '440269', 10, 'Frasco 4 ML', 'frasco', 16021.4, 'MG', '2024-Q3', T2),
+  item(55, ids.ctFoz, ids.fornPapel, 'Fermento', '459596', 2500, 'Embalagem 125 G', 'unknown', 16.47, 'PR', '2024-Q3', T2),
+  item(56, ids.ctSantaMaria, ids.fornPapel, 'Risperidona', '272839', 200000, 'Comprimido', 'comprimido', 0.141, 'RS', '2024-Q4', T2),
 ]

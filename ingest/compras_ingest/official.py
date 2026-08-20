@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 import time
 from dataclasses import dataclass
+from datetime import date, datetime, timedelta, timezone
 from html import unescape
 from urllib.parse import unquote, urljoin
 
@@ -42,7 +43,15 @@ TCE_RS_LEIAUTE_URL = "https://tcers.tc.br/repo/cex/licitacon/cpt/eValidador_Lici
 TCE_RS_EXAMPLE_URL = "https://tcers.tc.br/repo/cex/licitacon/cpt/eValidador-licitacon-exemplos-1.4.zip"
 TCE_RS_HOSTS = frozenset({"dados.tce.rs.gov.br", "tcers.tc.br"})
 TCE_RS_FETCH_ATTEMPTS = 4
-OFFICIAL_HOSTS = OCDS_HOSTS | RFB_HOSTS | PNCP_HOSTS | TCE_SP_HOSTS | TCE_RS_HOSTS
+# BUILD_SPEC Tier C source 7. Live Portal download verified 2026-08-20.
+# Listing https://portaldatransparencia.gov.br/download-de-dados/{ceis|cnep}/YYYYMMDD
+# redirects to dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/{ceis|cnep}/YYYYMMDD_{CEIS|CNEP}.zip
+CGU_CEIS_LISTING_URL = "https://portaldatransparencia.gov.br/download-de-dados/ceis"
+CGU_CNEP_LISTING_URL = "https://portaldatransparencia.gov.br/download-de-dados/cnep"
+CGU_ZIP_ROOT = "https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida"
+CGU_HOSTS = frozenset({"portaldatransparencia.gov.br", "dadosabertos-download.cgu.gov.br"})
+CGU_FETCH_LOOKBACK_DAYS = 14
+OFFICIAL_HOSTS = OCDS_HOSTS | RFB_HOSTS | PNCP_HOSTS | TCE_SP_HOSTS | TCE_RS_HOSTS | CGU_HOSTS
 USER_AGENT = "compras-ingest/0.1"
 _MONTH = re.compile(r"^\d{4}-\d{2}$")
 _PROP_NAME = re.compile(r"<d:displayname>([^<]+)</d:displayname>")
@@ -103,6 +112,17 @@ class TceRsOfficial:
     leiaute_url: str
     year: int
     via: str
+
+
+@dataclass(frozen=True)
+class CguCeisCnepOfficial:
+    listing_ceis: str
+    listing_cnep: str
+    ceis_download_url: str
+    cnep_download_url: str
+    ceis_zip_url: str
+    cnep_zip_url: str
+    day: date
 
 
 def http_client(timeout: float = 45.0) -> httpx.Client:
@@ -249,6 +269,127 @@ def fixture_tce_rs_official(year: int) -> TceRsOfficial:
         year,
         "example",
     )
+
+
+def cgu_listing_url(cadastro: str) -> str:
+    token = cadastro.strip().lower()
+    if token == "ceis":
+        return CGU_CEIS_LISTING_URL
+    if token == "cnep":
+        return CGU_CNEP_LISTING_URL
+    raise RuntimeError(f"CGU cadastro is not CEIS or CNEP: {cadastro}")
+
+
+def cgu_download_url(cadastro: str, day: date) -> str:
+    return f"{cgu_listing_url(cadastro)}/{day.strftime('%Y%m%d')}"
+
+
+def cgu_zip_url(cadastro: str, day: date) -> str:
+    token = cadastro.strip().lower()
+    if token not in {"ceis", "cnep"}:
+        raise RuntimeError(f"CGU cadastro is not CEIS or CNEP: {cadastro}")
+    return f"{CGU_ZIP_ROOT}/{token}/{day.strftime('%Y%m%d')}_{token.upper()}.zip"
+
+
+def assert_cgu_zip_url(url: str, cadastro: str) -> str:
+    """Refuse mirrors. Zip must be the official CGU saida extract."""
+    assert_official_host(url, CGU_HOSTS)
+    host = httpx.URL(url).host or ""
+    if host != "dadosabertos-download.cgu.gov.br":
+        raise RuntimeError(f"CGU zip host is not official: {url}")
+    token = cadastro.strip().lower()
+    path = (httpx.URL(url).path or "").lower()
+    if f"/portaldatransparencia/saida/{token}/" not in path:
+        raise RuntimeError(f"CGU download is not the {token} saida zip: {url}")
+    if not path.endswith(f"_{token}.zip"):
+        raise RuntimeError(f"CGU download is not the {token} saida zip: {url}")
+    return url
+
+
+def fixture_cgu_ceis_cnep_official(day: date | None = None) -> CguCeisCnepOfficial:
+    """Build official CEIS/CNEP URLs. Does not contact hosts."""
+    chosen = day or date(2024, 3, 15)
+    official = CguCeisCnepOfficial(
+        CGU_CEIS_LISTING_URL,
+        CGU_CNEP_LISTING_URL,
+        cgu_download_url("ceis", chosen),
+        cgu_download_url("cnep", chosen),
+        cgu_zip_url("ceis", chosen),
+        cgu_zip_url("cnep", chosen),
+        chosen,
+    )
+    _assert_cgu_official(official)
+    return official
+
+
+def resolve_cgu_ceis_cnep(day: date | None = None) -> CguCeisCnepOfficial:
+    """Read live Portal da Transparencia dated downloads. Fetch-only."""
+    start = day or datetime.now(timezone.utc).date()
+    last: Exception | None = None
+    with http_client() as client:
+        _require_ok(client, CGU_CEIS_LISTING_URL, CGU_HOSTS)
+        _require_ok(client, CGU_CNEP_LISTING_URL, CGU_HOSTS)
+        for i in range(CGU_FETCH_LOOKBACK_DAYS):
+            cand = start - timedelta(days=i)
+            try:
+                ceis_dl, ceis_zip = _resolve_cgu_cadastro(client, "ceis", cand)
+                cnep_dl, cnep_zip = _resolve_cgu_cadastro(client, "cnep", cand)
+                official = CguCeisCnepOfficial(
+                    CGU_CEIS_LISTING_URL,
+                    CGU_CNEP_LISTING_URL,
+                    ceis_dl,
+                    cnep_dl,
+                    ceis_zip,
+                    cnep_zip,
+                    cand,
+                )
+                _assert_cgu_official(official)
+                return official
+            except Exception as exc:
+                last = exc
+    raise RuntimeError(
+        f"CGU CEIS/CNEP download date could not be resolved after {CGU_FETCH_LOOKBACK_DAYS} days"
+    ) from last
+
+
+def _assert_cgu_official(official: CguCeisCnepOfficial) -> None:
+    if official.listing_ceis != CGU_CEIS_LISTING_URL:
+        raise RuntimeError(f"CEIS listing URL is not official: {official.listing_ceis}")
+    if official.listing_cnep != CGU_CNEP_LISTING_URL:
+        raise RuntimeError(f"CNEP listing URL is not official: {official.listing_cnep}")
+    for url in (
+        official.listing_ceis,
+        official.listing_cnep,
+        official.ceis_download_url,
+        official.cnep_download_url,
+        official.ceis_zip_url,
+        official.cnep_zip_url,
+    ):
+        assert_official_host(url, CGU_HOSTS)
+    if official.ceis_download_url != cgu_download_url("ceis", official.day):
+        raise RuntimeError(f"CEIS download URL is not official: {official.ceis_download_url}")
+    if official.cnep_download_url != cgu_download_url("cnep", official.day):
+        raise RuntimeError(f"CNEP download URL is not official: {official.cnep_download_url}")
+    assert_cgu_zip_url(official.ceis_zip_url, "ceis")
+    assert_cgu_zip_url(official.cnep_zip_url, "cnep")
+
+
+def _resolve_cgu_cadastro(client: httpx.Client, cadastro: str, day: date) -> tuple[str, str]:
+    download = cgu_download_url(cadastro, day)
+    assert_official_host(download, CGU_HOSTS)
+    resp = client.head(download)
+    if resp.status_code in {405, 403}:
+        resp = client.get(download)
+    if resp.status_code >= 400:
+        raise RuntimeError(f"official URL {download} returned {resp.status_code}")
+    assert_official_host(str(resp.url), CGU_HOSTS)
+    zip_url = str(resp.url)
+    if not zip_url.lower().endswith(".zip"):
+        loc = resp.headers.get("location") or ""
+        zip_url = loc if loc.lower().endswith(".zip") else cgu_zip_url(cadastro, day)
+    assert_cgu_zip_url(zip_url, cadastro)
+    _require_zip_reachable(client, zip_url, CGU_HOSTS)
+    return download, zip_url
 
 
 def fixture_pncp_official() -> PncpOfficial:

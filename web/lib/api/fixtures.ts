@@ -24,6 +24,8 @@ export const ids = {
   orgaoCaucaia: '7c2e1f40-2303-4050-9a01-000000000016',
   orgaoImperatriz: '7c2e1f40-2105-4050-9a01-000000000017',
   orgaoArapiraca: '7c2e1f40-2700-4050-9a01-000000000018',
+  orgaoDourados: '7c2e1f40-5003-4050-9a01-000000000019',
+  orgaoMaraba: '7c2e1f40-1504-4050-9a01-000000000020',
   fornFarma: '8d3f2a51-3306-4050-9a02-000000000001',
   fornAlim: '8d3f2a51-3306-4050-9a02-000000000002',
   fornComb: '8d3f2a51-3306-4050-9a02-000000000003',
@@ -55,6 +57,8 @@ export const ids = {
   ctCaucaia: '9e4a3b62-2303-4050-9a03-000000000022',
   ctImperatriz: '9e4a3b62-2105-4050-9a03-000000000023',
   ctArapiraca: '9e4a3b62-2700-4050-9a03-000000000024',
+  ctDourados: '9e4a3b62-5003-4050-9a03-000000000025',
+  ctMaraba: '9e4a3b62-1504-4050-9a03-000000000026',
 } as const
 
 function orgao(
@@ -262,6 +266,26 @@ export const orgaos: Orgao[] = [
     'AL',
     '2700300',
     'Arapiraca',
+  ),
+  orgao(
+    ids.orgaoDourados,
+    '20267427000168',
+    'Município de Dourados',
+    'executivo',
+    T2,
+    'MS',
+    '5003702',
+    'Dourados',
+  ),
+  orgao(
+    ids.orgaoMaraba,
+    '05853163000130',
+    'Município de Marabá',
+    'executivo',
+    T2,
+    'PA',
+    '1504208',
+    'Marabá',
   ),
 ]
 
@@ -632,6 +656,28 @@ export const contratacoes: Contratacao[] = [
     '2024-10-02T10:49:57.000Z',
     'compras.gov.br',
   ),
+  ct(
+    ids.ctDourados,
+    '20267427000168-1-000043/2024',
+    ids.orgaoDourados,
+    'dispensa',
+    'Contratação, por dispensa de licitação, de empresa especializada para aquisição de Reagentes para Diagnóstico Clínico.',
+    2024,
+    4_908.0,
+    '2024-11-07T17:13:48.000Z',
+    'compras.gov.br',
+  ),
+  ct(
+    ids.ctMaraba,
+    '05853163000130-1-000142/2024',
+    ids.orgaoMaraba,
+    'dispensa',
+    'CONTRATAÇÃO DE EMPRESA PARA AQUISIÇÃO DE FOGÃO 4 BOCAS, ACENDIMENTO AUTOMÁTICO COM FORNO, PARA ATENDER AS NECESSIDADES DA SECRETARIA MUNICIPAL DE SEGURANÇA INSTITUCIONAL E SEUS ÓRGÃOS ADIDOS',
+    2024,
+    3_399.96,
+    '2024-10-15T14:09:45.000Z',
+    'compras.gov.br',
+  ),
 ]
 
 function item(
@@ -715,4 +761,6 @@ export const items: Item[] = [
   item(40, ids.ctCaucaia, ids.fornPapel, 'Bloco receituário médico', '485443', 1000, 'Unidade', 'un', 8.55, 'CE', '2024-Q3', T1),
   item(41, ids.ctImperatriz, ids.fornPapel, 'Livro Didático', '464257', 100, 'Unidade', 'un', 525.3, 'MA', '2024-Q3', T1),
   item(42, ids.ctArapiraca, ids.fornPapel, 'Lamotrigina', '602451', 18, 'Comprimido', 'comprimido', 16.0, 'AL', '2024-Q4', T2),
+  item(43, ids.ctDourados, ids.fornPapel, 'Reagente Para Diagnóstico Clínico', '333587', 12, 'Unidade', 'un', 126.0, 'MS', '2024-Q4', T2),
+  item(44, ids.ctMaraba, ids.fornPapel, 'Fogão Gás', '425200', 4, 'Unidade', 'un', 849.99, 'PA', '2024-Q4', T2),
 ]

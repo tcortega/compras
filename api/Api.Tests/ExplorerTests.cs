@@ -998,6 +998,100 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		},
 	};
 
+	private static readonly Coverage s_douradosOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "MS",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_dourados = new()
+	{
+		Id = SliceIds.OrgaoDourados,
+		Cnpj = "20267427000168",
+		RazaoSocial = "Municipio de Dourados",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "MS",
+		MunicipioIbge = "5003702",
+		MunicipioNome = "Dourados",
+		Coverage = s_douradosOrgaoCoverage,
+	};
+
+	private static readonly Coverage s_marabaOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "PA",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_maraba = new()
+	{
+		Id = SliceIds.OrgaoMaraba,
+		Cnpj = "05853163000130",
+		RazaoSocial = "Municipio de Maraba",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "PA",
+		MunicipioIbge = "1504208",
+		MunicipioNome = "Maraba",
+		Coverage = s_marabaOrgaoCoverage,
+	};
+
+	private static readonly ItemRecord s_itemDourados = new()
+	{
+		Id = SliceIds.ItemDourados,
+		ContratacaoId = SliceIds.ContratacaoDourados,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Reagente para diagnostico clinico",
+		Catmat = "333587",
+		Catser = null,
+		Quantidade = 12m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 126m,
+		ValorTotal = 1512m,
+		Uf = "MS",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "MS",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
+	private static readonly ItemRecord s_itemMaraba = new()
+	{
+		Id = SliceIds.ItemMaraba,
+		ContratacaoId = SliceIds.ContratacaoMaraba,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Fogao gas",
+		Catmat = "425200",
+		Catser = null,
+		Quantidade = 4m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 849.99m,
+		ValorTotal = 3399.96m,
+		Uf = "PA",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "PA",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
 	[Fact]
 	public async Task FullCycle_BrowseMunicipioAndUf()
 	{
@@ -1185,6 +1279,32 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(new[] { s_arapiraca }, arapiracaPage.Items);
 		await ValidateOrgao(client, s_arapiraca);
 
+		var douradosPage = await client.ListOrgaos(municipioIbge: "5003702", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			douradosPage.Coverage);
+		Assert.Equal(new[] { s_dourados }, douradosPage.Items);
+		await ValidateOrgao(client, s_dourados);
+
+		var marabaPage = await client.ListOrgaos(uf: "PA", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "PA",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			marabaPage.Coverage);
+		Assert.Equal(new[] { s_maraba }, marabaPage.Items);
+		await ValidateOrgao(client, s_maraba);
+
 		var mixed = await client.ListOrgaos(quarter: SliceIds.Quarter);
 		Assert.Equal("", mixed.Coverage.Uf);
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3306305", StringComparison.Ordinal));
@@ -1202,6 +1322,8 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "2303709", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "2105302", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "2700300", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "5003702", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "1504208", StringComparison.Ordinal));
 
 		var spItems = await client.ListItems(uf: "SP", quarter: SliceIds.Quarter);
 		Assert.Equal(
@@ -1391,6 +1513,33 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 			OrgaoRazaoSocial = "Municipio de Imperatriz",
 			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
 			ContratacaoPncpId = "06158455000116-1-000002/2024",
+		});
+		var paItems = await client.ListItems(uf: "PA", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "PA",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			paItems.Coverage);
+		Assert.Equal(new[] { s_itemMaraba }, paItems.Items);
+		await ValidateItem(client, new()
+		{
+			Item = s_itemMaraba,
+			OrgaoId = SliceIds.OrgaoMaraba,
+			OrgaoRazaoSocial = "Municipio de Maraba",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "05853163000130-1-000142/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemDourados,
+			OrgaoId = SliceIds.OrgaoDourados,
+			OrgaoRazaoSocial = "Municipio de Dourados",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "20267427000168-1-000043/2024",
 		});
 
 		var empty = new Coverage

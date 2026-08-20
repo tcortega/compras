@@ -463,9 +463,9 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 
 		var mixed = await client.ListOrgaos(quarter: SliceIds.Quarter);
 		Assert.Equal("", mixed.Coverage.Uf);
-		Assert.Contains(mixed.Items, o => o.MunicipioIbge == "3306305");
-		Assert.Contains(mixed.Items, o => o.MunicipioIbge == "3303302");
-		Assert.Contains(mixed.Items, o => o.MunicipioIbge == "3506003");
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3306305", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3303302", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3506003", StringComparison.Ordinal));
 
 		var spItems = await client.ListItems(uf: "SP", quarter: SliceIds.Quarter);
 		Assert.Equal(

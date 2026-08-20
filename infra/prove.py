@@ -136,18 +136,24 @@ def main() -> int:
         raise SystemExit("web /orgaos missing Bauru")
 
     niteroi_html = get_text(f"{WEB}/orgaos?municipioIbge=3303302")
-    if "niter" not in niteroi_html.casefold():
+    niteroi_table = table_html(niteroi_html)
+    if "niteroi" not in niteroi_table.casefold() and "niterói" not in niteroi_table.casefold():
         raise SystemExit("web /orgaos?municipioIbge=3303302 missing Niterói")
-    if "bauru" in niteroi_html.casefold():
+    if "prefeitura municipal de bauru" in niteroi_table.casefold():
         raise SystemExit("web municipio filter leaked Bauru")
+    if "prefeitura municipal de volta redonda" in niteroi_table.casefold():
+        raise SystemExit("web municipio filter leaked Volta Redonda")
     if not re.search(r"n=1", niteroi_html):
         raise SystemExit("web municipio filter missing n=1")
 
     sp_html = get_text(f"{WEB}/orgaos?uf=SP")
-    if "bauru" not in sp_html.casefold():
+    sp_table = table_html(sp_html)
+    if "bauru" not in sp_table.casefold():
         raise SystemExit("web /orgaos?uf=SP missing Bauru")
-    if "volta redonda" in sp_html.casefold() or "niter" in sp_html.casefold():
-        raise SystemExit("web UF=SP filter leaked RJ")
+    if "prefeitura municipal de volta redonda" in sp_table.casefold():
+        raise SystemExit("web UF=SP filter leaked Volta Redonda")
+    if "prefeitura municipal de niter" in sp_table.casefold():
+        raise SystemExit("web UF=SP filter leaked Niterói")
     if "UF SP" not in sp_html:
         raise SystemExit("web UF=SP missing coverage UF")
 
@@ -214,6 +220,11 @@ def get_text(url: str) -> str:
         raise SystemExit(f"{url} status {exc.code}") from exc
     except urllib.error.URLError as exc:
         raise SystemExit(f"{url} unreachable: {exc.reason}") from exc
+
+
+def table_html(html: str) -> str:
+    match = re.search(r"<table\b[\s\S]*?</table>", html, re.I)
+    return match.group(0) if match else ""
 
 
 def deny_stub(blob: str, where: str) -> None:

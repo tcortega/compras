@@ -39,7 +39,11 @@ services:
       - ./postgres/01_compras.sql:/docker-entrypoint-initdb.d/01_compras.sql:ro
       - ./postgres/02_dagster.sh:/docker-entrypoint-initdb.d/02_dagster.sh:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-compras} -d ${POSTGRES_DB:-compras}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-compras} -d ${POSTGRES_DB:-compras} && psql -U ${POSTGRES_USER:-compras} -d ${DAGSTER_PG_DB:-dagster} -c 'SELECT 1' >/dev/null",
+        ]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -148,10 +152,11 @@ services:
       minio-init:
         condition: service_completed_successfully
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/server_info"]
-      interval: 10s
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:3000/server_info >/dev/null"]
+      interval: 5s
       timeout: 5s
-      retries: 20
+      retries: 24
+      start_period: 45s
     networks: [compras]
 
   dagster-daemon:

@@ -135,7 +135,10 @@ No ranking.
 - `GET /api/items/{id}`
 
 Internal publication routes exist and are tested.
-They are not linked from the explorer.
+`GET /api/internal/flags` lists warehouse facts by kind, state, itemId, skip, and take.
+That list is not linked from the explorer.
+No explorer route may return a flag field.
+Phase 0 precision is 9 percent, so public flags stay gated.
 
 Flag copy, if a DTO exists, is "indicio requiring verification" only.
 

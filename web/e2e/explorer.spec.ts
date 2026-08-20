@@ -38,6 +38,8 @@ const canoasName = /Munic[ií]pio de Canoas/i
 const lagesName = /Munic[ií]pio de Lages/i
 const santaremName = /Munic[ií]pio de Santar[eé]m/i
 const rioVerdeName = /Munic[ií]pio de Rio Verde/i
+const pauloAfonsoName = /Munic[ií]pio de Paulo Afonso/i
+const saoLourencoName = /Munic[ií]pio de S[aã]o Louren[cç]o da Mata/i
 
 const publishedNames = [
   niteroiName,
@@ -74,6 +76,8 @@ const publishedNames = [
   lagesName,
   santaremName,
   rioVerdeName,
+  pauloAfonsoName,
+  saoLourencoName,
 ]
 
 async function assertCoverageAndBan(page: Page) {
@@ -134,10 +138,10 @@ test('home cards usam o n da coleção, não o n de itens', async ({ page }) => 
   await page.goto('/')
   await expect(page.getByRole('strong').filter({ hasText: 'Cobertura incompleta' })).toBeVisible()
   await expect(page.getByText(/UF mista/).first()).toBeVisible()
-  await expect(page.getByText(/Caxias do Sul \(RS\), Joinville \(SC\), Uberlândia \(MG\), Londrina \(PR\), Feira de Santana \(BA\), Caruaru \(PE\), Anápolis \(GO\), Vila Velha \(ES\), Campina Grande \(PB\), Caucaia \(CE\), Imperatriz \(MA\), Arapiraca \(AL\), Dourados \(MS\), Marabá \(PA\), Várzea Grande \(MT\), Ji-Paraná \(RO\), Parnamirim \(RN\), Cruzeiro do Sul \(AC\), Santana \(AP\), Rorainópolis \(RR\), Maringá \(PR\), Taubaté \(SP\), Cascavel \(PR\), Juiz de Fora \(MG\), Foz do Iguaçu \(PR\), Santa Maria \(RS\), Montes Claros \(MG\), Governador Valadares \(MG\), Canoas \(RS\), Lages \(SC\), Santarém \(PA\) e Rio Verde \(GO\)/).first()).toBeVisible()
+  await expect(page.getByText(/Caxias do Sul \(RS\), Joinville \(SC\), Uberlândia \(MG\), Londrina \(PR\), Feira de Santana \(BA\), Caruaru \(PE\), Anápolis \(GO\), Vila Velha \(ES\), Campina Grande \(PB\), Caucaia \(CE\), Imperatriz \(MA\), Arapiraca \(AL\), Dourados \(MS\), Marabá \(PA\), Várzea Grande \(MT\), Ji-Paraná \(RO\), Parnamirim \(RN\), Cruzeiro do Sul \(AC\), Santana \(AP\), Rorainópolis \(RR\), Maringá \(PR\), Taubaté \(SP\), Cascavel \(PR\), Juiz de Fora \(MG\), Foz do Iguaçu \(PR\), Santa Maria \(RS\), Montes Claros \(MG\), Governador Valadares \(MG\), Canoas \(RS\), Lages \(SC\), Santarém \(PA\), Rio Verde \(GO\), Paulo Afonso \(BA\) e São Lourenço da Mata \(PE\)/).first()).toBeVisible()
   const brand = page.locator('.brand-kicker')
-  await expect(brand).toHaveText(/trinta e cinco municípios · 2024/i)
-  await expect(brand).not.toHaveText(/Caxias do Sul|Uberlândia|Londrina|Feira de Santana|Caruaru|Anápolis|Vila Velha|Campina Grande|Caucaia|Imperatriz|Arapiraca|Dourados|Marabá|Várzea Grande|Ji-Paraná|Parnamirim|Cruzeiro do Sul|Santana|Rorainópolis|Maringá|Taubaté|Cascavel|Juiz de Fora|Foz do Iguaçu|Santa Maria|Montes Claros|Governador Valadares|Canoas|Lages|Santarém|Rio Verde/)
+  await expect(brand).toHaveText(/trinta e sete municípios · 2024/i)
+  await expect(brand).not.toHaveText(/Caxias do Sul|Uberlândia|Londrina|Feira de Santana|Caruaru|Anápolis|Vila Velha|Campina Grande|Caucaia|Imperatriz|Arapiraca|Dourados|Marabá|Várzea Grande|Ji-Paraná|Parnamirim|Cruzeiro do Sul|Santana|Rorainópolis|Maringá|Taubaté|Cascavel|Juiz de Fora|Foz do Iguaçu|Santa Maria|Montes Claros|Governador Valadares|Canoas|Lages|Santarém|Rio Verde|Paulo Afonso|São Lourenço/)
   const brandBox = await brand.boundingBox()
   const masthead = await page.locator('.masthead-inner').boundingBox()
   expect(brandBox).toBeTruthy()
@@ -158,8 +162,8 @@ test('home cards usam o n da coleção, não o n de itens', async ({ page }) => 
   await expect(itens.getByText(new RegExp(`n=${itensN}`))).toBeVisible()
   expect(orgaosN).not.toEqual(itensN)
   if (!againstCompose) {
-    await expect(orgaos.getByRole('strong')).toHaveText('38')
-    await expect(itens.getByRole('strong')).toHaveText('62')
+    await expect(orgaos.getByRole('strong')).toHaveText('40')
+    await expect(itens.getByRole('strong')).toHaveText('64')
   }
 
   if (againstCompose) {
@@ -260,8 +264,8 @@ test('filtra Uberlândia por IBGE e Londrina por UF PR', async ({ page }) => {
 
 test('filtra Feira de Santana por IBGE e Caruaru por UF PE', async ({ page }) => {
   await assertOrgaoIbge(page, '2910800', feiraName, caruaruName, 'BA')
-  await assertOrgaoUf(page, 'PE', caruaruName, feiraName)
-  await assertItensUf(page, 'PE', /Placa sinalizadora/)
+  await assertOrgaoUf(page, 'PE', caruaruName, feiraName, '2')
+  await assertItensUf(page, 'PE', /Placa sinalizadora/, '2')
 })
 
 test('filtra Anápolis por IBGE e Vila Velha por UF ES', async ({ page }) => {
@@ -334,6 +338,11 @@ test('filtra Canoas por IBGE e Lages por IBGE', async ({ page }) => {
 test('filtra Santarém por IBGE e Rio Verde por IBGE', async ({ page }) => {
   await assertOrgaoIbge(page, '1506807', santaremName, rioVerdeName, 'PA')
   await assertOrgaoIbge(page, '5218805', rioVerdeName, santaremName, 'GO')
+})
+
+test('filtra Paulo Afonso por IBGE e São Lourenço da Mata por IBGE', async ({ page }) => {
+  await assertOrgaoIbge(page, '2924009', pauloAfonsoName, saoLourencoName, 'BA')
+  await assertOrgaoIbge(page, '2613701', saoLourencoName, pauloAfonsoName, 'PE')
 })
 
 test('mantém cobertura no filtro vazio e no vazio com UF', async ({ page }) => {
@@ -470,6 +479,8 @@ test('vazio, 404 e páginas estáticas mantêm cobertura e o banimento', async (
   await expect(page.getByText(/4209300/).first()).toBeVisible()
   await expect(page.getByText(/1506807/).first()).toBeVisible()
   await expect(page.getByText(/5218805/).first()).toBeVisible()
+  await expect(page.getByText(/2924009/).first()).toBeVisible()
+  await expect(page.getByText(/2613701/).first()).toBeVisible()
   await expect(page.getByText(/não é um total nacional/).first()).toBeVisible()
   await expect(page.getByText(/UF mista/).first()).toBeVisible()
   await assertCoverageAndBan(page)

@@ -45,6 +45,10 @@ class Settings:
     tce_sp_year: int
     tce_sp_month: int
     tce_sp_municipio: str
+    tce_rs_path: Path | None
+    tce_rs_fetch: bool
+    tce_rs_year: int
+    tce_rs_orgao: str
     fixture_root: Path
 
     @classmethod
@@ -88,6 +92,10 @@ class Settings:
             tce_sp_year=int(os.environ.get("TCE_SP_YEAR", os.environ.get("COMPRAS_GOV_YEAR", "2024"))),
             tce_sp_month=int(os.environ.get("TCE_SP_MONTH", "1")),
             tce_sp_municipio=os.environ.get("TCE_SP_MUNICIPIO", "Bauru"),
+            tce_rs_path=_opt_path("TCE_RS_PATH", fixture / "tce_rs_licitacon"),
+            tce_rs_fetch=_bool_env("TCE_RS_FETCH"),
+            tce_rs_year=int(os.environ.get("TCE_RS_YEAR", "2025")),
+            tce_rs_orgao=os.environ.get("TCE_RS_ORGAO", "4305108"),
             fixture_root=fixture,
         )
 

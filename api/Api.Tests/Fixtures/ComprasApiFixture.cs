@@ -510,6 +510,28 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			MunicipioIbge = "2613701",
 			MunicipioNome = "Sao Lourenco da Mata",
 		};
+		var crato = new Orgao
+		{
+			Id = SliceIds.OrgaoCrato,
+			Cnpj = "07587975000107",
+			RazaoSocial = "Municipio de Crato",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "CE",
+			MunicipioIbge = "2304202",
+			MunicipioNome = "Crato",
+		};
+		var ariquemes = new Orgao
+		{
+			Id = SliceIds.OrgaoAriquemes,
+			Cnpj = "04104816000116",
+			RazaoSocial = "Municipio de Ariquemes",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "RO",
+			MunicipioIbge = "1100023",
+			MunicipioNome = "Ariquemes",
+		};
 		var fornecedor = new Fornecedor
 		{
 			Id = SliceIds.Fornecedor,
@@ -1074,6 +1096,34 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			Ano = 2024,
 			ValorHomologado = 97000m,
 			PublicadoEm = Instant.FromUtc(2024, 10, 15, 7, 9),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoCrato = new Contratacao
+		{
+			Id = SliceIds.ContratacaoCrato,
+			PncpId = "07587975000107-1-000020/2024",
+			OrgaoId = SliceIds.OrgaoCrato,
+			Modalidade = "dispensa",
+			Objeto = "Aquisicao do tradicional bolo com tematica alusiva ao aniversario de 260 anos do municipio, em alusao ao aniversario do municipio FestCrato 2024.",
+			Ano = 2024,
+			ValorHomologado = 9612m,
+			PublicadoEm = Instant.FromUtc(2024, 7, 2, 17, 38),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoAriquemes = new Contratacao
+		{
+			Id = SliceIds.ContratacaoAriquemes,
+			PncpId = "04104816000116-1-000206/2024",
+			OrgaoId = SliceIds.OrgaoAriquemes,
+			Modalidade = "pregao eletronico",
+			Objeto = "Registro de Preco para eventual aquisicao de material de limpeza e higiene, material de consumo para atender as Secretarias Municipais da Prefeitura Municipal de Ariquemes/RO, por um periodo de 12 meses.",
+			Ano = 2024,
+			ValorHomologado = 68280.36m,
+			PublicadoEm = Instant.FromUtc(2024, 9, 16, 9, 20),
 			Source = "compras.gov.br",
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
@@ -1689,11 +1739,45 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
 		};
+		var itemCrato = new Item
+		{
+			Id = SliceIds.ItemCrato,
+			ContratacaoId = SliceIds.ContratacaoCrato,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Bolo Alimenticio",
+			Catmat = "308385",
+			Quantidade = 200m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 48.06m,
+			ValorTotal = 9612m,
+			Uf = "CE",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var itemAriquemes = new Item
+		{
+			Id = SliceIds.ItemAriquemes,
+			ContratacaoId = SliceIds.ContratacaoAriquemes,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Alcool Etilico",
+			Catmat = "269941",
+			Quantidade = 6909m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 6.88m,
+			ValorTotal = 47533.92m,
+			Uf = "RO",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
 
-		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville, uberlandia, londrina, feira, caruaru, anapolis, vilaVelha, campinaGrande, caucaia, imperatriz, arapiraca, dourados, maraba, varzeaGrande, jiParana, parnamirim, cruzeiroDoSul, santana, rorainopolis, maringa, taubate, cascavel, juizDeFora, foz, santaMaria, montesClaros, governadorValadares, canoas, lages, santarem, rioVerde, pauloAfonso, saoLourenco);
+		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville, uberlandia, londrina, feira, caruaru, anapolis, vilaVelha, campinaGrande, caucaia, imperatriz, arapiraca, dourados, maraba, varzeaGrande, jiParana, parnamirim, cruzeiroDoSul, santana, rorainopolis, maringa, taubate, cascavel, juizDeFora, foz, santaMaria, montesClaros, governadorValadares, canoas, lages, santarem, rioVerde, pauloAfonso, saoLourenco, crato, ariquemes);
 		db.Fornecedores.AddRange(fornecedor, fornecedorExtra);
-		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina, contratacaoFeira, contratacaoCaruaru, contratacaoAnapolis, contratacaoVilaVelha, contratacaoCampinaGrande, contratacaoCaucaia, contratacaoImperatriz, contratacaoArapiraca, contratacaoDourados, contratacaoMaraba, contratacaoVarzeaGrande, contratacaoJiParana, contratacaoParnamirim, contratacaoCruzeiroDoSul, contratacaoSantana, contratacaoRorainopolis, contratacaoMaringa, contratacaoTaubate, contratacaoCascavel, contratacaoJuizDeFora, contratacaoFoz, contratacaoSantaMaria, contratacaoMontesClaros, contratacaoGovernadorValadares, contratacaoCanoas, contratacaoLages, contratacaoSantarem, contratacaoRioVerde, contratacaoPauloAfonso, contratacaoSaoLourenco);
-		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina, itemFeira, itemCaruaru, itemAnapolis, itemVilaVelha, itemCampinaGrande, itemCaucaia, itemImperatriz, itemArapiraca, itemDourados, itemMaraba, itemVarzeaGrande, itemJiParana, itemParnamirim, itemCruzeiroDoSul, itemSantana, itemRorainopolis, itemMaringa, itemTaubate, itemCascavel, itemJuizDeFora, itemFoz, itemSantaMaria, itemMontesClaros, itemGovernadorValadares, itemCanoas, itemLages, itemSantarem, itemRioVerde, itemPauloAfonso, itemSaoLourenco);
+		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina, contratacaoFeira, contratacaoCaruaru, contratacaoAnapolis, contratacaoVilaVelha, contratacaoCampinaGrande, contratacaoCaucaia, contratacaoImperatriz, contratacaoArapiraca, contratacaoDourados, contratacaoMaraba, contratacaoVarzeaGrande, contratacaoJiParana, contratacaoParnamirim, contratacaoCruzeiroDoSul, contratacaoSantana, contratacaoRorainopolis, contratacaoMaringa, contratacaoTaubate, contratacaoCascavel, contratacaoJuizDeFora, contratacaoFoz, contratacaoSantaMaria, contratacaoMontesClaros, contratacaoGovernadorValadares, contratacaoCanoas, contratacaoLages, contratacaoSantarem, contratacaoRioVerde, contratacaoPauloAfonso, contratacaoSaoLourenco, contratacaoCrato, contratacaoAriquemes);
+		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina, itemFeira, itemCaruaru, itemAnapolis, itemVilaVelha, itemCampinaGrande, itemCaucaia, itemImperatriz, itemArapiraca, itemDourados, itemMaraba, itemVarzeaGrande, itemJiParana, itemParnamirim, itemCruzeiroDoSul, itemSantana, itemRorainopolis, itemMaringa, itemTaubate, itemCascavel, itemJuizDeFora, itemFoz, itemSantaMaria, itemMontesClaros, itemGovernadorValadares, itemCanoas, itemLages, itemSantarem, itemRioVerde, itemPauloAfonso, itemSaoLourenco, itemCrato, itemAriquemes);
 	}
 
 	private static JsonSerializerOptions CreateJson()

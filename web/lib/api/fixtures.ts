@@ -46,6 +46,8 @@ export const ids = {
   orgaoRioVerde: '7c2e1f40-5218-4050-9a01-000000000038',
   orgaoPauloAfonso: '7c2e1f40-2924-4050-9a01-000000000039',
   orgaoSaoLourenco: '7c2e1f40-2613-4050-9a01-000000000040',
+  orgaoCrato: '7c2e1f40-2304-4050-9a01-000000000041',
+  orgaoAriquemes: '7c2e1f40-1102-4050-9a01-000000000042',
   fornFarma: '8d3f2a51-3306-4050-9a02-000000000001',
   fornAlim: '8d3f2a51-3306-4050-9a02-000000000002',
   fornComb: '8d3f2a51-3306-4050-9a02-000000000003',
@@ -99,6 +101,8 @@ export const ids = {
   ctRioVerde: '9e4a3b62-5218-4050-9a03-000000000044',
   ctPauloAfonso: '9e4a3b62-2924-4050-9a03-000000000045',
   ctSaoLourenco: '9e4a3b62-2613-4050-9a03-000000000046',
+  ctCrato: '9e4a3b62-2304-4050-9a03-000000000047',
+  ctAriquemes: '9e4a3b62-1102-4050-9a03-000000000048',
 } as const
 
 function orgao(
@@ -526,6 +530,26 @@ export const orgaos: Orgao[] = [
     'PE',
     '2613701',
     'São Lourenço da Mata',
+  ),
+  orgao(
+    ids.orgaoCrato,
+    '07587975000107',
+    'Município de Crato',
+    'executivo',
+    T1,
+    'CE',
+    '2304202',
+    'Crato',
+  ),
+  orgao(
+    ids.orgaoAriquemes,
+    '04104816000116',
+    'Município de Ariquemes',
+    'executivo',
+    T2,
+    'RO',
+    '1100023',
+    'Ariquemes',
   ),
 ]
 
@@ -1138,6 +1162,28 @@ export const contratacoes: Contratacao[] = [
     '2024-10-15T07:09:11.000Z',
     'compras.gov.br',
   ),
+  ct(
+    ids.ctCrato,
+    '07587975000107-1-000020/2024',
+    ids.orgaoCrato,
+    'dispensa',
+    'Aquisição do tradicional bolo com temática alusiva ao aniversário de 260 anos do município, em alusão ao aniversário do município “FestCrato 2024”, ',
+    2024,
+    9_612.0,
+    '2024-07-02T17:38:35.000Z',
+    'compras.gov.br',
+  ),
+  ct(
+    ids.ctAriquemes,
+    '04104816000116-1-000206/2024',
+    ids.orgaoAriquemes,
+    'pregao eletronico',
+    'Registro de Preço para eventual aquisição de material de limpeza e higiene, material de consumo para atender as Secretarias Municipais da Prefeitura Municipal de Ariquemes/RO, por um período de 12 meses.',
+    2024,
+    68_280.36,
+    '2024-09-16T09:20:15.000Z',
+    'compras.gov.br',
+  ),
 ]
 
 function item(
@@ -1243,4 +1289,6 @@ export const items: Item[] = [
   item(62, ids.ctRioVerde, ids.fornPapel, 'Lâmpada refletora', '485659', 10, 'Unidade', 'un', 45.0, 'GO', '2024-Q4', T2),
   item(63, ids.ctPauloAfonso, ids.fornPapel, 'Açúcar', '603269', 2000, 'Embalagem 1,00 KG', 'unknown', 4.42, 'BA', '2024-Q4', T2),
   item(64, ids.ctSaoLourenco, ids.fornPapel, 'Ventilador', '461897', 375, 'Unidade', 'un', 194.0, 'PE', '2024-Q4', T2),
+  item(65, ids.ctCrato, ids.fornPapel, 'Bolo Alimentício', '308385', 200, 'Quilograma', 'kg', 48.06, 'CE', '2024-Q3', T1),
+  item(66, ids.ctAriquemes, ids.fornPapel, 'Álcool Etílico', '269941', 6909, 'Frasco 1000,00 ML', 'frasco', 6.88, 'RO', '2024-Q3', T2),
 ]

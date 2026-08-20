@@ -1,10 +1,21 @@
 import { expect, test, type Page } from '@playwright/test'
 import { readFile } from 'node:fs/promises'
 import { againstCompose } from './busca-helpers'
-import { ROTULOS_LEAK, SYNTHETIC_ITEMS, agreementFile, plantRotulosFixtures } from './rotulos-helpers'
+import {
+  PEER_EMPTY,
+  PEER_EXTRA,
+  PEER_HEADING,
+  ROTULOS_LEAK,
+  SYNTHETIC_ITEMS,
+  SYNTHETIC_PEERS,
+  agreementFile,
+  plantRotulosFixtures,
+} from './rotulos-helpers'
 
 const bannedPublic =
   /fraude|corrupto|roubo|\bflag\b|ranking|adjacenc|shared_qsa|shared_partner|cover[_-]?bidd|bid_variance|winner_rotation|co[_-]?bid|cnae_mismatch|hidden_label/i
+
+const bannedRotulos = /hidden_label|cnae_mismatch|0\.99|\bscore\b|\brank\b|\bz\b|detector|fraude/i
 
 const WHY =
   'O computador já marcou este preço como alto frente a itens semelhantes. Abra o link oficial. Depois escolha o porquê.'
@@ -72,20 +83,36 @@ test('rotulos: worker confere três itens sintéticos e retoma no quarto', async
   for (const hint of HINTS) {
     await expect(page.getByText(hint)).toBeVisible()
   }
+  await expect(page.getByRole('heading', { name: PEER_HEADING })).toBeVisible()
+  await expect(page.getByText('Mediana do grupo')).toBeVisible()
+  await expect(page.locator('.rotulos-peers-median')).toContainText(/18,40/)
+  await expect(page.locator('.rotulos-peers-list li')).toHaveCount(3)
+  for (const peer of SYNTHETIC_PEERS) {
+    await expect(page.getByText(peer.descricao)).toBeVisible()
+  }
+  await expect(page.getByText(PEER_EMPTY)).toHaveCount(0)
+  await expect(page.getByText(PEER_EXTRA)).toHaveCount(0)
   await expect(page.locator('body')).not.toHaveText(ROTULOS_LEAK)
   await expect(page.locator('body')).not.toHaveText(bannedPublic)
-  await expect(page.locator('body')).not.toHaveText(/hidden_label|cnae_mismatch|0\.99/)
+  await expect(page.locator('body')).not.toHaveText(bannedRotulos)
   await assertNoRotulosLink(page)
 
   await expect(page.getByRole('button', { name: 'Real' })).toBeEnabled()
   await page.keyboard.press('1')
   await expect(page.getByText('2 de 4')).toBeVisible()
   await expect(page.getByRole('heading', { name: SYNTHETIC_ITEMS[1].descricao })).toBeVisible()
+  await expect(page.getByRole('heading', { name: PEER_HEADING })).toBeVisible()
+  await expect(page.getByText(PEER_EMPTY)).toBeVisible()
+  await expect(page.locator('.rotulos-peers-list')).toHaveCount(0)
+  await expect(page.getByText('Mediana do grupo')).toHaveCount(0)
+  await expect(page.getByText(SYNTHETIC_PEERS[0].descricao)).toHaveCount(0)
 
   await page.getByRole('button', { name: 'Voltar' }).click()
   await expect(page.getByText('1 de 4')).toBeVisible()
   await expect(page.getByRole('heading', { name: SYNTHETIC_ITEMS[0].descricao })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Real' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.locator('.rotulos-peers-list li')).toHaveCount(3)
+  await expect(page.getByText(PEER_EMPTY)).toHaveCount(0)
 
   await page.keyboard.press('1')
   await expect(page.getByText('2 de 4')).toBeVisible()
@@ -121,5 +148,9 @@ test('rotulos: worker confere três itens sintéticos e retoma no quarto', async
   await page.reload()
   await expect(page.getByText('4 de 4')).toBeVisible()
   await expect(page.getByRole('heading', { name: SYNTHETIC_ITEMS[3].descricao })).toBeVisible()
+  await expect(page.getByRole('heading', { name: PEER_HEADING })).toBeVisible()
+  await expect(page.getByText(PEER_EMPTY)).toBeVisible()
   await expect(page.locator('body')).not.toHaveText(ROTULOS_LEAK)
+  await expect(page.locator('body')).not.toHaveText(bannedPublic)
+  await expect(page.locator('body')).not.toHaveText(bannedRotulos)
 })

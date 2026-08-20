@@ -48,4 +48,6 @@ O spec não assume campos só do stub. CI do compose também roda esse Playwrigh
 A fila interna de triagem fica em `/interno/triagem` e não entra no menu público.
 As contagens internas por detector ficam em `/interno/cobertura` e também ficam fora do menu público.
 A revisão interna de rótulos fica em `/interno/rotulos`, usa o mesmo gate de staging e também fica fora do menu público.
+O cartão pode mostrar até três pares de comparação de um JSON opcional.
+Sem pares, o texto é "sem pares neste recorte".
 Não há suíte de unit tests.

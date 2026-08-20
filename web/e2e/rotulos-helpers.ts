@@ -7,6 +7,29 @@ export const ROTULOS_LEAK = 'LEAKED_KEY_TOKEN_DO_NOT_SHOW'
 const HEADER =
   'packet_row_id,city,ibge,year,id_compra,id_compra_item,ID_contratacao_PNCP,numero_item,descricao,unidade_medida,quantidade,valor_unitario_estimado,valor_unitario_resultado,valor_total,valor_total_resultado,catalog_code,source_doc_url,pncp_item_api_url,official_compra_url,official_item_url'
 
+export const PEER_HEADING = 'Outras compras usadas na comparação'
+export const PEER_EMPTY = 'sem pares neste recorte'
+export const PEER_MEDIAN = '18.40'
+export const PEER_EXTRA = 'PEER EXTRA NAO MOSTRAR'
+
+export const SYNTHETIC_PEERS = [
+  {
+    descricao: 'Papel sulfite A4 75g 500 folhas',
+    unidade_medida: 'UN',
+    valor_unitario: '19.90',
+  },
+  {
+    descricao: 'Resma chamex A4 75g',
+    unidade_medida: 'UN',
+    valor_unitario: '17.20',
+  },
+  {
+    descricao: 'Papel A4 alcalino 75g',
+    unidade_medida: 'PCT',
+    valor_unitario: '18.10',
+  },
+] as const
+
 export const SYNTHETIC_ITEMS = [
   {
     packet_row_id: 'syn-row-001',
@@ -59,8 +82,9 @@ function line(item: (typeof SYNTHETIC_ITEMS)[number], index: number): string {
 export async function plantRotulosFixtures(): Promise<void> {
   const adjudication = path.join(ROTULOS_DATA_DIR, 'labels', 'adjudication')
   const agreement = path.join(adjudication, 'agreement')
+  const peers = path.join(adjudication, 'peers')
   await rm(agreement, { recursive: true, force: true })
-  await mkdir(adjudication, { recursive: true })
+  await mkdir(peers, { recursive: true })
   await writeFile(
     path.join(adjudication, 'vr-30-blind.csv'),
     `${HEADER}\n${SYNTHETIC_ITEMS.map(line).join('\n')}\n`,
@@ -69,6 +93,34 @@ export async function plantRotulosFixtures(): Promise<void> {
   await writeFile(
     path.join(adjudication, 'vr-30-keys-do-not-give-to-human.csv'),
     `packet_row_id,hidden_label,score,kind\nsyn-row-001,${ROTULOS_LEAK},0.99,cnae_mismatch\n`,
+    'utf8',
+  )
+  await writeFile(
+    path.join(peers, 'vr-30-keys-do-not-give-to-human.json'),
+    JSON.stringify({
+      'syn-row-001': {
+        median_unit_price: '0.99',
+        peers: [{ descricao: ROTULOS_LEAK, unidade_medida: 'score', valor_unitario: '0.99' }],
+      },
+    }),
+    'utf8',
+  )
+  await writeFile(
+    path.join(peers, 'vr-30-peers.json'),
+    JSON.stringify({
+      'syn-row-001': {
+        median_unit_price: PEER_MEDIAN,
+        score: '0.99',
+        rank: '1',
+        z: '4.2',
+        hidden_label: ROTULOS_LEAK,
+        peers: [
+          ...SYNTHETIC_PEERS,
+          { descricao: PEER_EXTRA, unidade_medida: 'UN', valor_unitario: '99.00' },
+        ],
+      },
+      'syn-row-003': { median_unit_price: '', peers: [] },
+    }),
     'utf8',
   )
 }

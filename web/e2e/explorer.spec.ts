@@ -24,6 +24,8 @@ const varzeaName = /Munic[ií]pio de V[aá]rzea Grande/i
 const jiParanaName = /Munic[ií]pio de Ji-Paran[aá]/i
 const parnamirimName = /Munic[ií]pio de Parnamirim/i
 const cruzeiroName = /Munic[ií]pio de Cruzeiro do Sul/i
+const santanaName = /Munic[ií]pio de Santana/i
+const rorainopolisName = /Munic[ií]pio de Rorain[oó]polis/i
 
 const publishedNames = [
   niteroiName,
@@ -46,11 +48,13 @@ const publishedNames = [
   jiParanaName,
   parnamirimName,
   cruzeiroName,
+  santanaName,
+  rorainopolisName,
 ]
 
 async function assertCoverageAndBan(page: Page) {
   await expect(page.getByText(/n=\d+/).first()).toBeVisible()
-  await expect(page.getByText(/UF RJ|UF SP|UF RS|UF SC|UF MG|UF PR|UF BA|UF PE|UF GO|UF ES|UF PB|UF CE|UF MA|UF AL|UF MS|UF PA|UF MT|UF RO|UF RN|UF AC|UF mista|filtro sem registros/).first()).toBeVisible()
+  await expect(page.getByText(/UF RJ|UF SP|UF RS|UF SC|UF MG|UF PR|UF BA|UF PE|UF GO|UF ES|UF PB|UF CE|UF MA|UF AL|UF MS|UF PA|UF MT|UF RO|UF RN|UF AC|UF AP|UF RR|UF mista|filtro sem registros/).first()).toBeVisible()
   await expect(page.getByText(/trimestre|trim\./i).first()).toBeVisible()
   await expect(page.getByText(/metodologia/i).first()).toBeVisible()
   await expect(page.locator('body')).not.toHaveText(banned)
@@ -106,10 +110,10 @@ test('home cards usam o n da coleção, não o n de itens', async ({ page }) => 
   await page.goto('/')
   await expect(page.getByRole('strong').filter({ hasText: 'Cobertura incompleta' })).toBeVisible()
   await expect(page.getByText(/UF mista/).first()).toBeVisible()
-  await expect(page.getByText(/Caxias do Sul \(RS\), Joinville \(SC\), Uberlândia \(MG\), Londrina \(PR\), Feira de Santana \(BA\), Caruaru \(PE\), Anápolis \(GO\), Vila Velha \(ES\), Campina Grande \(PB\), Caucaia \(CE\), Imperatriz \(MA\), Arapiraca \(AL\), Dourados \(MS\), Marabá \(PA\), Várzea Grande \(MT\), Ji-Paraná \(RO\), Parnamirim \(RN\) e Cruzeiro do Sul \(AC\)/).first()).toBeVisible()
+  await expect(page.getByText(/Caxias do Sul \(RS\), Joinville \(SC\), Uberlândia \(MG\), Londrina \(PR\), Feira de Santana \(BA\), Caruaru \(PE\), Anápolis \(GO\), Vila Velha \(ES\), Campina Grande \(PB\), Caucaia \(CE\), Imperatriz \(MA\), Arapiraca \(AL\), Dourados \(MS\), Marabá \(PA\), Várzea Grande \(MT\), Ji-Paraná \(RO\), Parnamirim \(RN\), Cruzeiro do Sul \(AC\), Santana \(AP\) e Rorainópolis \(RR\)/).first()).toBeVisible()
   const brand = page.locator('.brand-kicker')
-  await expect(brand).toHaveText(/vinte e um municípios · 2024/i)
-  await expect(brand).not.toHaveText(/Caxias do Sul|Uberlândia|Londrina|Feira de Santana|Caruaru|Anápolis|Vila Velha|Campina Grande|Caucaia|Imperatriz|Arapiraca|Dourados|Marabá|Várzea Grande|Ji-Paraná|Parnamirim|Cruzeiro do Sul/)
+  await expect(brand).toHaveText(/vinte e três municípios · 2024/i)
+  await expect(brand).not.toHaveText(/Caxias do Sul|Uberlândia|Londrina|Feira de Santana|Caruaru|Anápolis|Vila Velha|Campina Grande|Caucaia|Imperatriz|Arapiraca|Dourados|Marabá|Várzea Grande|Ji-Paraná|Parnamirim|Cruzeiro do Sul|Santana|Rorainópolis/)
   const brandBox = await brand.boundingBox()
   const masthead = await page.locator('.masthead-inner').boundingBox()
   expect(brandBox).toBeTruthy()
@@ -130,8 +134,8 @@ test('home cards usam o n da coleção, não o n de itens', async ({ page }) => 
   await expect(itens.getByText(new RegExp(`n=${itensN}`))).toBeVisible()
   expect(orgaosN).not.toEqual(itensN)
   if (!againstCompose) {
-    await expect(orgaos.getByRole('strong')).toHaveText('24')
-    await expect(itens.getByRole('strong')).toHaveText('48')
+    await expect(orgaos.getByRole('strong')).toHaveText('26')
+    await expect(itens.getByRole('strong')).toHaveText('50')
   }
 
   if (againstCompose) {
@@ -272,6 +276,12 @@ test('filtra Parnamirim por IBGE e Cruzeiro do Sul por UF AC', async ({ page }) 
   await assertItensUf(page, 'AC', /Grade niveladora/)
 })
 
+test('filtra Santana por IBGE e Rorainópolis por UF RR', async ({ page }) => {
+  await assertOrgaoIbge(page, '1600600', santanaName, rorainopolisName, 'AP')
+  await assertOrgaoUf(page, 'RR', rorainopolisName, santanaName)
+  await assertItensUf(page, 'RR', /Ambul/)
+})
+
 test('mantém cobertura no filtro vazio e no vazio com UF', async ({ page }) => {
   await page.goto('/orgaos?q=zzzz-sem-registro')
   await expect(page.getByText('Nenhum registro neste recorte para o filtro atual.')).toBeVisible()
@@ -392,6 +402,8 @@ test('vazio, 404 e páginas estáticas mantêm cobertura e o banimento', async (
   await expect(page.getByText(/1100122/).first()).toBeVisible()
   await expect(page.getByText(/2403251/).first()).toBeVisible()
   await expect(page.getByText(/1200203/).first()).toBeVisible()
+  await expect(page.getByText(/1600600/).first()).toBeVisible()
+  await expect(page.getByText(/1400472/).first()).toBeVisible()
   await expect(page.getByText(/não é um total nacional/).first()).toBeVisible()
   await expect(page.getByText(/UF mista/).first()).toBeVisible()
   await assertCoverageAndBan(page)

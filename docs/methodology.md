@@ -6,7 +6,7 @@ Este documento é a metodologia pública carimbada na linha de fonte do explorad
 
 A cobertura é incompleta.
 Nenhum agregado afirma cobertura nacional.
-O recorte publicado agora é Volta Redonda e Niterói (RJ), Bauru (SP), Caxias do Sul (RS), Joinville (SC), Uberlândia (MG), Londrina (PR), Feira de Santana (BA), Caruaru (PE), Anápolis (GO), Vila Velha (ES), Campina Grande (PB), Caucaia (CE), Imperatriz (MA), Arapiraca (AL), Dourados (MS), Marabá (PA), Várzea Grande (MT), Ji-Paraná (RO), Parnamirim (RN) e Cruzeiro do Sul (AC), códigos IBGE 3306305, 3303302, 3506003, 4305108, 4209102, 3170206, 4113700, 2910800, 2604106, 5201108, 3205200, 2504009, 2303709, 2105302, 2700300, 5003702, 1504208, 5108402, 1100122, 2403251 e 1200203, ano 2024, extraído dos arquivos em lote do Compras.gov.br.
+O recorte publicado agora é Volta Redonda e Niterói (RJ), Bauru (SP), Caxias do Sul (RS), Joinville (SC), Uberlândia (MG), Londrina (PR), Feira de Santana (BA), Caruaru (PE), Anápolis (GO), Vila Velha (ES), Campina Grande (PB), Caucaia (CE), Imperatriz (MA), Arapiraca (AL), Dourados (MS), Marabá (PA), Várzea Grande (MT), Ji-Paraná (RO), Parnamirim (RN), Cruzeiro do Sul (AC), Santana (AP) e Rorainópolis (RR), códigos IBGE 3306305, 3303302, 3506003, 4305108, 4209102, 3170206, 4113700, 2910800, 2604106, 5201108, 3205200, 2504009, 2303709, 2105302, 2700300, 5003702, 1504208, 5108402, 1100122, 2403251, 1200203, 1600600 e 1400472, ano 2024, extraído dos arquivos em lote do Compras.gov.br.
 Esses municípios aparecem no COMPRA municipal de 2024.
 O conjunto não é um censo nacional.
 Quando o agregado mistura UF, o campo uf fica vazio.

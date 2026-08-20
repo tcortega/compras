@@ -488,6 +488,28 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			MunicipioIbge = "5218805",
 			MunicipioNome = "Rio Verde",
 		};
+		var pauloAfonso = new Orgao
+		{
+			Id = SliceIds.OrgaoPauloAfonso,
+			Cnpj = "14217327000124",
+			RazaoSocial = "Municipio de Paulo Afonso",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "BA",
+			MunicipioIbge = "2924009",
+			MunicipioNome = "Paulo Afonso",
+		};
+		var saoLourenco = new Orgao
+		{
+			Id = SliceIds.OrgaoSaoLourenco,
+			Cnpj = "11251832000105",
+			RazaoSocial = "Municipio de Sao Lourenco da Mata",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "PE",
+			MunicipioIbge = "2613701",
+			MunicipioNome = "Sao Lourenco da Mata",
+		};
 		var fornecedor = new Fornecedor
 		{
 			Id = SliceIds.Fornecedor,
@@ -1024,6 +1046,34 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			Ano = 2024,
 			ValorHomologado = 450m,
 			PublicadoEm = Instant.FromUtc(2024, 11, 6, 17, 3),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoPauloAfonso = new Contratacao
+		{
+			Id = SliceIds.ContratacaoPauloAfonso,
+			PncpId = "14217327000124-1-000121/2024",
+			OrgaoId = SliceIds.OrgaoPauloAfonso,
+			Modalidade = "pregao eletronico",
+			Objeto = "Aquisicao de cafe em po e acucar para as necessidades da secretaria de educacao.",
+			Ano = 2024,
+			ValorHomologado = 8840m,
+			PublicadoEm = Instant.FromUtc(2024, 10, 17, 7, 7),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoSaoLourenco = new Contratacao
+		{
+			Id = SliceIds.ContratacaoSaoLourenco,
+			PncpId = "11251832000105-1-000065/2024",
+			OrgaoId = SliceIds.OrgaoSaoLourenco,
+			Modalidade = "pregao eletronico",
+			Objeto = "Aquisicao de Ventiladores Tipo Parede, para atender as necessidades da Secretaria de Educacao do Municipio de Sao Lourenco da Mata - PE.",
+			Ano = 2024,
+			ValorHomologado = 97000m,
+			PublicadoEm = Instant.FromUtc(2024, 10, 15, 7, 9),
 			Source = "compras.gov.br",
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
@@ -1605,11 +1655,45 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
 		};
+		var itemPauloAfonso = new Item
+		{
+			Id = SliceIds.ItemPauloAfonso,
+			ContratacaoId = SliceIds.ContratacaoPauloAfonso,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Acucar",
+			Catmat = "603269",
+			Quantidade = 2000m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 4.42m,
+			ValorTotal = 8840m,
+			Uf = "BA",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var itemSaoLourenco = new Item
+		{
+			Id = SliceIds.ItemSaoLourenco,
+			ContratacaoId = SliceIds.ContratacaoSaoLourenco,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Ventilador",
+			Catmat = "461897",
+			Quantidade = 375m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 194m,
+			ValorTotal = 72750m,
+			Uf = "PE",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
 
-		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville, uberlandia, londrina, feira, caruaru, anapolis, vilaVelha, campinaGrande, caucaia, imperatriz, arapiraca, dourados, maraba, varzeaGrande, jiParana, parnamirim, cruzeiroDoSul, santana, rorainopolis, maringa, taubate, cascavel, juizDeFora, foz, santaMaria, montesClaros, governadorValadares, canoas, lages, santarem, rioVerde);
+		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville, uberlandia, londrina, feira, caruaru, anapolis, vilaVelha, campinaGrande, caucaia, imperatriz, arapiraca, dourados, maraba, varzeaGrande, jiParana, parnamirim, cruzeiroDoSul, santana, rorainopolis, maringa, taubate, cascavel, juizDeFora, foz, santaMaria, montesClaros, governadorValadares, canoas, lages, santarem, rioVerde, pauloAfonso, saoLourenco);
 		db.Fornecedores.AddRange(fornecedor, fornecedorExtra);
-		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina, contratacaoFeira, contratacaoCaruaru, contratacaoAnapolis, contratacaoVilaVelha, contratacaoCampinaGrande, contratacaoCaucaia, contratacaoImperatriz, contratacaoArapiraca, contratacaoDourados, contratacaoMaraba, contratacaoVarzeaGrande, contratacaoJiParana, contratacaoParnamirim, contratacaoCruzeiroDoSul, contratacaoSantana, contratacaoRorainopolis, contratacaoMaringa, contratacaoTaubate, contratacaoCascavel, contratacaoJuizDeFora, contratacaoFoz, contratacaoSantaMaria, contratacaoMontesClaros, contratacaoGovernadorValadares, contratacaoCanoas, contratacaoLages, contratacaoSantarem, contratacaoRioVerde);
-		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina, itemFeira, itemCaruaru, itemAnapolis, itemVilaVelha, itemCampinaGrande, itemCaucaia, itemImperatriz, itemArapiraca, itemDourados, itemMaraba, itemVarzeaGrande, itemJiParana, itemParnamirim, itemCruzeiroDoSul, itemSantana, itemRorainopolis, itemMaringa, itemTaubate, itemCascavel, itemJuizDeFora, itemFoz, itemSantaMaria, itemMontesClaros, itemGovernadorValadares, itemCanoas, itemLages, itemSantarem, itemRioVerde);
+		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina, contratacaoFeira, contratacaoCaruaru, contratacaoAnapolis, contratacaoVilaVelha, contratacaoCampinaGrande, contratacaoCaucaia, contratacaoImperatriz, contratacaoArapiraca, contratacaoDourados, contratacaoMaraba, contratacaoVarzeaGrande, contratacaoJiParana, contratacaoParnamirim, contratacaoCruzeiroDoSul, contratacaoSantana, contratacaoRorainopolis, contratacaoMaringa, contratacaoTaubate, contratacaoCascavel, contratacaoJuizDeFora, contratacaoFoz, contratacaoSantaMaria, contratacaoMontesClaros, contratacaoGovernadorValadares, contratacaoCanoas, contratacaoLages, contratacaoSantarem, contratacaoRioVerde, contratacaoPauloAfonso, contratacaoSaoLourenco);
+		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina, itemFeira, itemCaruaru, itemAnapolis, itemVilaVelha, itemCampinaGrande, itemCaucaia, itemImperatriz, itemArapiraca, itemDourados, itemMaraba, itemVarzeaGrande, itemJiParana, itemParnamirim, itemCruzeiroDoSul, itemSantana, itemRorainopolis, itemMaringa, itemTaubate, itemCascavel, itemJuizDeFora, itemFoz, itemSantaMaria, itemMontesClaros, itemGovernadorValadares, itemCanoas, itemLages, itemSantarem, itemRioVerde, itemPauloAfonso, itemSaoLourenco);
 	}
 
 	private static JsonSerializerOptions CreateJson()

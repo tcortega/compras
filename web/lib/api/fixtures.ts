@@ -34,6 +34,8 @@ export const ids = {
   orgaoRorainopolis: '7c2e1f40-1400-4050-9a01-000000000026',
   orgaoMaringa: '7c2e1f40-4115-4050-9a01-000000000027',
   orgaoTaubate: '7c2e1f40-3554-4050-9a01-000000000028',
+  orgaoCascavel: '7c2e1f40-4104-4050-9a01-000000000029',
+  orgaoJuizDeFora: '7c2e1f40-3136-4050-9a01-000000000030',
   fornFarma: '8d3f2a51-3306-4050-9a02-000000000001',
   fornAlim: '8d3f2a51-3306-4050-9a02-000000000002',
   fornComb: '8d3f2a51-3306-4050-9a02-000000000003',
@@ -75,6 +77,8 @@ export const ids = {
   ctRorainopolis: '9e4a3b62-1400-4050-9a03-000000000032',
   ctMaringa: '9e4a3b62-4115-4050-9a03-000000000033',
   ctTaubate: '9e4a3b62-3554-4050-9a03-000000000034',
+  ctCascavel: '9e4a3b62-4104-4050-9a03-000000000035',
+  ctJuizDeFora: '9e4a3b62-3136-4050-9a03-000000000036',
 } as const
 
 function orgao(
@@ -382,6 +386,26 @@ export const orgaos: Orgao[] = [
     'SP',
     '3554102',
     'Taubaté',
+  ),
+  orgao(
+    ids.orgaoCascavel,
+    '76208867000107',
+    'Município de Cascavel',
+    'executivo',
+    T2,
+    'PR',
+    '4104808',
+    'Cascavel',
+  ),
+  orgao(
+    ids.orgaoJuizDeFora,
+    '18338178000102',
+    'Município de Juiz de Fora',
+    'executivo',
+    T2,
+    'MG',
+    '3136702',
+    'Juiz de Fora',
   ),
 ]
 
@@ -862,6 +886,28 @@ export const contratacoes: Contratacao[] = [
     '2024-09-10T15:00:47.000Z',
     'compras.gov.br',
   ),
+  ct(
+    ids.ctCascavel,
+    '76208867000107-1-000325/2024',
+    ids.orgaoCascavel,
+    'pregao eletronico',
+    'Aquisição de 03 (três) motocicletas para a Guarda Municipal de Cascavel - Emenda Individual nº 202330840002.',
+    2024,
+    196_110.0,
+    '2024-11-05T07:25:08.000Z',
+    'compras.gov.br',
+  ),
+  ct(
+    ids.ctJuizDeFora,
+    '18338178000102-1-000200/2024',
+    ids.orgaoJuizDeFora,
+    'dispensa',
+    'Keytruda 100mg/4ml solução injetável frasco de vidro incolor x 4 ml.',
+    2024,
+    160_214.0,
+    '2024-09-13T14:21:10.000Z',
+    'compras.gov.br',
+  ),
 ]
 
 function item(
@@ -955,4 +1001,6 @@ export const items: Item[] = [
   item(50, ids.ctRorainopolis, ids.fornPapel, 'Ambulância', '621643', 3, 'Unidade', 'un', 324000.0, 'RR', '2024-Q4', T2),
   item(51, ids.ctMaringa, ids.fornPapel, 'Enalapril maleato', '267652', 2505672, 'Comprimido', 'comprimido', 0.045, 'PR', '2024-Q4', T2),
   item(52, ids.ctTaubate, ids.fornPapel, 'Mapeamento Cerebral com Eletroencefalograma AQUISIÇÃO DE ELETRODOS PARA ELETROENCEFALOGRAMA.', '7021', 1, 'UNIDADE', 'un', 8250.0, 'SP', '2024-Q3', T2),
+  item(53, ids.ctCascavel, ids.fornPapel, 'Motocicleta', '318890', 3, 'Unidade', 'un', 65370.0, 'PR', '2024-Q4', T2),
+  item(54, ids.ctJuizDeFora, ids.fornPapel, 'Pembrolizumabe', '440269', 10, 'Frasco 4 ML', 'frasco', 16021.4, 'MG', '2024-Q3', T2),
 ]

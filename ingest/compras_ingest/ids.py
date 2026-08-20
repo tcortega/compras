@@ -27,6 +27,10 @@ def flag_id(item: str, kind: str, snapshot_id: str) -> str:
     return str(uuid.uuid5(NS, f"flag:{item}:{kind}:{snapshot_id}"))
 
 
+def socio_id(cnpj: str, nome: str, cpf_masked: str | None, qualificacao: str | None) -> str:
+    return str(uuid.uuid5(NS, f"socio:{cnpj}:{nome}:{cpf_masked or ''}:{qualificacao or ''}"))
+
+
 def record_hash(payload: dict) -> str:
     blob = json.dumps(payload, sort_keys=True, ensure_ascii=False, default=str)
     return hashlib.sha256(blob.encode("utf-8")).hexdigest()

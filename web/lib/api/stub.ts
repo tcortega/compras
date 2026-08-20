@@ -12,7 +12,7 @@ import type {
   SkipTakePage,
 } from '@/lib/types'
 import { ApiNotFoundError, isPublished } from '@/lib/types'
-import { contratacoes, fornecedores, items, orgaos } from '@/lib/api/fixtures'
+import { contratacoes, fornecedores, ids, items, orgaos } from '@/lib/api/fixtures'
 
 function norm(s: string): string {
   return s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
@@ -80,6 +80,31 @@ function requireFornecedor(id: string): Fornecedor {
   return row
 }
 
+function stubIdade(openedOn: string | null, asOf = '2024-06-15'): string {
+  if (!openedOn) return 'n/d'
+  const opened = openedOn.split('-').map(Number)
+  const asOfParts = asOf.split('-').map(Number)
+  const oy = opened[0]
+  const om = opened[1]
+  const od = opened[2]
+  const ay = asOfParts[0]
+  const am = asOfParts[1]
+  const ad = asOfParts[2]
+  if (!oy || !om || !od || !ay || !am || !ad) return 'n/d'
+  if (oy > ay || (oy === ay && om > am) || (oy === ay && om === am && od > ad)) return 'n/d'
+  let years = ay - oy
+  let months = am - om
+  if (ad < od) months -= 1
+  if (months < 0) {
+    years -= 1
+    months += 12
+  }
+  if (years === 0 && months === 0) return 'menos de 1 mês'
+  if (years === 0) return months === 1 ? '1 mês' : `${months} meses`
+  if (months === 0) return years === 1 ? '1 ano' : `${years} anos`
+  return `${years === 1 ? '1 ano' : `${years} anos`} e ${months === 1 ? '1 mês' : `${months} meses`}`
+}
+
 function requireContratacao(id: string): Contratacao {
   const row = liveContratacoes().find((c) => c.id === id)
   if (!row) throw new ApiNotFoundError('contratacao', id)
@@ -113,7 +138,25 @@ export const stubClient: ExplorerClient = {
   },
 
   async getFornecedor(id) {
-    return requireFornecedor(id)
+    const row = requireFornecedor(id)
+    if (id === ids.fornPapel) {
+      return {
+        ...row,
+        cnaeDescricao: 'Comércio varejista de livros, jornais, revistas e papelaria',
+        idadeCadastral: '7 anos e 4 meses',
+        idadeAsOf: '2024-06-15',
+        qsa: [
+          { nome: 'EDITORA EXEMPLO LTDA', cpfMasked: null, qualificacao: 'Sócio' },
+          { nome: 'JOAO DA SILVA', cpfMasked: '***.456.789-**', qualificacao: 'Sócio-Administrador' },
+        ],
+      }
+    }
+    return {
+      ...row,
+      idadeCadastral: stubIdade(row.openedOn),
+      idadeAsOf: '2024-06-15',
+      qsa: [],
+    }
   },
 
   async listContratacoes(req) {

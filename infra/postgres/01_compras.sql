@@ -148,6 +148,24 @@ CREATE INDEX IF NOT EXISTS fornecedor_adjacency_left_idx ON fornecedor_adjacency
 CREATE INDEX IF NOT EXISTS fornecedor_adjacency_right_idx ON fornecedor_adjacency ("rightCnpj");
 CREATE INDEX IF NOT EXISTS fornecedor_adjacency_kind_idx ON fornecedor_adjacency (kind);
 
+CREATE TABLE IF NOT EXISTS cnae (
+  codigo text PRIMARY KEY,
+  descricao text NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS fornecedor_socio (
+  id uuid PRIMARY KEY,
+  "fornecedorId" uuid NOT NULL REFERENCES fornecedor (id),
+  "fornecedorCnpj" text NOT NULL,
+  nome text NOT NULL,
+  "cpfMasked" text,
+  qualificacao text
+);
+
+CREATE INDEX IF NOT EXISTS fornecedor_socio_cnpj_idx ON fornecedor_socio ("fornecedorCnpj");
+CREATE INDEX IF NOT EXISTS fornecedor_socio_fornecedor_idx ON fornecedor_socio ("fornecedorId");
+
+
 ALTER TABLE item ADD COLUMN IF NOT EXISTS "valorPorUnidadeCanonica" numeric(18, 6);
 ALTER TABLE item ADD COLUMN IF NOT EXISTS "specConcentracao" text;
 ALTER TABLE item ADD COLUMN IF NOT EXISTS "specDosagem" text;

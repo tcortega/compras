@@ -12,7 +12,8 @@ import polars as pl
 import psycopg
 from psycopg.rows import dict_row
 
-from compras_ingest.ids import contratacao_id, flag_id, fornecedor_id, item_id, orgao_id
+from compras_ingest.cpf import assert_no_raw_cpf, is_cnpj
+from compras_ingest.ids import contratacao_id, flag_id, fornecedor_id, item_id, orgao_id, socio_id
 from compras_ingest.landing import LandingStore
 from compras_ingest.settings import Settings
 from compras_normalize.text import parse_date, parse_datetime, parse_decimal
@@ -305,6 +306,128 @@ def write_exclusions(settings: Settings, exclusions: pl.DataFrame, items: pl.Dat
     return len(rows)
 
 
+def write_cnaes(settings: Settings, cnaes: pl.DataFrame) -> int:
+    if cnaes.is_empty():
+        return 0
+    rows: list[dict] = []
+    seen: set[str] = set()
+    for row in cnaes.iter_rows(named=True):
+        codigo = _digits(row.get("codigo"))
+        descricao = str(row.get("descricao") or "").strip()
+        if not codigo or not descricao or codigo in seen:
+            continue
+        seen.add(codigo)
+        rows.append({"codigo": codigo, "descricao": descricao})
+    if not rows:
+        return 0
+    sql = """
+    INSERT INTO cnae (codigo, descricao)
+    VALUES (%(codigo)s, %(descricao)s)
+    ON CONFLICT (codigo) DO UPDATE SET descricao = EXCLUDED.descricao
+    """
+    with psycopg.connect(settings.postgres_dsn) as conn:
+        for row in rows:
+            conn.execute(sql, row)
+        conn.commit()
+    return len(rows)
+
+
+def write_fornecedor_socios(settings: Settings, socios: pl.DataFrame, qualificacoes: pl.DataFrame) -> int:
+    qual_map = _qualificacao_map(qualificacoes)
+    with psycopg.connect(settings.postgres_dsn, row_factory=dict_row) as conn:
+        fornecedores = list(conn.execute("SELECT id, cnpj FROM fornecedor").fetchall())
+        by_basico: dict[str, list[dict]] = {}
+        for forn in fornecedores:
+            cnpj = str(forn.get("cnpj") or "")
+            if len(cnpj) < 8:
+                continue
+            by_basico.setdefault(cnpj[:8], []).append(forn)
+        rows: list[dict] = []
+        if not socios.is_empty():
+            for socio in socios.iter_rows(named=True):
+                basico = _digits(socio.get("cnpj_basico")).zfill(8)[:8]
+                nome = str(socio.get("nome_socio") or "").strip()
+                if not basico or not nome:
+                    continue
+                qual_code = str(socio.get("qualificacao_do_socio") or "").strip()
+                qualificacao = qual_map.get(qual_code, qual_code or None)
+                cpf_masked = _socio_cpf_masked(
+                    str(socio.get("identificador_de_socio") or ""),
+                    str(socio.get("cnpj_cpf_do_socio") or ""),
+                )
+                for forn in by_basico.get(basico, []):
+                    rows.append(
+                        {
+                            "id": socio_id(str(forn["cnpj"]), nome, cpf_masked, qualificacao),
+                            "fornecedorId": forn["id"],
+                            "fornecedorCnpj": forn["cnpj"],
+                            "nome": nome,
+                            "cpfMasked": cpf_masked,
+                            "qualificacao": qualificacao,
+                        }
+                    )
+        assert_no_raw_cpf([str(v) for row in rows for v in row.values() if v is not None])
+        conn.execute("DELETE FROM fornecedor_socio")
+        sql = """
+        INSERT INTO fornecedor_socio (
+          id, "fornecedorId", "fornecedorCnpj", nome, "cpfMasked", qualificacao
+        ) VALUES (
+          %(id)s, %(fornecedorId)s, %(fornecedorCnpj)s, %(nome)s, %(cpfMasked)s, %(qualificacao)s
+        )
+        ON CONFLICT (id) DO UPDATE SET
+          nome = EXCLUDED.nome,
+          "cpfMasked" = EXCLUDED."cpfMasked",
+          qualificacao = EXCLUDED.qualificacao
+        """
+        for row in rows:
+            conn.execute(sql, row)
+        conn.commit()
+    return len(rows)
+
+
+def fetch_cnaes(settings: Settings) -> list[dict]:
+    with psycopg.connect(settings.postgres_dsn, row_factory=dict_row) as conn:
+        return list(conn.execute("SELECT codigo, descricao FROM cnae ORDER BY codigo").fetchall())
+
+
+def fetch_fornecedor_socios(settings: Settings, *, cnpj: str | None = None) -> list[dict]:
+    clauses: list[str] = []
+    params: dict = {}
+    if cnpj:
+        clauses.append('"fornecedorCnpj" = %(cnpj)s')
+        params["cnpj"] = cnpj
+    where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+    sql = f'SELECT * FROM fornecedor_socio {where} ORDER BY nome, id'
+    with psycopg.connect(settings.postgres_dsn, row_factory=dict_row) as conn:
+        return list(conn.execute(sql, params).fetchall())
+
+
+def _qualificacao_map(qualificacoes: pl.DataFrame) -> dict[str, str]:
+    out: dict[str, str] = {}
+    if qualificacoes.is_empty():
+        return out
+    for row in qualificacoes.iter_rows(named=True):
+        codigo = str(row.get("codigo") or "").strip()
+        descricao = str(row.get("descricao") or "").strip()
+        if codigo and descricao:
+            out[codigo] = descricao
+    return out
+
+
+def _socio_cpf_masked(identificador: str, documento: str) -> str | None:
+    doc = documento.strip()
+    ident = identificador.strip()
+    if ident == "1" or is_cnpj(doc):
+        return None
+    if ident == "2" or "*" in doc:
+        return doc or None
+    return None
+
+
+def _digits(value: object) -> str:
+    return "".join(c for c in str(value or "") if c.isdigit())
+
+
 def write_adjacencies(settings: Settings, edges: pl.DataFrame) -> int:
     if edges.is_empty():
         return 0
@@ -383,6 +506,8 @@ def fetch_counts(settings: Settings) -> dict[str, int]:
             "catalog_code",
             "landing_source",
             "fornecedor_adjacency",
+            "cnae",
+            "fornecedor_socio",
         ):
             counts[table] = conn.execute(f"SELECT count(*) AS n FROM {table}").fetchone()["n"]
     return counts
@@ -603,6 +728,8 @@ def fetch_raw_text_blobs(settings: Settings) -> list[str]:
             "catalog_code",
             "landing_source",
             "fornecedor_adjacency",
+            "cnae",
+            "fornecedor_socio",
         ):
             for row in conn.execute(f"SELECT * FROM {table}").fetchall():
                 blobs.extend(str(v) for v in row.values() if v is not None)

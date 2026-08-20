@@ -2665,6 +2665,29 @@ public class ComprasApiFixture : IAsyncLifetime
 		db.Fornecedores.AddRange(fornecedor, fornecedorExtra);
 		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina, contratacaoFeira, contratacaoCaruaru, contratacaoAnapolis, contratacaoVilaVelha, contratacaoCampinaGrande, contratacaoCaucaia, contratacaoImperatriz, contratacaoArapiraca, contratacaoDourados, contratacaoMaraba, contratacaoVarzeaGrande, contratacaoJiParana, contratacaoParnamirim, contratacaoCruzeiroDoSul, contratacaoSantana, contratacaoRorainopolis, contratacaoMaringa, contratacaoTaubate, contratacaoCascavel, contratacaoJuizDeFora, contratacaoFoz, contratacaoSantaMaria, contratacaoMontesClaros, contratacaoGovernadorValadares, contratacaoCanoas, contratacaoLages, contratacaoSantarem, contratacaoRioVerde, contratacaoPauloAfonso, contratacaoSaoLourenco, contratacaoCrato, contratacaoAriquemes, contratacaoColatina, contratacaoCastanhal, contratacaoDivinopolis, contratacaoPetropolis, contratacaoIpatinga, contratacaoMacae, contratacaoSantaLuzia, contratacaoNovaFriburgo, contratacaoMarilia, contratacaoBalneario, contratacaoItaqua, contratacaoPraiaGrande, contratacaoSaoJoseDosPinhais, contratacaoSuzano, contratacaoGuaruja, contratacaoCotia, contratacaoParauapebas, contratacaoJacarei, contratacaoItaborai, contratacaoMarica);
 		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina, itemFeira, itemCaruaru, itemAnapolis, itemVilaVelha, itemCampinaGrande, itemCaucaia, itemImperatriz, itemArapiraca, itemDourados, itemMaraba, itemVarzeaGrande, itemJiParana, itemParnamirim, itemCruzeiroDoSul, itemSantana, itemRorainopolis, itemMaringa, itemTaubate, itemCascavel, itemJuizDeFora, itemFoz, itemSantaMaria, itemMontesClaros, itemGovernadorValadares, itemCanoas, itemLages, itemSantarem, itemRioVerde, itemPauloAfonso, itemSaoLourenco, itemCrato, itemAriquemes, itemColatina, itemCastanhal, itemDivinopolis, itemPetropolis, itemIpatinga, itemMacae, itemSantaLuzia, itemNovaFriburgo, itemMarilia, itemBalneario, itemItaqua, itemPraiaGrande, itemSaoJoseDosPinhais, itemSuzano, itemGuaruja, itemCotia, itemParauapebas, itemJacarei, itemItaborai, itemMarica);
+		db.Cnaes.Add(new Cnae
+		{
+			Codigo = "4761001",
+			Descricao = "Comércio varejista de livros, jornais, revistas e papelaria",
+		});
+		db.FornecedorSocios.AddRange(
+			new FornecedorSocio
+			{
+				Id = SliceIds.SocioJoao,
+				FornecedorId = SliceIds.Fornecedor,
+				FornecedorCnpj = "12345678000195",
+				Nome = "JOAO DA SILVA",
+				CpfMasked = "***.456.789-**",
+				Qualificacao = "Sócio-Administrador",
+			},
+			new FornecedorSocio
+			{
+				Id = SliceIds.SocioEditora,
+				FornecedorId = SliceIds.Fornecedor,
+				FornecedorCnpj = "12345678000195",
+				Nome = "EDITORA EXEMPLO LTDA",
+				Qualificacao = "Sócio",
+			});
 		db.CatalogCodes.AddRange(
 			new CatalogCode { Codigo = "123456", Kind = CatalogKind.Catmat },
 			new CatalogCode { Codigo = "654321", Kind = CatalogKind.Catmat },

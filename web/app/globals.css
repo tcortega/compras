@@ -418,6 +418,10 @@ h3 {
   font-size: 13px;
 }
 
+.qsa-empty {
+  margin: 0;
+}
+
 .filters {
   display: flex;
   flex-wrap: wrap;

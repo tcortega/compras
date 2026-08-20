@@ -18,6 +18,10 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
 
 	public DbSet<LandingSource> LandingSources => Set<LandingSource>();
 
+	public DbSet<Cnae> Cnaes => Set<Cnae>();
+
+	public DbSet<FornecedorSocio> FornecedorSocios => Set<FornecedorSocio>();
+
 	protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
 	{
 		if (Database.ProviderName is { Length: > 0 }

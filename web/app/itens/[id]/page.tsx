@@ -79,6 +79,13 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
           coverage={peers.coverage}
         />
         <Stat label="Valor unitário" value={<Money value={row.valorUnitario} />} coverage={peers.coverage} />
+        {row.valorPorUnidadeCanonica != null ? (
+          <Stat
+            label={`Valor por ${row.unidadeCanonica ?? 'unidade canônica'}`}
+            value={<Money value={row.valorPorUnidadeCanonica} />}
+            coverage={peers.coverage}
+          />
+        ) : null}
         <Stat label="Valor total" value={<Money value={row.valorTotal} />} coverage={peers.coverage} />
       </div>
       <p className="source">

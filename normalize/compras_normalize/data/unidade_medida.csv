@@ -2,136 +2,296 @@ raw;canonical;to_base_factor;base_unit
 UN;un;1;un
 UND;un;1;un
 UNID;un;1;un
+UNID.;un;1;un
+UN.;un;1;un
+U;un;1;un
 UNIDADE;un;1;un
 UNIDADES;un;1;un
+UNIDADE(S);un;1;un
+UNIDADADE;un;1;un
+UNITARIO;un;1;un
+UNIT;un;1;un
 PC;un;1;un
 PÇ;un;1;un
+PÇS;un;1;un
 PECA;un;1;un
 PEÇAS;un;1;un
 PECA;un;1;un
+PECAS;un;1;un
 PCS;un;1;un
+PÇ.;un;1;un
+PC.;un;1;un
+PÇ/UN;un;1;un
 KG;kg;1;kg
+KG.;kg;1;kg
+KGS;kg;1;kg
+KG LIQUIDO;kg;1;kg
+KG LÍQUIDO;kg;1;kg
+KG LIQ;kg;1;kg
 QUILO;kg;1;kg
+QUILOS;kg;1;kg
 QUILOGRAMA;kg;1;kg
 QUILOGRAMAS;kg;1;kg
 KILO;kg;1;kg
+KILOS;kg;1;kg
+KILOGRAMA;kg;1;kg
+KILOGRAMAS;kg;1;kg
 G;kg;0.001;kg
+G.;kg;0.001;kg
 GR;kg;0.001;kg
+GR.;kg;0.001;kg
+GRS;kg;0.001;kg
 GRAMA;kg;0.001;kg
 GRAMAS;kg;0.001;kg
+GRAMA(S);kg;0.001;kg
 MG;kg;0.000001;kg
+MG.;kg;0.000001;kg
 MILIGRAMA;kg;0.000001;kg
+MILIGRAMAS;kg;0.000001;kg
 T;kg;1000;kg
 TON;kg;1000;kg
+TON.;kg;1000;kg
+TONS;kg;1000;kg
 TONELADA;kg;1000;kg
 TONELADAS;kg;1000;kg
+TONELADA METRICA;kg;1000;kg
 L;l;1;l
+L.;l;1;l
 LT;l;1;l
+LT.;l;1;l
 LTR;l;1;l
+LTS;l;1;l
 LITRO;l;1;l
 LITROS;l;1;l
+LITRO(S);l;1;l
 ML;l;0.001;l
+ML.;l;0.001;l
+MLS;l;0.001;l
 MILILITRO;l;0.001;l
 MILILITROS;l;0.001;l
-M;m;1;m
-MT;m;1;m
-MTS;m;1;m
-METRO;m;1;m
-METROS;m;1;m
-CM;m;0.01;m
-CENTIMETRO;m;0.01;m
-MM;m;0.001;m
-MILIMETRO;m;0.001;m
-KM;m;1000;m
-M2;m2;1;m2
-M²;m2;1;m2
-M 2;m2;1;m2
-METRO QUADRADO;m2;1;m2
-METROS QUADRADOS;m2;1;m2
 M3;m3;1;m3
 M³;m3;1;m3
 M 3;m3;1;m3
+M3.;m3;1;m3
 METRO CUBICO;m3;1;m3
 METROS CUBICOS;m3;1;m3
+METRO CÚBICO;m3;1;m3
+M2;m2;1;m2
+M²;m2;1;m2
+M 2;m2;1;m2
+M2.;m2;1;m2
+METRO QUADRADO;m2;1;m2
+METROS QUADRADOS;m2;1;m2
+M;m;1;m
+M.;m;1;m
+MT;m;1;m
+MT.;m;1;m
+MTS;m;1;m
+METRO;m;1;m
+METROS;m;1;m
+METRO(S);m;1;m
+METRO LINEAR;m;1;m
+MLINEAR;m;1;m
+CM;m;0.01;m
+CM.;m;0.01;m
+CENTIMETRO;m;0.01;m
+CENTIMETROS;m;0.01;m
+MM;m;0.001;m
+MM.;m;0.001;m
+MILIMETRO;m;0.001;m
+MILIMETROS;m;0.001;m
+KM;km;1;km
+KM.;km;1;km
+KMS;km;1;km
+QUILOMETRO;km;1;km
+QUILOMETROS;km;1;km
+QUILÔMETRO;km;1;km
 H;h;1;h
 HR;h;1;h
 HRS;h;1;h
 HORA;h;1;h
 HORAS;h;1;h
+HORA(S);h;1;h
+HH;h;1;h
+H/H;h;1;h
 DIA;d;1;d
 DIAS;d;1;d
+DIA(S);d;1;d
 MES;mes;1;mes
 MÊS;mes;1;mes
 MESES;mes;1;mes
+MES(ES);mes;1;mes
 ANO;ano;1;ano
 ANOS;ano;1;ano
 CX;cx;1;cx
+CX.;cx;1;cx
+CXS;cx;1;cx
 CXA;cx;1;cx
+CXAS;cx;1;cx
 CAIXA;cx;1;cx
 CAIXAS;cx;1;cx
+CAIXA(S);cx;1;cx
+BOX;cx;1;cx
 PCT;pct;1;pct
+PCT.;pct;1;pct
 PCTE;pct;1;pct
+PCTES;pct;1;pct
 PACOTE;pct;1;pct
 PACOTES;pct;1;pct
+PACOTE(S);pct;1;pct
+PACK;pct;1;pct
 PAR;par;1;par
 PARES;par;1;par
+PR;par;1;par
 JG;kit;1;kit
 JOGO;kit;1;kit
+JOGOS;kit;1;kit
 KIT;kit;1;kit
 KITS;kit;1;kit
+CONJUNTO;kit;1;kit
+CJ;kit;1;kit
+CJT;kit;1;kit
 RL;rolo;1;rolo
 ROLO;rolo;1;rolo
 ROLOS;rolo;1;rolo
+BOBINA;rolo;1;rolo
+BOBINAS;rolo;1;rolo
 FD;fardo;1;fardo
 FARDO;fardo;1;fardo
+FARDOS;fardo;1;fardo
 BD;balde;1;balde
 BALDE;balde;1;balde
+BALDES;balde;1;balde
 GL;galao;1;galao
+GAL;galao;1;galao
 GALAO;galao;1;galao
 GALÃO;galao;1;galao
+GALAOS;galao;1;galao
+GALÕES;galao;1;galao
 TB;tubo;1;tubo
 TUBO;tubo;1;tubo
+TUBOS;tubo;1;tubo
 FR;frasco;1;frasco
+FR.;frasco;1;frasco
+FRC;frasco;1;frasco
 FRASCO;frasco;1;frasco
 FRASCOS;frasco;1;frasco
+FRASCO(S);frasco;1;frasco
 AM;ampola;1;ampola
 AMP;ampola;1;ampola
+AMP.;ampola;1;ampola
 AMPOLA;ampola;1;ampola
 AMPOLAS;ampola;1;ampola
 CP;comprimido;1;comprimido
+CPR;comprimido;1;comprimido
 COMP;comprimido;1;comprimido
+COMP.;comprimido;1;comprimido
 COMPRIMIDO;comprimido;1;comprimido
 COMPRIMIDOS;comprimido;1;comprimido
+COMPRIMIDO(S);comprimido;1;comprimido
 CAP;capsula;1;capsula
+CAPS;capsula;1;capsula
 CAPSULA;capsula;1;capsula
+CAPSULAS;capsula;1;capsula
 CÁPSULA;capsula;1;capsula
+CÁPSULAS;capsula;1;capsula
 SC;saco;1;saco
+SAC;saco;1;saco
 SACO;saco;1;saco
 SACOS;saco;1;saco
-SAC;saco;1;saco
 DZ;duzia;1;duzia
 DUZIA;duzia;1;duzia
+DUZIAS;duzia;1;duzia
 DÚZIA;duzia;1;duzia
+DÚZIAS;duzia;1;duzia
 CENTO;cento;1;cento
+CENTENA;cento;1;cento
 RESMA;resma;1;resma
+RESMAS;resma;1;resma
 FOLHA;folha;1;folha
+FOLHAS;folha;1;folha
 FL;folha;1;folha
+FLS;folha;1;folha
 LATA;lata;1;lata
+LATAS;lata;1;lata
 BARRA;barra;1;barra
+BARRAS;barra;1;barra
 BLOCO;bloco;1;bloco
+BLOCOS;bloco;1;bloco
 BISNAGA;bisnaga;1;bisnaga
+BISNAGAS;bisnaga;1;bisnaga
 POTE;pote;1;pote
+POTES;pote;1;pote
+CARTELA;cartela;1;cartela
+CARTELAS;cartela;1;cartela
+ENVELOPE;envelope;1;envelope
+ENVELOPES;envelope;1;envelope
+TAMBOR;tambor;1;tambor
+TAMBOR(ES);tambor;1;tambor
+DOSE;dose;1;dose
+DOSES;dose;1;dose
+APLICACAO;aplicacao;1;aplicacao
+APLICAÇÃO;aplicacao;1;aplicacao
+EXAME;exame;1;exame
+EXAMES;exame;1;exame
 VB;verba;1;verba
 VERBA;verba;1;verba
+GLB;verba;1;verba
+GLOBAL;verba;1;verba
 SV;servico;1;servico
+SERV;servico;1;servico
 SERVICO;servico;1;servico
 SERVIÇO;servico;1;servico
 SERVICOS;servico;1;servico
+SERVIÇOS;servico;1;servico
+SERVICO(S);servico;1;servico
 CX 10;un;10;un
 CX/10;un;10;un
 CX10;un;10;un
+CX X 10;un;10;un
+CXA 10;un;10;un
+CAIXA 10;un;10;un
+CAIXA C/10;un;10;un
+CAIXA C/ 10;un;10;un
 CX 12;un;12;un
 CX/12;un;12;un
+CX12;un;12;un
+CX 24;un;24;un
+CX/24;un;24;un
+CX 25;un;25;un
+CX/25;un;25;un
+CAIXA 25;un;25;un
+CAIXA 25 PCT;un;25;un
+CAIXA 25,00 PCT;un;25;un
 CX 50;un;50;un
+CX/50;un;50;un
+CX50;un;50;un
 CX 100;un;100;un
+CX/100;un;100;un
+CX100;un;100;un
 RESMA 500;folha;500;folha
+RESMA 500 FOLHAS;folha;500;folha
+PCT 10;un;10;un
+PCT 12;un;12;un
+PACOTE 10;un;10;un
+PACOTE C/10;un;10;un
+DZ 12;un;12;un
+DUZIA 12;un;12;un
+FRASCO 20 ML;l;0.02;l
+FRASCO 20,00 ML;l;0.02;l
+FRASCO 10 ML;l;0.01;l
+AMPOLA 1 ML;l;0.001;l
+AMPOLA 1,00 ML;l;0.001;l
+COPO 200 ML;l;0.2;l
+COPO 200,00 ML;l;0.2;l
+20 ML;l;0.02;l
+20,00 ML;l;0.02;l
+500 ML;l;0.5;l
+1 L;l;1;l
+5 L;l;5;l
+5L;l;5;l
+900 ML;l;0.9;l
+1000 G;kg;1;kg
+500 G;kg;0.5;kg
+1 KG;kg;1;kg
+1KG;kg;1;kg

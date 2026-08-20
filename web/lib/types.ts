@@ -83,6 +83,7 @@ export type Item = {
   unidadeCanonica: string | null
   valorUnitario: number | null
   valorTotal: number | null
+  valorPorUnidadeCanonica?: number | null
   uf: string
   quarter: string
   snapshotId: string

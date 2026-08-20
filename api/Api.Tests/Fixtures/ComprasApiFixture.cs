@@ -356,6 +356,28 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			MunicipioIbge = "1400472",
 			MunicipioNome = "Rorainopolis",
 		};
+		var maringa = new Orgao
+		{
+			Id = SliceIds.OrgaoMaringa,
+			Cnpj = "76282656000106",
+			RazaoSocial = "Municipio de Maringa",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "PR",
+			MunicipioIbge = "4115200",
+			MunicipioNome = "Maringa",
+		};
+		var taubate = new Orgao
+		{
+			Id = SliceIds.OrgaoTaubate,
+			Cnpj = "45176005000108",
+			RazaoSocial = "Municipio de Taubate",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "SP",
+			MunicipioIbge = "3554102",
+			MunicipioNome = "Taubate",
+		};
 		var fornecedor = new Fornecedor
 		{
 			Id = SliceIds.Fornecedor,
@@ -724,6 +746,34 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			Ano = 2024,
 			ValorHomologado = 1404000m,
 			PublicadoEm = Instant.FromUtc(2024, 10, 31, 13, 53),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoMaringa = new Contratacao
+		{
+			Id = SliceIds.ContratacaoMaringa,
+			PncpId = "76282656000106-1-000691/2024",
+			OrgaoId = SliceIds.OrgaoMaringa,
+			Modalidade = "pregao eletronico",
+			Objeto = "Registro de precos para aquisicao de medicamentos",
+			Ano = 2024,
+			ValorHomologado = 5373878.65m,
+			PublicadoEm = Instant.FromUtc(2024, 10, 8, 7, 6),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoTaubate = new Contratacao
+		{
+			Id = SliceIds.ContratacaoTaubate,
+			PncpId = "45176005000108-1-000706/2024",
+			OrgaoId = SliceIds.OrgaoTaubate,
+			Modalidade = "inexigibilidade",
+			Objeto = "Aquisicao de eletrodos para eletroencefalograma",
+			Ano = 2024,
+			ValorHomologado = 8250m,
+			PublicadoEm = Instant.FromUtc(2024, 9, 10, 15, 0),
 			Source = "compras.gov.br",
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
@@ -1101,11 +1151,45 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
 		};
+		var itemMaringa = new Item
+		{
+			Id = SliceIds.ItemMaringa,
+			ContratacaoId = SliceIds.ContratacaoMaringa,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Enalapril maleato",
+			Catmat = "267652",
+			Quantidade = 2505672m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 0.045m,
+			ValorTotal = 112755.24m,
+			Uf = "PR",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var itemTaubate = new Item
+		{
+			Id = SliceIds.ItemTaubate,
+			ContratacaoId = SliceIds.ContratacaoTaubate,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Eletrodos para eletroencefalograma",
+			Catmat = "7021",
+			Quantidade = 1m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 8250m,
+			ValorTotal = 8250m,
+			Uf = "SP",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
 
-		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville, uberlandia, londrina, feira, caruaru, anapolis, vilaVelha, campinaGrande, caucaia, imperatriz, arapiraca, dourados, maraba, varzeaGrande, jiParana, parnamirim, cruzeiroDoSul, santana, rorainopolis);
+		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville, uberlandia, londrina, feira, caruaru, anapolis, vilaVelha, campinaGrande, caucaia, imperatriz, arapiraca, dourados, maraba, varzeaGrande, jiParana, parnamirim, cruzeiroDoSul, santana, rorainopolis, maringa, taubate);
 		db.Fornecedores.AddRange(fornecedor, fornecedorExtra);
-		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina, contratacaoFeira, contratacaoCaruaru, contratacaoAnapolis, contratacaoVilaVelha, contratacaoCampinaGrande, contratacaoCaucaia, contratacaoImperatriz, contratacaoArapiraca, contratacaoDourados, contratacaoMaraba, contratacaoVarzeaGrande, contratacaoJiParana, contratacaoParnamirim, contratacaoCruzeiroDoSul, contratacaoSantana, contratacaoRorainopolis);
-		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina, itemFeira, itemCaruaru, itemAnapolis, itemVilaVelha, itemCampinaGrande, itemCaucaia, itemImperatriz, itemArapiraca, itemDourados, itemMaraba, itemVarzeaGrande, itemJiParana, itemParnamirim, itemCruzeiroDoSul, itemSantana, itemRorainopolis);
+		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina, contratacaoFeira, contratacaoCaruaru, contratacaoAnapolis, contratacaoVilaVelha, contratacaoCampinaGrande, contratacaoCaucaia, contratacaoImperatriz, contratacaoArapiraca, contratacaoDourados, contratacaoMaraba, contratacaoVarzeaGrande, contratacaoJiParana, contratacaoParnamirim, contratacaoCruzeiroDoSul, contratacaoSantana, contratacaoRorainopolis, contratacaoMaringa, contratacaoTaubate);
+		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina, itemFeira, itemCaruaru, itemAnapolis, itemVilaVelha, itemCampinaGrande, itemCaucaia, itemImperatriz, itemArapiraca, itemDourados, itemMaraba, itemVarzeaGrande, itemJiParana, itemParnamirim, itemCruzeiroDoSul, itemSantana, itemRorainopolis, itemMaringa, itemTaubate);
 	}
 
 	private static JsonSerializerOptions CreateJson()

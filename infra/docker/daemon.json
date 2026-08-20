@@ -1,0 +1,6 @@
+{
+  "iptables": true,
+  "ip-forward": true,
+  "ip-masq": true,
+  "userland-proxy": true
+}

@@ -48,7 +48,7 @@ def sync_search_index(settings: Settings) -> dict[str, int]:
     _assert_factual(docs)
     with _client(settings) as client:
         _ensure_index(client)
-        _wait_task(client, _put_json(client, f"/indexes/{INDEX}/settings", {
+        _wait_task(client, _patch_json(client, f"/indexes/{INDEX}/settings", {
             "searchableAttributes": SEARCHABLE,
             "filterableAttributes": FILTERABLE,
             "displayedAttributes": DISPLAYED,
@@ -167,6 +167,10 @@ def _post_json(client: httpx.Client, path: str, payload: Any) -> dict[str, Any]:
 
 def _put_json(client: httpx.Client, path: str, payload: Any) -> dict[str, Any]:
     return _write_json(client.put, path, payload)
+
+
+def _patch_json(client: httpx.Client, path: str, payload: Any) -> dict[str, Any]:
+    return _write_json(client.patch, path, payload)
 
 
 def _write_json(method, path: str, payload: Any) -> dict[str, Any]:

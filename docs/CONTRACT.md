@@ -161,6 +161,30 @@ Closed reason set: qty_unit_price_neq_total, decimal_shift, qty_eq_1_collapse, z
 Python writes this table after normalize.
 C# does not run a detector.
 
+### fornecedor_adjacency (internal only)
+
+Shared-QSA-partner, shared-address, and shared-phone/email edges from landed Receita CNPJ dumps.
+This is F1 groundwork, not F2 co-bid, not E2 public enrichment, and not a public alert.
+Shared partners are not per se illegal (TCU 297/2009, 1.793/2011, 2.803/2016).
+No explorer route reads this table.
+No explorer DTO carries adjacency, shared-partner counts, or a score.
+C# does not run this detector.
+Python writes from landed Receita frames after CPF mask.
+`kind` is shared_qsa_partner | shared_address | shared_phone | shared_email.
+`leftCnpj` and `rightCnpj` are 14-digit CNPJs stored once per undirected pair, with leftCnpj < rightCnpj.
+Unique (kind, leftCnpj, rightCnpj).
+`evidence` never stores raw CPF.
+A socio key is the ingest mask `***.XXX.XXX-**` or a legal-entity socio CNPJ.
+Address is fold/ascii tipo+logradouro, numero, digit CEP, and municipio.
+Rows with an empty street, or with neither numero nor CEP, are skipped.
+Phone is digits of DDD plus number.
+Email is fold/ascii.
+Empty phone and email values are skipped.
+Tokens that look like CPF are masked or dropped.
+`snapshotId` is the Receita landing sha256.
+`methodologyVersion` is the pipeline version.
+`createdAt` timestamptz.
+
 The CATMAT/CATSER classifier is internal normalize.
 It fills only rows with no official catalog code.
 Assigned `knn` codes are not public alerts.
@@ -229,6 +253,7 @@ Internal publication routes exist and are tested.
 That list is not linked from the explorer.
 No explorer route may return a flag field.
 No explorer route may return an exclusion reason.
+No explorer route may return adjacency or a shared-partner count.
 No explorer route may return spec columns or a knn quality token.
 Phase 0 precision is 9 percent, so public flags stay gated.
 

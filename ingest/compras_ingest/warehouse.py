@@ -304,10 +304,85 @@ def write_exclusions(settings: Settings, exclusions: pl.DataFrame, items: pl.Dat
     return len(rows)
 
 
+def write_adjacencies(settings: Settings, edges: pl.DataFrame) -> int:
+    if edges.is_empty():
+        return 0
+    now = _NOW()
+    rows = []
+    for row in edges.iter_rows(named=True):
+        left = str(row.get("leftCnpj") or "")
+        right = str(row.get("rightCnpj") or "")
+        if not left or not right or left == right:
+            continue
+        if left > right:
+            left, right = right, left
+        rows.append(
+            {
+                "kind": str(row["kind"]),
+                "leftCnpj": left,
+                "rightCnpj": right,
+                "evidence": str(row.get("evidence") or ""),
+                "snapshotId": str(row.get("snapshot_id") or row.get("snapshotId") or ""),
+                "methodologyVersion": str(
+                    row.get("methodology_version") or row.get("methodologyVersion") or ""
+                ),
+            }
+        )
+    if not rows:
+        return 0
+    sql = """
+    INSERT INTO fornecedor_adjacency (
+      kind, "leftCnpj", "rightCnpj", evidence, "snapshotId", "methodologyVersion", "createdAt"
+    ) VALUES (
+      %(kind)s, %(leftCnpj)s, %(rightCnpj)s, %(evidence)s, %(snapshotId)s,
+      %(methodologyVersion)s, %(now)s
+    )
+    ON CONFLICT (kind, "leftCnpj", "rightCnpj") DO UPDATE SET
+      evidence = EXCLUDED.evidence,
+      "snapshotId" = EXCLUDED."snapshotId",
+      "methodologyVersion" = EXCLUDED."methodologyVersion"
+    """
+    with psycopg.connect(settings.postgres_dsn) as conn:
+        for row in rows:
+            conn.execute(sql, {**row, "now": now})
+        conn.commit()
+    return len(rows)
+
+
+def fetch_adjacencies(
+    settings: Settings,
+    *,
+    kind: str | None = None,
+    cnpj: str | None = None,
+) -> list[dict]:
+    clauses: list[str] = []
+    params: dict = {}
+    if kind:
+        clauses.append("kind = %(kind)s")
+        params["kind"] = kind
+    if cnpj:
+        clauses.append('("leftCnpj" = %(cnpj)s OR "rightCnpj" = %(cnpj)s)')
+        params["cnpj"] = cnpj
+    where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+    sql = f'SELECT * FROM fornecedor_adjacency {where} ORDER BY kind, "leftCnpj", "rightCnpj"'
+    with psycopg.connect(settings.postgres_dsn, row_factory=dict_row) as conn:
+        return list(conn.execute(sql, params).fetchall())
+
+
 def fetch_counts(settings: Settings) -> dict[str, int]:
     with psycopg.connect(settings.postgres_dsn, row_factory=dict_row) as conn:
         counts = {}
-        for table in ("orgao", "fornecedor", "contratacao", "item", "flag", "item_exclusion", "catalog_code", "landing_source"):
+        for table in (
+            "orgao",
+            "fornecedor",
+            "contratacao",
+            "item",
+            "flag",
+            "item_exclusion",
+            "catalog_code",
+            "landing_source",
+            "fornecedor_adjacency",
+        ):
             counts[table] = conn.execute(f"SELECT count(*) AS n FROM {table}").fetchone()["n"]
     return counts
 
@@ -492,7 +567,17 @@ def fetch_landing_sources(settings: Settings) -> list[dict]:
 def fetch_raw_text_blobs(settings: Settings) -> list[str]:
     blobs: list[str] = []
     with psycopg.connect(settings.postgres_dsn, row_factory=dict_row) as conn:
-        for table in ("orgao", "fornecedor", "contratacao", "item", "flag", "item_exclusion", "catalog_code", "landing_source"):
+        for table in (
+            "orgao",
+            "fornecedor",
+            "contratacao",
+            "item",
+            "flag",
+            "item_exclusion",
+            "catalog_code",
+            "landing_source",
+            "fornecedor_adjacency",
+        ):
             for row in conn.execute(f"SELECT * FROM {table}").fetchall():
                 blobs.extend(str(v) for v in row.values() if v is not None)
     return blobs

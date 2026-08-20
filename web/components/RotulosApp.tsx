@@ -127,6 +127,7 @@ export function RotulosApp({ initial }: { initial: RotulosView }) {
         ) : null}
       </div>
       <p className="lede">{rotulosCopy.lede}</p>
+      <p className="rotulos-howto">{rotulosCopy.howto}</p>
       {error ? (
         <p className="notice triage-flash" role="alert">
           {error}
@@ -158,16 +159,10 @@ export function RotulosApp({ initial }: { initial: RotulosView }) {
               ))}
             </nav>
           ) : null}
-          <label className="field field-grow rotulos-notes">
-            <span>{rotulosCopy.notes}</span>
-            <input
-              value={notes}
-              onChange={(event) => setNotes(event.target.value)}
-              maxLength={400}
-              autoComplete="off"
-              disabled={pending}
-            />
-          </label>
+          <div className="rotulos-prompt">
+            <p className="lede">{rotulosCopy.lede}</p>
+            <p className="rotulos-howto">{rotulosCopy.howto}</p>
+          </div>
           <div className="rotulos-keys">
             {LABEL_RUBRIC.map((row, index) => (
               <button
@@ -178,11 +173,24 @@ export function RotulosApp({ initial }: { initial: RotulosView }) {
                 aria-pressed={view.existingLabel === row.value}
                 onClick={() => void label(row.value)}
               >
-                <kbd>{index + 1}</kbd>
-                {row.label}
+                <span className="rotulos-choice-label">
+                  <kbd>{index + 1}</kbd>
+                  {row.label}
+                </span>
+                <span className="rotulos-choice-hint">{rotulosCopy.hints[row.value]}</span>
               </button>
             ))}
           </div>
+          <label className="field field-grow rotulos-notes">
+            <span>{rotulosCopy.notes}</span>
+            <input
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+              maxLength={400}
+              autoComplete="off"
+              disabled={pending}
+            />
+          </label>
           <div className="actions rotulos-nav">
             <button
               className="btn-ghost"

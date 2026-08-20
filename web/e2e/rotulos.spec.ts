@@ -6,6 +6,16 @@ import { ROTULOS_LEAK, SYNTHETIC_ITEMS, agreementFile, plantRotulosFixtures } fr
 const bannedPublic =
   /fraude|corrupto|roubo|\bflag\b|ranking|adjacenc|shared_qsa|shared_partner|cover[_-]?bidd|bid_variance|winner_rotation|co[_-]?bid|cnae_mismatch|hidden_label/i
 
+const WHY =
+  'O computador já marcou este preço como alto frente a itens semelhantes. Abra o link oficial. Depois escolha o porquê.'
+
+const HINTS = [
+  'Mesmo produto, mesmo pacote, e o preço oficial bate com a linha. Eles de fato pagaram isso.',
+  'O tamanho do pacote não é o da comparação (ex.: isto é Pacote 10, os pares são 1 fita).',
+  'Não é o mesmo produto do grupo de comparação.',
+  'Não houve adjudicação de verdade, ou o número oficial não é o da linha (fracassado, deserto, cancelado, CSV errado).',
+] as const
+
 async function assertNoRotulosLink(page: Page) {
   await expect(page.locator('a[href="/interno/rotulos"]')).toHaveCount(0)
   await expect(page.locator('nav[aria-label="Seções"] a[href="/interno/rotulos"]')).toHaveCount(0)
@@ -40,6 +50,7 @@ test('rotulos: worker confere três itens sintéticos e retoma no quarto', async
     await page.goto('/interno/rotulos')
     await expect(page.getByText('Revisão interna')).toBeVisible()
     await expect(page.getByText('Conferir o item na fonte')).toBeVisible()
+    await expect(page.getByText(WHY).first()).toBeVisible()
     await assertNoRotulosLink(page)
     await expect(page.locator('body')).not.toHaveText(bannedPublic)
     return
@@ -54,6 +65,13 @@ test('rotulos: worker confere três itens sintéticos e retoma no quarto', async
   await expect(page.getByRole('link', { name: 'API do item' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Compra oficial' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Item oficial' })).toBeVisible()
+  await expect(page.getByText(WHY)).toHaveCount(2)
+  await expect(
+    page.getByText('Conferir o item na fonte: compare unidade, quantidade e preço unitário, depois pressione 1 a 4.'),
+  ).toHaveCount(2)
+  for (const hint of HINTS) {
+    await expect(page.getByText(hint)).toBeVisible()
+  }
   await expect(page.locator('body')).not.toHaveText(ROTULOS_LEAK)
   await expect(page.locator('body')).not.toHaveText(bannedPublic)
   await expect(page.locator('body')).not.toHaveText(/hidden_label|cnae_mismatch|0\.99/)

@@ -902,6 +902,14 @@ table.data a:hover {
   font-size: clamp(26px, 4vw, 36px);
 }
 
+.rotulos-page > .lede {
+  margin-bottom: 8px;
+}
+
+.rotulos-page > .rotulos-howto {
+  margin: 0 0 22px;
+}
+
 .rotulos-card .lede {
   margin-bottom: 0;
   font-size: 16px;
@@ -915,35 +923,91 @@ table.data a:hover {
   font-size: 13.5px;
 }
 
+.rotulos-prompt {
+  margin: 20px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule);
+}
+
+.rotulos-prompt .lede {
+  margin: 0 0 6px;
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.rotulos-howto {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
 .rotulos-notes {
-  margin-top: 18px;
+  margin-top: 16px;
 }
 
 .rotulos-keys {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
 }
 
 .rotulos-keys .btn {
-  height: 56px;
-  padding: 0 16px;
-  justify-content: flex-start;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  height: auto;
+  min-height: 0;
+  padding: 13px 16px 14px;
+  gap: 5px;
+  background: var(--paper);
+  color: var(--ink);
+  border-color: var(--rule-strong);
+  text-align: left;
+  letter-spacing: 0;
+}
+
+.rotulos-keys .btn:hover {
+  background: var(--paper-deep);
+  color: var(--ink);
+}
+
+.rotulos-choice-label {
+  display: flex;
+  align-items: baseline;
   gap: 10px;
+  font-size: 15px;
+  line-height: 1.25;
 }
 
 .rotulos-keys .btn kbd {
   min-width: 1.15rem;
-  color: #cfe0d6;
+  color: var(--muted);
   font-family: var(--mono);
   font-size: 12px;
   font-weight: 400;
   letter-spacing: 0;
 }
 
+.rotulos-choice-hint {
+  margin-left: calc(1.15rem + 10px);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.4;
+}
+
 .rotulos-keys .btn[aria-pressed='true'] {
+  background: var(--wheat);
   box-shadow: inset 0 0 0 2px #c5b57a;
+}
+
+.rotulos-keys .btn[aria-pressed='true']:hover {
+  background: var(--wheat);
+  color: var(--ink);
 }
 
 .rotulos-nav {
@@ -970,6 +1034,16 @@ table.data a:hover {
 .btn-ghost:disabled:hover {
   background: transparent;
   color: var(--ink);
+}
+
+.rotulos-keys .btn:disabled:hover,
+.rotulos-keys .btn[aria-pressed='true']:disabled:hover {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.rotulos-keys .btn[aria-pressed='true']:disabled:hover {
+  background: var(--wheat);
 }
 
 @media (max-width: 860px) {
@@ -1027,10 +1101,6 @@ table.data a:hover {
 
   .search button {
     width: 100%;
-  }
-
-  .rotulos-keys {
-    grid-template-columns: 1fr;
   }
 
   .rotulos-card {

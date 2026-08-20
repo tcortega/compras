@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from urllib.parse import urljoin
+from html import unescape
+from urllib.parse import unquote, urljoin
 
 import httpx
 
@@ -30,11 +31,19 @@ PNCP_MODALIDADES_PATH = "/v1/modalidades"
 OCDS_HOSTS = frozenset({"data.open-contracting.org", "fastly.data.open-contracting.org"})
 RFB_HOSTS = frozenset({"arquivos.receitafederal.gov.br"})
 PNCP_HOSTS = frozenset({"pncp.gov.br"})
+# BUILD_SPEC Tier B source 6. Listing verified 2026-08-20. Cubo SQL is not this extract.
+TCE_SP_LISTING_URL = "https://transparencia.tce.sp.gov.br/conjunto-de-dados"
+TCE_SP_HOSTS = frozenset({"transparencia.tce.sp.gov.br"})
 USER_AGENT = "compras-ingest/0.1"
 _MONTH = re.compile(r"^\d{4}-\d{2}$")
 _PROP_NAME = re.compile(r"<d:displayname>([^<]+)</d:displayname>")
 _JSONL = re.compile(
     r"""(?:href|contentUrl)\s*[=\:]\s*["']([^"']+?\.jsonl\.gz)["']""",
+    re.IGNORECASE,
+)
+_HREF = re.compile(r"""href\s*=\s*["']([^"']+)["']""", re.IGNORECASE)
+_LICITACAO_ZIP = re.compile(
+    r"licitacao-(\d{4})(?:-(\d{2}))?(?:_\d+)?\.zip$",
     re.IGNORECASE,
 )
 
@@ -66,6 +75,14 @@ class PncpOfficial:
     itens_path: str
     resultados_path: str
     modalidades: tuple[int, ...]
+
+
+@dataclass(frozen=True)
+class TceSpOfficial:
+    listing_url: str
+    zip_url: str
+    year: int
+    month: int
 
 
 def http_client(timeout: float = 45.0) -> httpx.Client:
@@ -123,6 +140,53 @@ def resolve_pncp_consulta() -> PncpOfficial:
         PNCP_ITEM_RESULTADOS_PATH,
         mods,
     )
+
+
+def resolve_tce_sp_licitacao(year: int, month: int) -> TceSpOfficial:
+    """Read live TCE-SP listing. Fail if the year/month licitacao zip is not official."""
+    if month < 1 or month > 12:
+        raise RuntimeError(f"TCE-SP month out of range: {month}")
+    with http_client() as client:
+        resp = client.get(TCE_SP_LISTING_URL)
+        resp.raise_for_status()
+        assert_official_host(str(resp.url), TCE_SP_HOSTS)
+        zip_url = licitacao_zip_from_listing(resp.text, year, month, str(resp.url))
+        _require_zip_reachable(client, zip_url, TCE_SP_HOSTS)
+    return TceSpOfficial(TCE_SP_LISTING_URL, zip_url, year, month)
+
+
+def licitacao_zip_from_listing(html: str, year: int, month: int, listing_url: str) -> str:
+    """Pick the official licitacao-YYYY-MM zip. Refuse cubo SQL and non-official hosts."""
+    monthly: list[str] = []
+    annual: list[str] = []
+    for raw in _HREF.findall(html):
+        abs_url = urljoin(listing_url, unquote(unescape(raw)))
+        name = (httpx.URL(abs_url).path or "").rsplit("/", 1)[-1]
+        match = _LICITACAO_ZIP.search(name)
+        if not match:
+            continue
+        found_year = int(match.group(1))
+        found_month = int(match.group(2)) if match.group(2) else None
+        if found_year != year:
+            continue
+        if found_month is not None and found_month != month:
+            continue
+        if found_month is None and year != 2018:
+            continue
+        assert_official_host(abs_url, TCE_SP_HOSTS)
+        if "/licitacoes-contratos/licitacao-" not in abs_url:
+            raise RuntimeError(f"TCE-SP download is not a licitacao zip: {abs_url}")
+        if "cubo" in abs_url.lower():
+            raise RuntimeError(f"TCE-SP cubo SQL is not the licitacao extract: {abs_url}")
+        if found_month is None:
+            annual.append(abs_url)
+        else:
+            monthly.append(abs_url)
+    chosen = _prefer_month_zip(monthly) or (annual[0] if annual else "")
+    if not chosen:
+        raise RuntimeError(f"TCE-SP listing has no licitacao-{year}-{month:02d} zip")
+    assert_official_host(chosen, TCE_SP_HOSTS)
+    return chosen
 
 
 def resolve_receita_index() -> ReceitaOfficial:
@@ -221,6 +285,30 @@ def _modalidade_ids(client: httpx.Client) -> tuple[int, ...]:
     if not ids:
         raise RuntimeError("PNCP modalidades have no ids")
     return tuple(ids)
+
+
+def _prefer_month_zip(urls: list[str]) -> str:
+    if not urls:
+        return ""
+    exact = []
+    for url in urls:
+        name = (httpx.URL(url).path or "").rsplit("/", 1)[-1]
+        if re.search(r"licitacao-\d{4}-\d{2}\.zip$", name, re.I):
+            exact.append(url)
+    return exact[0] if exact else urls[0]
+
+
+def _require_zip_reachable(client: httpx.Client, url: str, allowed: frozenset[str]) -> None:
+    assert_official_host(url, allowed)
+    resp = client.head(url)
+    if resp.status_code in {405, 403}:
+        with client.stream("GET", url) as streamed:
+            streamed.raise_for_status()
+            assert_official_host(str(streamed.url), allowed)
+        return
+    if resp.status_code >= 400:
+        raise RuntimeError(f"official URL {url} returned {resp.status_code}")
+    assert_official_host(str(resp.url), allowed)
 
 
 def _require_ok(client: httpx.Client, url: str, allowed: frozenset[str]) -> None:

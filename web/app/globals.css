@@ -866,6 +866,95 @@ table.data a:hover {
   gap: 12px;
 }
 
+.rotulos-page {
+  max-width: 40rem;
+}
+
+.rotulos-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.rotulos-head .kicker {
+  margin: 0;
+}
+
+.rotulos-progress {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+.rotulos-card {
+  margin-top: 8px;
+  padding: 22px 22px 20px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+}
+
+.rotulos-card h1 {
+  margin-bottom: 16px;
+  font-size: clamp(26px, 4vw, 36px);
+}
+
+.rotulos-card .lede {
+  margin-bottom: 0;
+  font-size: 16px;
+}
+
+.rotulos-sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 16px 0 0;
+  font-size: 13.5px;
+}
+
+.rotulos-notes {
+  margin-top: 18px;
+}
+
+.rotulos-keys {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.rotulos-keys .btn {
+  height: 56px;
+  padding: 0 16px;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.rotulos-keys .btn kbd {
+  min-width: 1.15rem;
+  color: #cfe0d6;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.rotulos-keys .btn[aria-pressed='true'] {
+  box-shadow: inset 0 0 0 2px #c5b57a;
+}
+
+.rotulos-nav {
+  margin-top: 14px;
+}
+
+.rotulos-keys .btn:focus-visible {
+  outline: 2px solid #c5b57a;
+  outline-offset: 3px;
+}
+
 .btn:disabled,
 .btn-ghost:disabled {
   opacity: 0.42;
@@ -938,6 +1027,14 @@ table.data a:hover {
 
   .search button {
     width: 100%;
+  }
+
+  .rotulos-keys {
+    grid-template-columns: 1fr;
+  }
+
+  .rotulos-card {
+    padding: 16px 14px 14px;
   }
 
   table.data th:first-child,

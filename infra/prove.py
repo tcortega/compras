@@ -592,6 +592,8 @@ def main() -> int:
         raise SystemExit("public shell linked staging triage")
     if 'href="/interno/cobertura"' in home:
         raise SystemExit("public shell linked staging coverage")
+    if 'href="/interno/rotulos"' in home:
+        raise SystemExit("public shell linked staging review")
     folded = home.casefold()
     if "volta redonda" not in folded:
         raise SystemExit("web / missing Volta Redonda")
@@ -1641,6 +1643,8 @@ def main() -> int:
 
     cobertura = get_text(f"{WEB}/cobertura")
     assert_served_page(cobertura, "web /cobertura")
+    if 'href="/interno/rotulos"' in cobertura:
+        raise SystemExit("public cobertura linked staging review")
     if "3306305" not in cobertura:
         raise SystemExit("web /cobertura missing VR IBGE")
     if "3303302" not in cobertura:
@@ -1874,6 +1878,18 @@ def main() -> int:
             raise SystemExit(f"web /interno/cobertura missing {kind}")
     if STAT_HOMOLOGADO.search(interno_cob):
         raise SystemExit("web /interno/cobertura showed Homologado")
+    rotulos = get_text(f"{WEB}/interno/rotulos")
+    deny_stub(rotulos, "web /interno/rotulos")
+    if BANNED_COPY.search(rotulos):
+        raise SystemExit("web /interno/rotulos leaked banned copy")
+    if "Conferir o item na fonte" not in rotulos:
+        raise SystemExit("web /interno/rotulos missing framing")
+    if "Conferir item" not in rotulos and "Nenhum item para conferir" not in rotulos:
+        raise SystemExit("web /interno/rotulos missing title")
+    if 'href="/interno/rotulos"' in rotulos:
+        raise SystemExit("web /interno/rotulos linked itself from the shell")
+    if STAT_HOMOLOGADO.search(rotulos):
+        raise SystemExit("web /interno/rotulos showed Homologado")
     deny_flags(orgaos, f"{API}/api/orgaos")
     deny_flags(items, f"{API}/api/items")
     deny_flags(item, f"{API}/api/items/{iid}")

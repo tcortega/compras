@@ -12,7 +12,7 @@ docker compose up --build --wait
 
 That command starts Postgres 16, ClickHouse, MinIO, Meilisearch, Dagster, the warehouse seed, the C# API, and the Next.js explorer.
 
-The seed runs the existing Python ingest/normalize into Postgres and ClickHouse using the in-repo Volta Redonda 2024 fixture (IBGE 3306305).
+The seed runs the existing Python ingest/normalize into Postgres and ClickHouse using the in-repo 2024 fixture: Volta Redonda RJ 3306305, Niterói RJ 3303302, and Bauru SP 3506003.
 
 Python never calls C#.
 C# never runs a detector.
@@ -30,7 +30,9 @@ C# never runs a detector.
 
 The explorer talks to the compose API at `http://api:5080`, not the in-process stub.
 
-A browser on the explorer home must show Volta Redonda coverage with `n`, UF RJ, trimestre, and metodologia.
+A browser on the explorer home must show the published slice with `n`, UF (RJ, SP, or UF mista when mixed), trimestre, and metodologia.
+Mixed UF coverage leaves uf empty.
+It is not a national total.
 
 ## Prove
 

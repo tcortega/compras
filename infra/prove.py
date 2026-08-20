@@ -24,6 +24,11 @@ STUB_MARKERS = (
 )
 BANNED_COPY = re.compile(r"fraude|corrupto|roubo|flag|ranking", re.I)
 FLAG_KEY = re.compile(r"flag", re.I)
+PUBLISHED = {
+    "3306305": ("volta redonda", "RJ"),
+    "3303302": ("niteroi", "RJ"),
+    "3506003": ("bauru", "SP"),
+}
 
 
 def main() -> int:
@@ -31,19 +36,42 @@ def main() -> int:
     deny_flags(orgaos, f"{API}/api/orgaos")
     deny_stub(json.dumps(orgaos, ensure_ascii=False), "api /api/orgaos")
     items_page = orgaos.get("items") or []
-    if not items_page:
-        raise SystemExit("api /api/orgaos returned no rows")
-    orgao = items_page[0]
-    razao = str(orgao.get("razaoSocial") or "")
-    if "volta redonda" not in razao.casefold():
-        raise SystemExit(f"api orgao is not Volta Redonda: {razao}")
-    if str(orgao.get("municipioIbge") or "") != "3306305":
-        raise SystemExit(f"api orgao IBGE is not 3306305: {orgao.get('municipioIbge')}")
-    if str(orgao.get("uf") or "") != "RJ":
-        raise SystemExit(f"api orgao UF is not RJ: {orgao.get('uf')}")
-    if str(orgao.get("cnpj") or "") == "29138108000113":
-        raise SystemExit("api served stub Prefeitura CNPJ")
+    if len(items_page) < 3:
+        raise SystemExit(f"api /api/orgaos returned {len(items_page)} rows, need the published slice")
+    by_ibge = {str(row.get("municipioIbge") or ""): row for row in items_page}
+    for ibge, (nome, uf) in PUBLISHED.items():
+        row = by_ibge.get(ibge)
+        if row is None:
+            raise SystemExit(f"api /api/orgaos missing IBGE {ibge}")
+        razao = str(row.get("razaoSocial") or "")
+        if nome not in razao.casefold():
+            raise SystemExit(f"api orgao {ibge} razao is not {nome}: {razao}")
+        if str(row.get("uf") or "") != uf:
+            raise SystemExit(f"api orgao {ibge} UF is not {uf}: {row.get('uf')}")
+        if str(row.get("cnpj") or "") == "29138108000113":
+            raise SystemExit("api served stub Prefeitura CNPJ")
+    orgao_cov = orgaos.get("coverage") or {}
+    if orgao_cov.get("uf") not in (None, ""):
+        raise SystemExit(f"mixed orgao list invented a UF: {orgao_cov}")
+    if not isinstance(orgao_cov.get("n"), int) or orgao_cov["n"] < 3:
+        raise SystemExit(f"api orgaos coverage.n missing the extra slice: {orgao_cov}")
+    if not orgao_cov.get("methodologyVersion"):
+        raise SystemExit(f"api orgaos coverage missing methodologyVersion: {orgao_cov}")
 
+    niteroi = get_json(f"{API}/api/orgaos?municipioIbge=3303302&skip=0&take=50")
+    deny_flags(niteroi, f"{API}/api/orgaos?municipioIbge=3303302")
+    niteroi_rows = niteroi.get("items") or []
+    if len(niteroi_rows) != 1 or str(niteroi_rows[0].get("municipioIbge") or "") != "3303302":
+        raise SystemExit(f"api municipio filter 3303302 failed: {niteroi_rows}")
+    bauru = get_json(f"{API}/api/orgaos?uf=SP&skip=0&take=50")
+    deny_flags(bauru, f"{API}/api/orgaos?uf=SP")
+    bauru_rows = bauru.get("items") or []
+    if not bauru_rows or any(str(row.get("uf") or "") != "SP" for row in bauru_rows):
+        raise SystemExit(f"api UF=SP filter failed: {bauru_rows}")
+    if str((bauru.get("coverage") or {}).get("uf") or "") != "SP":
+        raise SystemExit(f"api UF=SP coverage lost slice UF: {bauru.get('coverage')}")
+
+    orgao = by_ibge["3306305"]
     oid = orgao["id"]
     got = get_json(f"{API}/api/orgaos/{oid}")
     deny_flags(got, f"{API}/api/orgaos/{oid}")
@@ -58,11 +86,16 @@ def main() -> int:
     n = coverage.get("n")
     if not isinstance(n, int) or n < 1:
         raise SystemExit(f"api items coverage.n missing or empty: {coverage}")
+    if coverage.get("uf") not in (None, ""):
+        raise SystemExit(f"mixed item list invented a UF: {coverage}")
+    if not coverage.get("methodologyVersion"):
+        raise SystemExit(f"api items coverage missing methodologyVersion: {coverage}")
     rows = items.get("items") or []
     if not rows:
         raise SystemExit("api /api/items returned no rows")
-    if any(str(row.get("uf") or "") != "RJ" for row in rows):
-        raise SystemExit("api items are not the RJ slice")
+    ufs = {str(row.get("uf") or "") for row in rows}
+    if ufs != {"RJ", "SP"}:
+        raise SystemExit(f"api items UF set is not RJ+SP: {sorted(ufs)}")
     iid = rows[0]["id"]
     item = get_json(f"{API}/api/items/{iid}")
     deny_flags(item, f"{API}/api/items/{iid}")
@@ -72,12 +105,19 @@ def main() -> int:
     deny_stub(home, "web /")
     if BANNED_COPY.search(home):
         raise SystemExit("web / leaked banned copy")
-    if "volta redonda" not in home.casefold():
+    folded = home.casefold()
+    if "volta redonda" not in folded:
         raise SystemExit("web / missing Volta Redonda")
+    if "niter" not in folded:
+        raise SystemExit("web / missing Niterói")
+    if "bauru" not in folded:
+        raise SystemExit("web / missing Bauru")
     if not re.search(r"n=\d+", home):
         raise SystemExit("web / missing coverage n")
-    if "UF RJ" not in home:
-        raise SystemExit("web / missing UF RJ")
+    if "UF mista" not in home:
+        raise SystemExit("web / missing honest mixed UF")
+    if "UF Brasil" in home or "total nacional" in folded:
+        raise SystemExit("web / invented a national total")
     if not re.search(r"trimestre|trim\.", home, re.I):
         raise SystemExit("web / missing trimestre")
     if not re.search(r"metodologia", home, re.I):
@@ -87,8 +127,29 @@ def main() -> int:
     deny_stub(orgaos_html, "web /orgaos")
     if BANNED_COPY.search(orgaos_html):
         raise SystemExit("web /orgaos leaked banned copy")
-    if "volta redonda" not in orgaos_html.casefold():
+    orgaos_fold = orgaos_html.casefold()
+    if "volta redonda" not in orgaos_fold:
         raise SystemExit("web /orgaos missing Volta Redonda")
+    if "niter" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing Niterói")
+    if "bauru" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing Bauru")
+
+    niteroi_html = get_text(f"{WEB}/orgaos?municipioIbge=3303302")
+    if "niter" not in niteroi_html.casefold():
+        raise SystemExit("web /orgaos?municipioIbge=3303302 missing Niterói")
+    if "bauru" in niteroi_html.casefold():
+        raise SystemExit("web municipio filter leaked Bauru")
+    if not re.search(r"n=1", niteroi_html):
+        raise SystemExit("web municipio filter missing n=1")
+
+    sp_html = get_text(f"{WEB}/orgaos?uf=SP")
+    if "bauru" not in sp_html.casefold():
+        raise SystemExit("web /orgaos?uf=SP missing Bauru")
+    if "volta redonda" in sp_html.casefold() or "niter" in sp_html.casefold():
+        raise SystemExit("web UF=SP filter leaked RJ")
+    if "UF SP" not in sp_html:
+        raise SystemExit("web UF=SP missing coverage UF")
 
     flags = get_json(f"{API}/api/internal/flags?state=detected&skip=0&take=50")
     flag_coverage = flags.get("coverage") or {}
@@ -127,7 +188,7 @@ def main() -> int:
     deny_flags(item, f"{API}/api/items/{iid}")
 
     print("compose prove ok")
-    print(f"orgao={razao} ibge={orgao.get('municipioIbge')} items={n} flags={flag_n}")
+    print(f"orgaos={len(items_page)} ibges={sorted(by_ibge)} items={n} flags={flag_n}")
     return 0
 
 

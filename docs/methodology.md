@@ -6,7 +6,10 @@ Este documento é a metodologia pública carimbada na linha de fonte do explorad
 
 A cobertura é incompleta.
 Nenhum agregado afirma cobertura nacional.
-O recorte publicado agora é Volta Redonda, RJ, código IBGE 3306305, ano 2024, extraído dos arquivos em lote do Compras.gov.br.
+O recorte publicado agora é Volta Redonda e Niterói (RJ) e Bauru (SP), códigos IBGE 3306305, 3303302 e 3506003, ano 2024, extraído dos arquivos em lote do Compras.gov.br.
+Esses municípios aparecem no COMPRA municipal de 2024.
+O conjunto não é um censo nacional.
+Quando o agregado mistura UF, o campo uf fica vazio.
 A API de consulta do PNCP é gravada em parquet imutável para entidades que não estão nesse lote.
 O explorador publicado neste recorte ainda lê o lote Compras.gov.br.
 Todo agregado mostra n, UF e trimestre.

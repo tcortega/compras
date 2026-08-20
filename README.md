@@ -11,7 +11,7 @@ Genuine national municipal coverage is not achievable before roughly 2027-2028.
 
 See [PROJECT.md](docs/PROJECT.md) and [BUILD_SPEC.md](docs/BUILD_SPEC.md).
 
-From `infra`, `docker compose up --build --wait` serves the explorer at http://127.0.0.1:3100 and the API at http://127.0.0.1:5080 against the Volta Redonda 2024 warehouse slice.
+From `infra`, `docker compose up --build --wait` serves the explorer at http://127.0.0.1:3100 and the API at http://127.0.0.1:5080 against the 2024 warehouse slice (Volta Redonda and Niterói in RJ, Bauru in SP).
 
 Phase 0 is the hard start.
 Do not build public flags until the precision number exists in `/labels`.

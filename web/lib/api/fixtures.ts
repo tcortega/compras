@@ -1,10 +1,4 @@
-import {
-  METHOD_VERSION,
-  SLICE_IBGE,
-  SLICE_MUNICIPIO,
-  SLICE_UF,
-  SNAPSHOT_ID,
-} from '@/lib/copy'
+import { METHOD_VERSION, SNAPSHOT_ID } from '@/lib/copy'
 import type { Contratacao, Fornecedor, Item, Orgao } from '@/lib/types'
 
 const T0 = '2024-02-12T12:00:00.000Z'
@@ -16,6 +10,8 @@ export const ids = {
   orgaoCamara: '7c2e1f40-3306-4050-9a01-000000000002',
   orgaoSaude: '7c2e1f40-3306-4050-9a01-000000000003',
   orgaoTransito: '7c2e1f40-3306-4050-9a01-000000000004',
+  orgaoNiteroi: '7c2e1f40-3303-4050-9a01-000000000005',
+  orgaoBauru: '7c2e1f40-3506-4050-9a01-000000000006',
   fornFarma: '8d3f2a51-3306-4050-9a02-000000000001',
   fornAlim: '8d3f2a51-3306-4050-9a02-000000000002',
   fornComb: '8d3f2a51-3306-4050-9a02-000000000003',
@@ -33,6 +29,8 @@ export const ids = {
   ctCamara: '9e4a3b62-3306-4050-9a03-000000000008',
   ctSaude2: '9e4a3b62-3306-4050-9a03-000000000009',
   ctSinal: '9e4a3b62-3306-4050-9a03-000000000010',
+  ctNiteroi: '9e4a3b62-3303-4050-9a03-000000000011',
+  ctBauru: '9e4a3b62-3506-4050-9a03-000000000012',
 } as const
 
 function orgao(
@@ -41,6 +39,9 @@ function orgao(
   razaoSocial: string,
   poder: string,
   createdAt: string,
+  uf: string,
+  municipioIbge: string,
+  municipioNome: string,
 ): Orgao {
   return {
     id,
@@ -48,9 +49,9 @@ function orgao(
     razaoSocial,
     esfera: 'municipal',
     poder,
-    uf: SLICE_UF,
-    municipioIbge: SLICE_IBGE,
-    municipioNome: SLICE_MUNICIPIO,
+    uf,
+    municipioIbge,
+    municipioNome,
     suspended: false,
     createdAt,
     updatedAt: createdAt,
@@ -58,10 +59,66 @@ function orgao(
 }
 
 export const orgaos: Orgao[] = [
-  orgao(ids.orgaoPref, '29138108000113', 'Prefeitura Municipal de Volta Redonda', 'executivo', T0),
-  orgao(ids.orgaoCamara, '29139007000160', 'Câmara Municipal de Volta Redonda', 'legislativo', T0),
-  orgao(ids.orgaoSaude, '39451277000122', 'Fundação Saúde de Volta Redonda', 'executivo', T0),
-  orgao(ids.orgaoTransito, '08664133000191', 'Autarquia Municipal de Trânsito de Volta Redonda', 'executivo', T1),
+  orgao(
+    ids.orgaoPref,
+    '29138108000113',
+    'Prefeitura Municipal de Volta Redonda',
+    'executivo',
+    T0,
+    'RJ',
+    '3306305',
+    'Volta Redonda',
+  ),
+  orgao(
+    ids.orgaoCamara,
+    '29139007000160',
+    'Câmara Municipal de Volta Redonda',
+    'legislativo',
+    T0,
+    'RJ',
+    '3306305',
+    'Volta Redonda',
+  ),
+  orgao(
+    ids.orgaoSaude,
+    '39451277000122',
+    'Fundação Saúde de Volta Redonda',
+    'executivo',
+    T0,
+    'RJ',
+    '3306305',
+    'Volta Redonda',
+  ),
+  orgao(
+    ids.orgaoTransito,
+    '08664133000191',
+    'Autarquia Municipal de Trânsito de Volta Redonda',
+    'executivo',
+    T1,
+    'RJ',
+    '3306305',
+    'Volta Redonda',
+  ),
+  orgao(
+    ids.orgaoNiteroi,
+    '28521748000159',
+    'Prefeitura Municipal de Niterói',
+    'executivo',
+    T0,
+    'RJ',
+    '3303302',
+    'Niterói',
+  ),
+  orgao(
+    ids.orgaoBauru,
+    '46137410000180',
+    'Prefeitura Municipal de Bauru',
+    'executivo',
+    T1,
+    'SP',
+    '3506003',
+    'Bauru',
+  ),
 ]
 
 export const fornecedores: Fornecedor[] = [
@@ -277,6 +334,28 @@ export const contratacoes: Contratacao[] = [
     '2024-11-19T17:05:00.000Z',
     'pncp',
   ),
+  ct(
+    ids.ctNiteroi,
+    '28521748000159-1-000001/2024',
+    ids.orgaoNiteroi,
+    'pregão eletrônico',
+    'Aquisição de material de limpeza para as unidades escolares de Niterói',
+    2024,
+    120.0,
+    '2024-03-20T14:00:00.000Z',
+    'compras.gov.br',
+  ),
+  ct(
+    ids.ctBauru,
+    '46137410000180-1-000001/2024',
+    ids.orgaoBauru,
+    'pregão eletrônico',
+    'Aquisição de material de expediente para as secretarias de Bauru',
+    2024,
+    80.0,
+    '2024-04-12T11:00:00.000Z',
+    'compras.gov.br',
+  ),
 ]
 
 function item(
@@ -342,4 +421,8 @@ export const items: Item[] = [
   item(24, ids.ctSaude2, ids.fornFarma, 'Seringa descartável 10 ml', '267911', 18_000, 'unidade', 'un', 0.31, 'RJ', '2024-Q4', T2),
   item(25, ids.ctSinal, ids.fornObra, 'Tinta retrorrefletiva para sinalização horizontal', '421020', 3_200, 'kg', 'kg', 38.4, 'RJ', '2024-Q4', T2),
   item(26, ids.ctSinal, ids.fornObra, 'Placa de regulamentação em aço', '421021', 180, 'unidade', 'un', 214.0, 'RJ', '2024-Q4', T2),
+  item(27, ids.ctNiteroi, ids.fornPapel, 'Detergente neutro concentrado 5 L', '123456', 8, 'unidade', 'un', 15.0, 'RJ', '2024-Q1', T0),
+  item(28, ids.ctNiteroi, ids.fornPapel, 'Álcool etílico 70% 1 L', '420090', 40, 'litro', 'l', 8.5, 'RJ', '2024-Q1', T0),
+  item(29, ids.ctBauru, ids.fornPapel, 'Papel A4 75 g/m² resma 500 folhas', '476101', 16, 'resma', 'un', 5.0, 'SP', '2024-Q2', T1),
+  item(30, ids.ctBauru, ids.fornPapel, 'Caneta esferográfica azul', '476130', 200, 'unidade', 'un', 0.9, 'SP', '2024-Q2', T1),
 ]

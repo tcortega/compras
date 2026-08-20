@@ -12,6 +12,7 @@ export type PageRequest = {
   take: number
   q?: string
   uf?: string
+  municipioIbge?: string
   esfera?: Esfera
   orgaoId?: string
   fornecedorId?: string

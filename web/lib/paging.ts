@@ -32,6 +32,7 @@ export function pageRequestFromSearch(
     take: intOr(first(sp.take), DEFAULT_TAKE, 1, MAX_TAKE),
     q: first(sp.q)?.trim() || undefined,
     uf: first(sp.uf)?.trim().toUpperCase() || undefined,
+    municipioIbge: first(sp.municipioIbge)?.trim() || undefined,
     esfera,
     orgaoId: first(sp.orgaoId) || undefined,
     fornecedorId: first(sp.fornecedorId) || undefined,

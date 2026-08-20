@@ -30,6 +30,16 @@ export default async function OrgaosPage({ searchParams }: { searchParams: Promi
               <span>UF</span>
               <input name="uf" defaultValue={req.uf ?? ''} maxLength={2} autoCapitalize="characters" />
             </label>
+            <label className="field field-ibge">
+              <span>IBGE</span>
+              <input
+                name="municipioIbge"
+                defaultValue={req.municipioIbge ?? ''}
+                inputMode="numeric"
+                maxLength={7}
+                placeholder="3303302"
+              />
+            </label>
             <label className="field">
               <span>Esfera</span>
               <select name="esfera" defaultValue={req.esfera ?? ''}>

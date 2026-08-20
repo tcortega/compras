@@ -34,6 +34,7 @@ function queryOf(req: PageRequest): string {
   params.set('take', String(req.take))
   if (req.q) params.set('q', req.q)
   if (req.uf) params.set('uf', req.uf)
+  if (req.municipioIbge) params.set('municipioIbge', req.municipioIbge)
   if (req.esfera) params.set('esfera', req.esfera)
   if (req.orgaoId) params.set('orgaoId', req.orgaoId)
   if (req.fornecedorId) params.set('fornecedorId', req.fornecedorId)

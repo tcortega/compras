@@ -95,7 +95,7 @@ services:
     networks: [compras]
 
   minio-init:
-    image: minio/mc:RELEASE.2024-12-18T00-37-43Z
+    image: minio/mc:RELEASE.2024-11-21T17-21-54Z
     depends_on:
       minio:
         condition: service_healthy

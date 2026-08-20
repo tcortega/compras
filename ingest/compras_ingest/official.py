@@ -14,8 +14,22 @@ RFB_SHARE_URL = "https://arquivos.receitafederal.gov.br/index.php/s/YggdBLfdninE
 RFB_WEBDAV_URL = "https://arquivos.receitafederal.gov.br/public.php/webdav/"
 RFB_SHARE_TOKEN = "YggdBLfdninEJX9"
 
+# BUILD_SPEC Tier B source 5. Live OpenAPI verified 2026-08-20.
+PNCP_CONSULTA_BASE = "https://pncp.gov.br/api/consulta"
+PNCP_CONSULTA_OPENAPI = "https://pncp.gov.br/api/consulta/v3/api-docs"
+PNCP_CONSULTA_SWAGGER = "https://pncp.gov.br/api/consulta/swagger-ui/index.html"
+# Items are not on consulta (live 404). Same host, /api/pncp swagger verified 2026-08-20.
+PNCP_API_BASE = "https://pncp.gov.br/api/pncp"
+PNCP_API_OPENAPI = "https://pncp.gov.br/api/pncp/v3/api-docs"
+PNCP_PUBLICACAO_PATH = "/v1/contratacoes/publicacao"
+PNCP_COMPRA_PATH = "/v1/orgaos/{cnpj}/compras/{ano}/{sequencial}"
+PNCP_ITENS_PATH = "/v1/orgaos/{cnpj}/compras/{ano}/{sequencial}/itens"
+PNCP_ITEM_RESULTADOS_PATH = "/v1/orgaos/{cnpj}/compras/{ano}/{sequencial}/itens/{numeroItem}/resultados"
+PNCP_MODALIDADES_PATH = "/v1/modalidades"
+
 OCDS_HOSTS = frozenset({"data.open-contracting.org", "fastly.data.open-contracting.org"})
 RFB_HOSTS = frozenset({"arquivos.receitafederal.gov.br"})
+PNCP_HOSTS = frozenset({"pncp.gov.br"})
 USER_AGENT = "compras-ingest/0.1"
 _MONTH = re.compile(r"^\d{4}-\d{2}$")
 _PROP_NAME = re.compile(r"<d:displayname>([^<]+)</d:displayname>")
@@ -39,6 +53,19 @@ class ReceitaOfficial:
     token: str
     month: str
     files: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class PncpOfficial:
+    consulta_base: str
+    consulta_openapi: str
+    swagger_url: str
+    api_base: str
+    publicacao_path: str
+    compra_path: str
+    itens_path: str
+    resultados_path: str
+    modalidades: tuple[int, ...]
 
 
 def http_client(timeout: float = 45.0) -> httpx.Client:
@@ -70,6 +97,32 @@ def resolve_ocds_feed(year: int) -> OcdsOfficial:
             raise RuntimeError(f"OCDS download is not publication 157: {download}")
         _require_ok(client, download, OCDS_HOSTS)
     return OcdsOfficial(OCDS_OCP_REGISTRY_URL, download, year)
+
+
+def resolve_pncp_consulta() -> PncpOfficial:
+    """Hit live PNCP OpenAPI. Fail if official consulta or items paths cannot be resolved."""
+    with http_client() as client:
+        consulta = _require_json(client, PNCP_CONSULTA_OPENAPI, PNCP_HOSTS)
+        _require_openapi_path(consulta, PNCP_PUBLICACAO_PATH)
+        _require_openapi_path(consulta, PNCP_COMPRA_PATH)
+        if _openapi_has_path(consulta, PNCP_ITENS_PATH):
+            raise RuntimeError("consulta OpenAPI unexpectedly lists items; re-verify before changing hosts")
+        pncp = _require_json(client, PNCP_API_OPENAPI, PNCP_HOSTS)
+        _require_openapi_path(pncp, PNCP_ITENS_PATH)
+        _require_openapi_path(pncp, PNCP_ITEM_RESULTADOS_PATH)
+        _require_openapi_path(pncp, PNCP_MODALIDADES_PATH)
+        mods = _modalidade_ids(client)
+    return PncpOfficial(
+        PNCP_CONSULTA_BASE,
+        PNCP_CONSULTA_OPENAPI,
+        PNCP_CONSULTA_SWAGGER,
+        PNCP_API_BASE,
+        PNCP_PUBLICACAO_PATH,
+        PNCP_COMPRA_PATH,
+        PNCP_ITENS_PATH,
+        PNCP_ITEM_RESULTADOS_PATH,
+        mods,
+    )
 
 
 def resolve_receita_index() -> ReceitaOfficial:
@@ -128,6 +181,46 @@ def _ocp_jsonl_from_page(html: str, year: int) -> str:
         if "name=full.jsonl.gz" in url:
             return url
     return found[0]
+
+
+def _require_json(client: httpx.Client, url: str, allowed: frozenset[str]) -> dict:
+    assert_official_host(url, allowed)
+    resp = client.get(url)
+    resp.raise_for_status()
+    assert_official_host(str(resp.url), allowed)
+    payload = resp.json()
+    if not isinstance(payload, dict):
+        raise RuntimeError(f"official JSON {url} is not an object")
+    return payload
+
+
+def _openapi_has_path(spec: dict, path: str) -> bool:
+    paths = spec.get("paths")
+    return isinstance(paths, dict) and path in paths
+
+
+def _require_openapi_path(spec: dict, path: str) -> None:
+    if not _openapi_has_path(spec, path):
+        raise RuntimeError(f"official OpenAPI missing {path}")
+
+
+def _modalidade_ids(client: httpx.Client) -> tuple[int, ...]:
+    url = f"{PNCP_API_BASE}{PNCP_MODALIDADES_PATH}"
+    assert_official_host(url, PNCP_HOSTS)
+    resp = client.get(url)
+    resp.raise_for_status()
+    assert_official_host(str(resp.url), PNCP_HOSTS)
+    rows = resp.json()
+    if not isinstance(rows, list) or not rows:
+        raise RuntimeError("PNCP modalidades list is empty")
+    ids = []
+    for row in rows:
+        if not isinstance(row, dict) or row.get("id") is None:
+            continue
+        ids.append(int(row["id"]))
+    if not ids:
+        raise RuntimeError("PNCP modalidades have no ids")
+    return tuple(ids)
 
 
 def _require_ok(client: httpx.Client, url: str, allowed: frozenset[str]) -> None:

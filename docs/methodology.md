@@ -7,6 +7,8 @@ Este documento é a metodologia pública carimbada na linha de fonte do explorad
 A cobertura é incompleta.
 Nenhum agregado afirma cobertura nacional.
 O recorte publicado agora é Volta Redonda, RJ, código IBGE 3306305, ano 2024, extraído dos arquivos em lote do Compras.gov.br.
+A API de consulta do PNCP é gravada em parquet imutável para entidades que não estão nesse lote.
+O explorador publicado neste recorte ainda lê o lote Compras.gov.br.
 Todo agregado mostra n, UF e trimestre.
 Municípios com menos de 20 mil habitantes estão dispensados de publicar no PNCP até 31 de março de 2027.
 O TCU, no Acórdão 53/2025, registrou inconsistência em 86,4% dos registros do PNCP.

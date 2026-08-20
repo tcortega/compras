@@ -11,6 +11,7 @@ from compras_ingest.settings import Settings
 from compras_ingest.sources.catalogo_cnbs import land_catalogo_cnbs
 from compras_ingest.sources.compras_gov import land_compras_gov
 from compras_ingest.sources.ocds import land_ocds
+from compras_ingest.sources.pncp_consulta import land_pncp_consulta
 from compras_ingest.sources.receita_cnpj import cnpj_basicos_from_frame, land_receita_cnpj
 from compras_ingest.warehouse import apply_schema, write_entities, write_facts, write_flags
 from compras_normalize.catalog import load_catalog
@@ -39,6 +40,7 @@ def run_compras_slice(settings: Settings, store: LandingStore | None = None) -> 
     landed_cnpj, _cnpj_df = land_receita_cnpj(settings, store, cnpj_basicos=cnpj_basicos_from_frame(raw))
     receita_ref = landed_cnpj.as_dict()
     _, ocds_report = land_ocds(settings, compras_ids, store)
+    land_pncp_consulta(settings, store)
     items, warehouse = warehouse_from_landing(
         settings,
         store,

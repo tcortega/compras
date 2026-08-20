@@ -310,9 +310,30 @@ DATA_ERROR_EXPECTED = {
     "de-dup-b": frozenset({"duplicate_row"}),
     "de-dup-c": frozenset({"duplicate_row"}),
     "de-catalog": frozenset({"catalog_magnitude"}),
+    "de-fracassado": frozenset({"excluded_no_award"}),
+    "de-deserto": frozenset({"excluded_no_award"}),
+    "de-anulado": frozenset({"excluded_no_award"}),
+    "de-revogado": frozenset({"excluded_no_award"}),
+    "de-cancelado": frozenset({"excluded_no_award"}),
+    "de-204": frozenset({"excluded_no_award"}),
+    "de-andamento": frozenset({"excluded_no_award"}),
 }
 DATA_ERROR_CLEAN = frozenset(
-    {"de-clean", "de-peer-2", "de-peer-3", "de-peer-4", "de-nearmiss", "de-dup-a"}
+    {
+        "de-clean",
+        "de-peer-2",
+        "de-peer-3",
+        "de-peer-4",
+        "de-nearmiss",
+        "de-dup-a",
+        "de-homologado",
+        "de-nocat",
+        "de-andamento-award",
+    }
+)
+LIVE_NO_AWARD_IDS = (
+    "9805950590008202400004",
+    "9865890590120202400010",
 )
 MAIN_MISMATCH_RECORD = "I-2024-000002"
 PNCP_COMPRA_1 = "29477000000180-1-000001/2024"
@@ -569,9 +590,29 @@ def _assert_data_error_suite(settings: Settings, main_items) -> None:
     if stored_got != {k: set(v) for k, v in DATA_ERROR_EXPECTED.items()}:
         raise SystemExit(f"postgres item_exclusion tags mismatch got={stored_got}")
 
-    main_got = _reasons_by_record(detect_data_errors(main_items))
+    main_exclusions = detect_data_errors(main_items)
+    main_got = _reasons_by_record(main_exclusions)
     if "qty_unit_price_neq_total" not in main_got.get(MAIN_MISMATCH_RECORD, set()):
         raise SystemExit("warehouse slice missed qty_unit_price_neq_total exclusion")
+    main_pool_ids = {str(v) for v in anomaly_pool(main_items, main_exclusions)["record_id"].to_list()}
+    for rid in LIVE_NO_AWARD_IDS:
+        if "excluded_no_award" not in main_got.get(rid, set()):
+            raise SystemExit(f"live no-resultado row missed excluded_no_award: {rid}")
+        if rid in main_pool_ids:
+            raise SystemExit(f"live no-resultado row stayed in anomaly_pool: {rid}")
+    homo = None
+    for row in items.iter_rows(named=True):
+        if str(row.get("record_id") or "") == "de-homologado":
+            homo = row
+            break
+    if homo is None:
+        raise SystemExit("planted de-homologado missing from golden fixture")
+    if str(homo.get("valor_unitario_estimado") or "") != "5000.00":
+        raise SystemExit("de-homologado CSV estimate plant drifted")
+    if str(homo.get("valor_unitario_resultado") or "") != "5.00":
+        raise SystemExit("de-homologado resultado plant drifted")
+    if "de-homologado" in got:
+        raise SystemExit("de-homologado was scored from the CSV estimate")
     main_mismatch = None
     for row in main_items.iter_rows(named=True):
         if str(row.get("record_id") or "") == MAIN_MISMATCH_RECORD:
@@ -585,6 +626,19 @@ def _assert_data_error_suite(settings: Settings, main_items) -> None:
         raise SystemExit("warehouse write path did not persist qty_unit_price_neq_total exclusion")
     if main_iid not in stored_ids:
         raise SystemExit("excluded main-slice item missing from postgres item")
+    live_no_award = None
+    for row in main_items.iter_rows(named=True):
+        if str(row.get("record_id") or "") == LIVE_NO_AWARD_IDS[0]:
+            live_no_award = row
+            break
+    if live_no_award is None:
+        raise SystemExit(f"main slice missing live no-award {LIVE_NO_AWARD_IDS[0]}")
+    live_iid = item_id(str(live_no_award.get("pncp_id") or ""), LIVE_NO_AWARD_IDS[0])
+    live_stored = fetch_exclusions(settings, item_id=live_iid, reason="excluded_no_award")
+    if not live_stored:
+        raise SystemExit("warehouse write path did not persist excluded_no_award")
+    if live_iid not in stored_ids:
+        raise SystemExit("excluded_no_award item missing from postgres item")
 
 
 def _a2_dir() -> Path:

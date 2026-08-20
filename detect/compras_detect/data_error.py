@@ -7,7 +7,6 @@ from pathlib import Path
 
 import polars as pl
 
-from compras_detect.tier1.mismatch import detect_qty_price_mismatch
 from compras_normalize.text import fold, parse_decimal
 
 REASONS = (
@@ -17,6 +16,7 @@ REASONS = (
     "zero_or_negative",
     "duplicate_row",
     "catalog_magnitude",
+    "excluded_no_award",
 )
 
 REASON_QTY = "qty_unit_price_neq_total"
@@ -25,6 +25,20 @@ REASON_COLLAPSE = "qty_eq_1_collapse"
 REASON_ZERO = "zero_or_negative"
 REASON_DUP = "duplicate_row"
 REASON_CATALOG = "catalog_magnitude"
+REASON_NO_AWARD = "excluded_no_award"
+
+HOMOLOGADO_KEYS = ("valor_unitario_resultado", "valor_unitario_homologado")
+SITUACAO_KEYS = (
+    "situacao",
+    "situacao_compra_item",
+    "situacao_compra",
+    "situacaocompraitemnome",
+    "situacaocompranome",
+    "situacaocompraitem",
+)
+HTTP_KEYS = ("resultado_http", "resultados_http", "resultado_status")
+NO_AWARD_SITUACOES = frozenset({"fracassado", "deserto", "anulado", "revogado", "cancelado"})
+EM_ANDAMENTO = "emandamento"
 
 REF_KEYS = ("valor_referencia", "preco_referencia", "valor_referencia_catalogo")
 SHIFT_BANDS = ((1.8, 2.2), (2.8, 3.2))
@@ -51,6 +65,7 @@ def detect_data_errors(
     if items.is_empty():
         return pl.DataFrame(schema=SCHEMA)
     rows: list[dict] = []
+    rows.extend(_excluded_no_award(items))
     rows.extend(_from_qty_mismatch(items))
     rows.extend(_decimal_shift(items))
     rows.extend(_qty_eq_1_collapse(items))
@@ -107,20 +122,37 @@ def fixture_items_path(root: Path | None = None) -> Path:
     return path
 
 
-def _from_qty_mismatch(items: pl.DataFrame) -> list[dict]:
-    flags = detect_qty_price_mismatch(items)
+def _excluded_no_award(items: pl.DataFrame) -> list[dict]:
     rows: list[dict] = []
-    for row in flags.iter_rows(named=True):
+    for row in items.iter_rows(named=True):
+        why = _no_award_reason(row)
+        if not why:
+            continue
+        rows.append(_tag(row, REASON_NO_AWARD, why))
+    return rows
+
+
+def _from_qty_mismatch(items: pl.DataFrame) -> list[dict]:
+    rows: list[dict] = []
+    for row in items.iter_rows(named=True):
+        qty = parse_decimal(row.get("quantidade"))
+        unit = _homologado_unit(row)
+        total = parse_decimal(row.get("valor_total"))
+        if qty is None or unit is None or unit <= 0 or total is None:
+            continue
+        expected = qty * unit
+        abs_err = abs(expected - total)
+        scale = max(abs(total), abs(expected), Decimal("1"))
+        if abs_err <= Decimal("0.02") or (abs_err / scale) <= Decimal("0.002"):
+            continue
         rows.append(
             _tag(
-                {
-                    "record_id": row.get("record_id"),
-                    "pncp_id": row.get("pncp_id"),
-                    "snapshot_id": row.get("snapshot_id"),
-                    "methodology_version": row.get("methodology_version"),
-                },
+                row,
                 REASON_QTY,
-                str(row.get("delta") or "qty * unit_price != total_value"),
+                (
+                    f"qty * unit_price != total_value. qty={qty} unit_price={unit} "
+                    f"product={expected} total={total}"
+                ),
             )
         )
     return rows
@@ -130,7 +162,7 @@ def _decimal_shift(items: pl.DataFrame) -> list[dict]:
     groups: dict[tuple[str, str], list[tuple[dict, Decimal]]] = defaultdict(list)
     for row in items.iter_rows(named=True):
         key = _peer_key(row)
-        price = parse_decimal(row.get("valor_unitario"))
+        price = _homologado_unit(row)
         if key is None or price is None or price <= 0:
             continue
         groups[key].append((row, price))
@@ -162,9 +194,9 @@ def _qty_eq_1_collapse(items: pl.DataFrame) -> list[dict]:
     rows: list[dict] = []
     for row in items.iter_rows(named=True):
         qty = parse_decimal(row.get("quantidade"))
-        unit = parse_decimal(row.get("valor_unitario"))
+        unit = _homologado_unit(row)
         total = parse_decimal(row.get("valor_total"))
-        if qty != Decimal("1") or unit is None or total is None:
+        if qty != Decimal("1") or unit is None or unit <= 0 or total is None:
             continue
         if unit != total:
             continue
@@ -182,13 +214,13 @@ def _zero_or_negative(items: pl.DataFrame) -> list[dict]:
     rows: list[dict] = []
     for row in items.iter_rows(named=True):
         qty = parse_decimal(row.get("quantidade"))
-        unit = parse_decimal(row.get("valor_unitario"))
+        unit = _homologado_unit(row)
         total = parse_decimal(row.get("valor_total"))
         hits: list[str] = []
         if qty is not None and qty <= 0:
             hits.append(f"quantidade={qty}")
         if unit is not None and unit <= 0:
-            hits.append(f"valor_unitario={unit}")
+            hits.append(f"valor_unitario_resultado={unit}")
         if total is not None and total < 0:
             hits.append(f"valor_total={total}")
         if not hits:
@@ -234,7 +266,7 @@ def _catalog_magnitude(
         ref = _row_reference(row, prices)
         if ref is None or ref <= 0:
             continue
-        unit = parse_decimal(row.get("valor_unitario"))
+        unit = _homologado_unit(row)
         if unit is None or unit <= 0:
             continue
         ratio = unit / ref
@@ -291,9 +323,54 @@ def _dup_key(row: dict) -> tuple | None:
         pncp,
         item_part,
         _dec_key(parse_decimal(row.get("quantidade"))),
-        _dec_key(parse_decimal(row.get("valor_unitario"))),
+        _dec_key(_homologado_unit(row)),
         _dec_key(parse_decimal(row.get("valor_total"))),
     )
+
+
+def _no_award_reason(row: dict) -> str:
+    sit = _situacao(row)
+    sit_token = sit.replace(" ", "")
+    http = _resultado_http(row)
+    price = _homologado_unit(row)
+    awarded = price is not None and price > 0
+    if sit_token in NO_AWARD_SITUACOES:
+        return f"situacao={sit or sit_token} is a no-award terminal status"
+    if http == 204:
+        return "resultados HTTP 204 has no homologated award"
+    if sit_token == EM_ANDAMENTO and not awarded:
+        return "situacao=em andamento without a positive valor_unitario_resultado"
+    if price is None:
+        return "missing positive valor_unitario_resultado / valorUnitarioHomologado"
+    return ""
+
+
+def _homologado_unit(row: dict) -> Decimal | None:
+    """Score only the homologado unit price. Never the CSV estimate."""
+    return parse_decimal(_row_get(row, *HOMOLOGADO_KEYS))
+
+
+def _situacao(row: dict) -> str:
+    return fold(str(_row_get(row, *SITUACAO_KEYS) or ""))
+
+
+def _resultado_http(row: dict) -> int | None:
+    raw = _row_get(row, *HTTP_KEYS)
+    if raw is None:
+        return None
+    try:
+        return int(str(raw).strip())
+    except ValueError:
+        return None
+
+
+def _row_get(row: dict, *names: str):
+    folded = {fold(str(k)).replace(" ", "").replace("_", ""): v for k, v in row.items()}
+    for name in names:
+        key = fold(name).replace(" ", "").replace("_", "")
+        if key in folded and folded[key] not in (None, ""):
+            return folded[key]
+    return None
 
 
 def _tag(row: dict, reason: str, detail: str) -> dict:

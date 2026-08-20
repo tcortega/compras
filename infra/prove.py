@@ -37,6 +37,8 @@ PUBLISHED = {
     "2604106": ("caruaru", "PE"),
     "5201108": ("anapolis", "GO"),
     "3205200": ("vila velha", "ES"),
+    "2504009": ("campina grande", "PB"),
+    "2303709": ("caucaia", "CE"),
 }
 
 
@@ -45,7 +47,7 @@ def main() -> int:
     deny_flags(orgaos, f"{API}/api/orgaos")
     deny_stub(json.dumps(orgaos, ensure_ascii=False), "api /api/orgaos")
     items_page = orgaos.get("items") or []
-    if len(items_page) < 11:
+    if len(items_page) < 13:
         raise SystemExit(f"api /api/orgaos returned {len(items_page)} rows, need the published slice")
     by_ibge = {str(row.get("municipioIbge") or ""): row for row in items_page}
     for ibge, (nome, uf) in PUBLISHED.items():
@@ -62,7 +64,7 @@ def main() -> int:
     orgao_cov = orgaos.get("coverage") or {}
     if orgao_cov.get("uf") not in (None, ""):
         raise SystemExit(f"mixed orgao list invented a UF: {orgao_cov}")
-    if not isinstance(orgao_cov.get("n"), int) or orgao_cov["n"] < 11:
+    if not isinstance(orgao_cov.get("n"), int) or orgao_cov["n"] < 13:
         raise SystemExit(f"api orgaos coverage.n missing the extra slice: {orgao_cov}")
     if not orgao_cov.get("methodologyVersion"):
         raise SystemExit(f"api orgaos coverage missing methodologyVersion: {orgao_cov}")
@@ -132,6 +134,19 @@ def main() -> int:
     if str((vila_velha.get("coverage") or {}).get("uf") or "") != "ES":
         raise SystemExit(f"api UF=ES coverage lost slice UF: {vila_velha.get('coverage')}")
 
+    campina = get_json(f"{API}/api/orgaos?municipioIbge=2504009&skip=0&take=50")
+    deny_flags(campina, f"{API}/api/orgaos?municipioIbge=2504009")
+    campina_rows = campina.get("items") or []
+    if len(campina_rows) != 1 or str(campina_rows[0].get("municipioIbge") or "") != "2504009":
+        raise SystemExit(f"api municipio filter 2504009 failed: {campina_rows}")
+    caucaia = get_json(f"{API}/api/orgaos?uf=CE&skip=0&take=50")
+    deny_flags(caucaia, f"{API}/api/orgaos?uf=CE")
+    caucaia_rows = caucaia.get("items") or []
+    if not caucaia_rows or any(str(row.get("uf") or "") != "CE" for row in caucaia_rows):
+        raise SystemExit(f"api UF=CE filter failed: {caucaia_rows}")
+    if str((caucaia.get("coverage") or {}).get("uf") or "") != "CE":
+        raise SystemExit(f"api UF=CE coverage lost slice UF: {caucaia.get('coverage')}")
+
     orgao = by_ibge["3306305"]
     oid = orgao["id"]
     got = get_json(f"{API}/api/orgaos/{oid}")
@@ -174,8 +189,8 @@ def main() -> int:
     if unknown and unknown[0].get("valorPorUnidadeCanonica") is not None:
         raise SystemExit("api invented a base price for unknown unit")
     ufs = {str(row.get("uf") or "") for row in rows}
-    if ufs != {"RJ", "SP", "RS", "SC", "MG", "PR", "BA", "PE", "GO", "ES"}:
-        raise SystemExit(f"api items UF set is not RJ+SP+RS+SC+MG+PR+BA+PE+GO+ES: {sorted(ufs)}")
+    if ufs != {"RJ", "SP", "RS", "SC", "MG", "PR", "BA", "PE", "GO", "ES", "PB", "CE"}:
+        raise SystemExit(f"api items UF set is not RJ+SP+RS+SC+MG+PR+BA+PE+GO+ES+PB+CE: {sorted(ufs)}")
     iid = rows[0]["id"]
     item = get_json(f"{API}/api/items/{iid}")
     deny_flags(item, f"{API}/api/items/{iid}")
@@ -227,9 +242,13 @@ def main() -> int:
         raise SystemExit("web / missing Anápolis")
     if "vila velha" not in folded:
         raise SystemExit("web / missing Vila Velha")
+    if "campina grande" not in folded:
+        raise SystemExit("web / missing Campina Grande")
+    if "caucaia" not in folded:
+        raise SystemExit("web / missing Caucaia")
     if "UF mista" not in home:
         raise SystemExit("web / missing honest mixed UF")
-    if "Onze municípios" not in home:
+    if "Treze municípios" not in home:
         raise SystemExit("web / missing short brand kicker")
     if "UF Brasil" in home or "total nacional" in folded:
         raise SystemExit("web / invented a national total")
@@ -259,6 +278,10 @@ def main() -> int:
         raise SystemExit("web /orgaos missing Anápolis")
     if "vila velha" not in orgaos_fold:
         raise SystemExit("web /orgaos missing Vila Velha")
+    if "campina grande" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing Campina Grande")
+    if "caucaia" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing Caucaia")
     if "UF mista" not in orgaos_html:
         raise SystemExit("web /orgaos missing honest mixed UF")
 
@@ -392,6 +415,32 @@ def main() -> int:
     if "UF ES" not in es_html:
         raise SystemExit("web UF=ES missing coverage UF")
 
+    campina_html = get_text(f"{WEB}/orgaos?municipioIbge=2504009")
+    assert_served_page(campina_html, "web /orgaos?municipioIbge=2504009")
+    campina_table = table_html(campina_html)
+    if "campina grande" not in campina_table.casefold():
+        raise SystemExit("web /orgaos?municipioIbge=2504009 missing Campina Grande")
+    if "municipio de caucaia" in campina_table.casefold() or "município de caucaia" in campina_table.casefold():
+        raise SystemExit("web municipio filter leaked Caucaia")
+    if "prefeitura municipal de volta redonda" in campina_table.casefold():
+        raise SystemExit("web municipio filter leaked Volta Redonda")
+    if not re.search(r"n=1", campina_html):
+        raise SystemExit("web Campina Grande filter missing n=1")
+    if "UF PB" not in campina_html:
+        raise SystemExit("web Campina Grande filter missing UF PB")
+
+    ce_html = get_text(f"{WEB}/orgaos?uf=CE")
+    assert_served_page(ce_html, "web /orgaos?uf=CE")
+    ce_table = table_html(ce_html)
+    if "caucaia" not in ce_table.casefold():
+        raise SystemExit("web /orgaos?uf=CE missing Caucaia")
+    if "municipio de campina grande" in ce_table.casefold() or "município de campina grande" in ce_table.casefold():
+        raise SystemExit("web UF=CE filter leaked Campina Grande")
+    if "prefeitura municipal de volta redonda" in ce_table.casefold():
+        raise SystemExit("web UF=CE filter leaked Volta Redonda")
+    if "UF CE" not in ce_html:
+        raise SystemExit("web UF=CE missing coverage UF")
+
     orgao_html = get_text(f"{WEB}/orgaos/{oid}")
     assert_served_page(orgao_html, "web /orgaos/{id}")
     if STAT_HOMOLOGADO.search(orgao_html):
@@ -489,6 +538,10 @@ def main() -> int:
         raise SystemExit("web /cobertura missing Anápolis IBGE")
     if "3205200" not in cobertura:
         raise SystemExit("web /cobertura missing Vila Velha IBGE")
+    if "2504009" not in cobertura:
+        raise SystemExit("web /cobertura missing Campina Grande IBGE")
+    if "2303709" not in cobertura:
+        raise SystemExit("web /cobertura missing Caucaia IBGE")
     if "não é um total nacional" not in cobertura:
         raise SystemExit("web /cobertura missing disclaimer")
     if "UF mista" not in cobertura:
@@ -546,7 +599,7 @@ def assert_served_page(html: str, where: str) -> None:
         raise SystemExit(f"{where} leaked banned copy")
     if not re.search(r"n=\d+", html):
         raise SystemExit(f"{where} missing coverage n")
-    if not any(token in html for token in ("UF RJ", "UF SP", "UF RS", "UF SC", "UF MG", "UF PR", "UF BA", "UF PE", "UF GO", "UF ES", "UF mista", "filtro sem registros")):
+    if not any(token in html for token in ("UF RJ", "UF SP", "UF RS", "UF SC", "UF MG", "UF PR", "UF BA", "UF PE", "UF GO", "UF ES", "UF PB", "UF CE", "UF mista", "filtro sem registros")):
         raise SystemExit(f"{where} missing UF / empty-filter chip")
     if not re.search(r"trimestre|trim\.", html, re.I):
         raise SystemExit(f"{where} missing trimestre")

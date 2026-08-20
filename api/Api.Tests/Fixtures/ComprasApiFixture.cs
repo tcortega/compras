@@ -224,6 +224,28 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			MunicipioIbge = "3205200",
 			MunicipioNome = "Vila Velha",
 		};
+		var campinaGrande = new Orgao
+		{
+			Id = SliceIds.OrgaoCampinaGrande,
+			Cnpj = "08993917000146",
+			RazaoSocial = "Municipio de Campina Grande",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "PB",
+			MunicipioIbge = "2504009",
+			MunicipioNome = "Campina Grande",
+		};
+		var caucaia = new Orgao
+		{
+			Id = SliceIds.OrgaoCaucaia,
+			Cnpj = "07616162000106",
+			RazaoSocial = "Municipio de Caucaia",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "CE",
+			MunicipioIbge = "2303709",
+			MunicipioNome = "Caucaia",
+		};
 		var fornecedor = new Fornecedor
 		{
 			Id = SliceIds.Fornecedor,
@@ -428,6 +450,34 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
 		};
+		var contratacaoCampinaGrande = new Contratacao
+		{
+			Id = SliceIds.ContratacaoCampinaGrande,
+			PncpId = "08993917000146-1-000180/2024",
+			OrgaoId = SliceIds.OrgaoCampinaGrande,
+			Modalidade = "dispensa",
+			Objeto = "Aquisicao de modulos de memoria adicionais",
+			Ano = 2024,
+			ValorHomologado = 839.96m,
+			PublicadoEm = Instant.FromUtc(2024, 12, 3, 14, 36),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoCaucaia = new Contratacao
+		{
+			Id = SliceIds.ContratacaoCaucaia,
+			PncpId = "07616162000106-1-000076/2024",
+			OrgaoId = SliceIds.OrgaoCaucaia,
+			Modalidade = "dispensa",
+			Objeto = "Aquisicao de receituario b azul",
+			Ano = 2024,
+			ValorHomologado = 8550m,
+			PublicadoEm = Instant.FromUtc(2024, 9, 30, 15, 44),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
 		var itemNiteroi = new Item
 		{
 			Id = SliceIds.ItemNiteroi,
@@ -598,11 +648,45 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
 		};
+		var itemCampinaGrande = new Item
+		{
+			Id = SliceIds.ItemCampinaGrande,
+			ContratacaoId = SliceIds.ContratacaoCampinaGrande,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Memoria Ram",
+			Catmat = "618288",
+			Quantidade = 4m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 209.99m,
+			ValorTotal = 839.96m,
+			Uf = "PB",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var itemCaucaia = new Item
+		{
+			Id = SliceIds.ItemCaucaia,
+			ContratacaoId = SliceIds.ContratacaoCaucaia,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Bloco receituario medico",
+			Catmat = "485443",
+			Quantidade = 1000m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 8.55m,
+			ValorTotal = 8550m,
+			Uf = "CE",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
 
-		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville, uberlandia, londrina, feira, caruaru, anapolis, vilaVelha);
+		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville, uberlandia, londrina, feira, caruaru, anapolis, vilaVelha, campinaGrande, caucaia);
 		db.Fornecedores.AddRange(fornecedor, fornecedorExtra);
-		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina, contratacaoFeira, contratacaoCaruaru, contratacaoAnapolis, contratacaoVilaVelha);
-		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina, itemFeira, itemCaruaru, itemAnapolis, itemVilaVelha);
+		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina, contratacaoFeira, contratacaoCaruaru, contratacaoAnapolis, contratacaoVilaVelha, contratacaoCampinaGrande, contratacaoCaucaia);
+		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina, itemFeira, itemCaruaru, itemAnapolis, itemVilaVelha, itemCampinaGrande, itemCaucaia);
 	}
 
 	private static JsonSerializerOptions CreateJson()

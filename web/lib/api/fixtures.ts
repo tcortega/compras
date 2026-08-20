@@ -20,6 +20,8 @@ export const ids = {
   orgaoCaruaru: '7c2e1f40-2604-4050-9a01-000000000012',
   orgaoAnapolis: '7c2e1f40-5201-4050-9a01-000000000013',
   orgaoVilaVelha: '7c2e1f40-3205-4050-9a01-000000000014',
+  orgaoCampina: '7c2e1f40-2504-4050-9a01-000000000015',
+  orgaoCaucaia: '7c2e1f40-2303-4050-9a01-000000000016',
   fornFarma: '8d3f2a51-3306-4050-9a02-000000000001',
   fornAlim: '8d3f2a51-3306-4050-9a02-000000000002',
   fornComb: '8d3f2a51-3306-4050-9a02-000000000003',
@@ -47,6 +49,8 @@ export const ids = {
   ctCaruaru: '9e4a3b62-2604-4050-9a03-000000000018',
   ctAnapolis: '9e4a3b62-5201-4050-9a03-000000000019',
   ctVilaVelha: '9e4a3b62-3205-4050-9a03-000000000020',
+  ctCampina: '9e4a3b62-2504-4050-9a03-000000000021',
+  ctCaucaia: '9e4a3b62-2303-4050-9a03-000000000022',
 } as const
 
 function orgao(
@@ -214,6 +218,26 @@ export const orgaos: Orgao[] = [
     'ES',
     '3205200',
     'Vila Velha',
+  ),
+  orgao(
+    ids.orgaoCampina,
+    '08993917000146',
+    'Município de Campina Grande',
+    'executivo',
+    T2,
+    'PB',
+    '2504009',
+    'Campina Grande',
+  ),
+  orgao(
+    ids.orgaoCaucaia,
+    '07616162000106',
+    'Município de Caucaia',
+    'executivo',
+    T1,
+    'CE',
+    '2303709',
+    'Caucaia',
   ),
 ]
 
@@ -540,6 +564,28 @@ export const contratacoes: Contratacao[] = [
     '2024-11-11T07:02:54.000Z',
     'compras.gov.br',
   ),
+  ct(
+    ids.ctCampina,
+    '08993917000146-1-000180/2024',
+    ids.orgaoCampina,
+    'dispensa',
+    ' AQUISIÇÃO DE MÓDULOS DE MEMÓRIA ADICIONAIS, VISANDO ATENDER AS DEMANDAS DA DIRETORIA DE TECNOLOGIA DA INFORMAÇÃO DO MUNICIPIO DE CAMPINA GRANDE, ESTADO DA PARAÍBA.',
+    2024,
+    839.96,
+    '2024-12-03T14:36:50.000Z',
+    'compras.gov.br',
+  ),
+  ct(
+    ids.ctCaucaia,
+    '07616162000106-1-000076/2024',
+    ids.orgaoCaucaia,
+    'dispensa',
+    'Aquisição de receituário “b” azul, de interesse da secretaria de saúde do município de caucaia/ce',
+    2024,
+    8_550.0,
+    '2024-09-30T15:44:26.000Z',
+    'compras.gov.br',
+  ),
 ]
 
 function item(
@@ -619,4 +665,6 @@ export const items: Item[] = [
   item(36, ids.ctCaruaru, ids.fornPapel, 'Placa sinalizadora', '383339', 375, 'Unidade', 'un', 79.0, 'PE', '2024-Q3', T1),
   item(37, ids.ctAnapolis, ids.fornPapel, 'Scanner', '611695', 8, 'Unidade', 'un', 1642.61, 'GO', '2024-Q4', T2),
   item(38, ids.ctVilaVelha, ids.fornPapel, 'Revelador Radiológico', '405620', 420, 'Frasco 475,00 ML', 'frasco', 7.48, 'ES', '2024-Q4', T2),
+  item(39, ids.ctCampina, ids.fornPapel, 'Memória Ram', '618288', 4, 'Unidade', 'un', 209.99, 'PB', '2024-Q4', T2),
+  item(40, ids.ctCaucaia, ids.fornPapel, 'Bloco receituário médico', '485443', 1000, 'Unidade', 'un', 8.55, 'CE', '2024-Q3', T1),
 ]

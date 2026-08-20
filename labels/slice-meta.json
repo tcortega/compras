@@ -1,0 +1,91 @@
+{
+  "municipio": "Volta Redonda",
+  "municipio_nome_arquivo": "VOLTA REDONDA",
+  "ibge": 3306305,
+  "uf": "RJ",
+  "year": 2024,
+  "populacao_aprox": 273988,
+  "populacao_fonte": "IBGE Censo 2022 (approx, used only to confirm mid-size 100k-500k)",
+  "esfera": "M",
+  "n_contratacoes": 964,
+  "n_contratacoes_unique_id_compra": 959,
+  "n_items": 5463,
+  "n_items_with_unit_price": 5462,
+  "n_peer_pool_items_rj_municipal": 43590,
+  "n_orgaos": 7,
+  "orgaos": [
+    {
+      "cnpj": 32512501000143,
+      "razao_social": "MUNICIPIO DE VOLTA REDONDA",
+      "n_compras": 271
+    },
+    {
+      "cnpj": 29063294000182,
+      "razao_social": "SERVICO AUTONOMO HOSPITALAR",
+      "n_compras": 237
+    },
+    {
+      "cnpj": 32504706000187,
+      "razao_social": "SERVICO AUTONOMO DE AGUA E ESGOTO SAAE",
+      "n_compras": 226
+    },
+    {
+      "cnpj": 39563911000162,
+      "razao_social": "FUNDO MUNICIPAL DE SAUDE PMVR SMS",
+      "n_compras": 204
+    },
+    {
+      "cnpj": 39758701000120,
+      "razao_social": "FUNDO COMUNITARIO DE VOLTA REDONDA",
+      "n_compras": 12
+    },
+    {
+      "cnpj": 30442495000170,
+      "razao_social": "FUNDACAO BEATRIZ GAMA",
+      "n_compras": 10
+    },
+    {
+      "cnpj": 32508186000261,
+      "razao_social": "FUNDACAO EDUCACIONAL DE VOLTA REDONDA",
+      "n_compras": 4
+    }
+  ],
+  "source_files": [
+    {
+      "url": "https://repositorio.dados.gov.br/seges/comprasgov/anual/2024/comprasGOV-anual-VW_FT_PNCP_COMPRA-2024.csv",
+      "bytes_local": 311863124,
+      "role": "contratacoes 2024 annual"
+    },
+    {
+      "url": "https://repositorio.dados.gov.br/seges/comprasgov/anual/2024/comprasGOV-anual-VW_FT_PNCP_COMPRA_ITEM-2024.csv",
+      "bytes_remote": 912059345,
+      "role": "items 2024 annual; streamed and filtered, not loaded nationally into memory"
+    },
+    {
+      "url": "https://repositorio.dados.gov.br/seges/comprasgov/catalogo_cnbs/catmat.csv",
+      "role": "CATMAT catalog for exact-code coverage join"
+    },
+    {
+      "url": "https://repositorio.dados.gov.br/seges/comprasgov/catalogo_cnbs/catser.csv",
+      "role": "CATSER catalog for exact-code coverage join"
+    }
+  ],
+  "how_filtered": [
+    "COMPRA 2024 scanned with Polars; orgao_entidade_esfera_id == M",
+    "Mid-size candidates counted by n_compras; Volta Redonda RJ (IBGE 3306305) chosen: 964 municipal compras, ~274k inhabitants, not a capital",
+    "ITEM 2024 streamed over HTTP; kept rows whose id_compra is in the 2024 RJ municipal COMPRA set (peer pool = same UF)",
+    "Coverage and outlier ranking use the Volta Redonda subset of that pool",
+    "No PNCP scraping"
+  ],
+  "outlier_method": {
+    "peer_group": "same valid CATMAT/CATSER code (else same normalized description) + same UF (RJ municipal 2024) + same quarter + qty band (1 / 2-10 / 11-100 / 101-1000 / 1001+)",
+    "stats": "median and MAD; score = |price-median|/MAD, or price/median if MAD==0",
+    "price_field": "valor_unitario_resultado if >0 else valor_unitario_estimado",
+    "data_error_screen": "qty * unit_price vs total with 1% or R$0.05 tolerance; labeled, split out if they flood top 100",
+    "data_errors_in_naive_top100": 0,
+    "data_error_flood": false,
+    "n_data_error_priced_vr": 0,
+    "ranked": "top 100 by score among Volta Redonda priced items"
+  },
+  "generated_at_utc": "2026-08-20T00:31:48Z"
+}

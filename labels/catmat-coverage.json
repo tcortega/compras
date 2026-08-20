@@ -1,0 +1,18 @@
+{
+  "n_items": 5463,
+  "n_with_catmat": 4464,
+  "n_with_catser": 396,
+  "n_both_catmat_and_catser": 394,
+  "n_code_present_but_unmatched": 0,
+  "n_no_code": 997,
+  "n_free_text_only": 997,
+  "percent_coded": 81.75,
+  "join_rule": "exact integer match of item.cod_item_catalogo to catmat.codigoItem or catser.codigoServico; no fuzzy description matching",
+  "catalog_urls": [
+    "https://repositorio.dados.gov.br/seges/comprasgov/catalogo_cnbs/catmat.csv",
+    "https://repositorio.dados.gov.br/seges/comprasgov/catalogo_cnbs/catser.csv"
+  ],
+  "catmat_catalog_n": 343352,
+  "catser_catalog_n": 3095,
+  "notes": "On this Volta Redonda 2024 slice, every non-null cod_item_catalogo joined exactly to catmat.codigoItem and/or catser.codigoServico. The 997 free-text-only rows have a null/empty code. National ITEM header rows sometimes show small integers such as 116.0 that are not 6-digit CATMAT codes; that pattern did not appear in this municipal slice. 394 codes exist in both catalogs (catalog overlap, 2788 shared codigo values nationally). percent_coded = (n_items - n_free_text_only) / n_items. No fuzzy description matching."
+}

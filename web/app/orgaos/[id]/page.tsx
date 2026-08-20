@@ -56,7 +56,10 @@ export default async function OrgaoPage({ params }: { params: Promise<{ id: stri
         <Stat label="Contratações" value={formatNumber(cts.total)} coverage={cts.coverage} />
         <Stat label="Itens" value={formatNumber(its.total)} coverage={its.coverage} />
       </div>
-      <SourceLine methodologyVersion={its.coverage.methodologyVersion} />
+      <SourceLine
+        snapshotId={its.items[0]?.snapshotId}
+        methodologyVersion={its.coverage.methodologyVersion}
+      />
 
       <section className="section">
         <div className="section-head">

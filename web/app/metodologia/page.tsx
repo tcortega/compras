@@ -1,6 +1,5 @@
 import { Shell } from '@/components/Shell'
 import { loadSliceCoverage } from '@/lib/api'
-import { METHOD_VERSION } from '@/lib/copy'
 import { routes } from '@/lib/routes'
 import type { Metadata } from 'next'
 
@@ -11,7 +10,7 @@ export default async function MetodologiaPage() {
   const coverage = await loadSliceCoverage()
   return (
     <Shell coverage={coverage}>
-      <p className="kicker">Versão {METHOD_VERSION}</p>
+      <p className="kicker">Versão {coverage.methodologyVersion}</p>
       <h1>Metodologia do explorador</h1>
       <div className="prose">
         <p>Fase 2: busca, listagem e ficha. Sem pontuação, sem classificação de órgãos ou fornecedores e sem alertas públicos.</p>

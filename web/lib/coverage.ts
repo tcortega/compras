@@ -1,11 +1,11 @@
-import { METHOD_VERSION, SLICE_UF } from '@/lib/copy'
+import { METHOD_VERSION } from '@/lib/copy'
 import type { Coverage, Item } from '@/lib/types'
 import { formatQuarter } from '@/lib/format'
 
 export function emptyCoverage(): Coverage {
   return {
     n: 0,
-    uf: SLICE_UF,
+    uf: null,
     quarter: null,
     methodologyVersion: METHOD_VERSION,
   }

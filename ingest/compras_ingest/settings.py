@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-METHODOLOGY_VERSION = "phase1-0.1.0"
+METHODOLOGY_VERSION = "0.2"
 TRAILING_WINDOW_DAYS = 90
 
 

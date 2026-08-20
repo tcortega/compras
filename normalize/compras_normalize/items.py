@@ -88,6 +88,8 @@ def _normalize_row(
         "ano": _first(row, "anocomprapncp", "ano") or (str(publicado.year) if publicado else ""),
         "valor_homologado": _dec_str(parse_decimal(_first(row, "valortotalhomologado"))),
         "publicado_em": publicado.isoformat() if publicado else "",
+        "data_resultado": _first(row, "dataresultado", "data_resultado") or "",
+        "award_date": publicado.date().isoformat() if publicado else "",
         "descricao": descricao or "",
         "catmat": hit.catmat or "",
         "catser": hit.catser or "",

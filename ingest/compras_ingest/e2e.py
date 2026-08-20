@@ -13,6 +13,9 @@ from compras_detect.tier1 import run_tier1
 from compras_ingest.cpf import assert_no_raw_cpf, mask_cpf
 from compras_ingest.landing import LandingStore
 from compras_ingest.official import (
+    CGU_CEIS_LISTING_URL,
+    CGU_CNEP_LISTING_URL,
+    CGU_HOSTS,
     OCDS_OCP_REGISTRY_URL,
     OFFICIAL_HOSTS,
     PNCP_API_BASE,
@@ -30,8 +33,10 @@ from compras_ingest.official import (
     TCE_SP_HOSTS,
     TCE_SP_LISTING_URL,
     PncpOfficial,
+    assert_cgu_zip_url,
     assert_official_host,
     ckan_zip_from_package,
+    fixture_cgu_ceis_cnep_official,
     fixture_ocds_official,
     fixture_pncp_official,
     fixture_receita_official,
@@ -57,12 +62,15 @@ from compras_ingest.sources.pncp_consulta import (
     RateLimiter,
     land_pncp_consulta,
 )
+from compras_ingest.sources.cgu_ceis_cnep import SOURCE as CGU_SOURCE
+from compras_ingest.sources.cgu_ceis_cnep import land_cgu_ceis_cnep, load_landed_sanctions
 from compras_ingest.sources.receita_cnpj import cnpj_basicos_from_frame, land_receita_cnpj
 from compras_ingest.sources.tce_rs_licitacon import SOURCE as TCE_RS_SOURCE
 from compras_ingest.sources.tce_rs_licitacon import TABLE_COL as TCE_RS_TABLE
 from compras_ingest.sources.tce_rs_licitacon import land_tce_rs_licitacon
 from compras_ingest.sources.tce_sp_licitacao import SOURCE as TCE_SP_SOURCE
 from compras_ingest.sources.tce_sp_licitacao import land_tce_sp_licitacao
+from compras_ingest.ids import item_id
 from compras_ingest.warehouse import (
     fact_columns,
     fetch_all_items,
@@ -93,6 +101,7 @@ LANDED_SOURCES = (
     "pncp_consulta",
     TCE_SP_SOURCE,
     TCE_RS_SOURCE,
+    CGU_SOURCE,
 )
 TCE_WINNER_CNPJ = "34.914.897/0001-80"
 TCE_LOSER_CNPJ = "11.021.249/0001-08"
@@ -101,6 +110,14 @@ TCE_LOSER_PROPOSTA = "32250,0"
 TCE_RS_WINNER_CNPJ = "03722885000120"
 TCE_RS_LOSER_CNPJ = "91549055000100"
 TCE_RS_LOSER_PROPOSTA = "5493164,86"
+SANCTION_CNPJ_A = "44555666000172"
+SANCTION_CNPJ_CNEP = "11222333000181"
+SANCTION_CNPJ_B = "01328535000159"
+SANCTION_CNPJ_C = "47140401000100"
+SANCTION_CNPJ_D = "00802002000102"
+SANCTION_CNPJ_E = "01042740000153"
+SANCTION_OVERLAP = frozenset({SANCTION_CNPJ_A, SANCTION_CNPJ_CNEP})
+SANCTION_CLEAN = frozenset({SANCTION_CNPJ_B, SANCTION_CNPJ_C, SANCTION_CNPJ_D, SANCTION_CNPJ_E})
 TCE_RS_TABLES = {
     "LICITANTE",
     "PROPOSTA",
@@ -200,6 +217,7 @@ def main() -> int:
         _assert_tier_a_landing(settings, result.ocds_report)
         _assert_tce_sp_landing(settings)
         _assert_tce_rs_landing(settings)
+        _assert_cgu_ceis_cnep_landing(settings)
         _assert_write_once(settings)
         _assert_data_error_suite(settings, result.items)
     _assert_tce_sp_not_public(settings)
@@ -226,10 +244,14 @@ def main() -> int:
     mutate = str(result.items["record_id"][0])
     land_second_snapshot(settings, mutate, store)
     landing_records = _collect_landing_records(store, "compras_gov")
-    flags = run_tier1(result.items, landing_records=landing_records, sanctions=None)
+    sanctions = load_landed_sanctions(store)
+    if sanctions is None or sanctions.is_empty():
+        raise SystemExit("landed sanctions missing when run_tier1 should load them")
+    flags = run_tier1(result.items, landing_records=landing_records, sanctions=sanctions)
     write_flags(settings, flags, result.items)
     stored = fetch_flags(settings, state="detected")
     kinds = {str(row["kind"]) for row in stored}
+    _assert_sanction_flags(result.items, result.flags, stored)
     if "qty_unit_price_neq_total" not in kinds:
         raise SystemExit("warehouse missing qty_unit_price_neq_total after write_flags")
     if "retroactive_edit" not in kinds:
@@ -261,6 +283,8 @@ def main() -> int:
     print(f"official_pncp={official['pncp_consulta']}")
     print(f"official_tce_sp={official['tce_sp_zip']}")
     print(f"official_tce_rs={official['tce_rs_zip']}")
+    print(f"official_cgu_ceis={official['cgu_ceis_zip']}")
+    print(f"official_cgu_cnep={official['cgu_cnep_zip']}")
     print(f"orgao={orgao['cnpj']} contratacao={contratacao['pncpId']} items={len(items)}")
     print(f"flags={sorted(kinds)}")
     print(f"exclusions={result.exclusion_rows}")
@@ -563,6 +587,29 @@ def _assert_official_urls(settings: Settings) -> dict:
     if "tcers.tc.br" not in tce_rs.example_url or "tcers.tc.br" not in tce_rs.leiaute_url:
         raise SystemExit("TCE-RS example or leiaute host is not official")
     _assert_tce_rs_host_refused()
+    try:
+        cgu = fixture_cgu_ceis_cnep_official()
+    except Exception as exc:
+        raise SystemExit(f"official URL resolve failed: {exc}") from exc
+    if settings.sanctions_fetch:
+        raise SystemExit("fixture e2e must run with SANCTIONS_FETCH=0")
+    if cgu.listing_ceis != CGU_CEIS_LISTING_URL:
+        raise SystemExit(f"CEIS listing URL is not official: {cgu.listing_ceis}")
+    if cgu.listing_cnep != CGU_CNEP_LISTING_URL:
+        raise SystemExit(f"CNEP listing URL is not official: {cgu.listing_cnep}")
+    if "portaldatransparencia.gov.br" not in cgu.ceis_download_url:
+        raise SystemExit(f"CEIS download host is not official: {cgu.ceis_download_url}")
+    if "portaldatransparencia.gov.br" not in cgu.cnep_download_url:
+        raise SystemExit(f"CNEP download host is not official: {cgu.cnep_download_url}")
+    if "dadosabertos-download.cgu.gov.br" not in cgu.ceis_zip_url:
+        raise SystemExit(f"CEIS zip host is not official: {cgu.ceis_zip_url}")
+    if "dadosabertos-download.cgu.gov.br" not in cgu.cnep_zip_url:
+        raise SystemExit(f"CNEP zip host is not official: {cgu.cnep_zip_url}")
+    if "/download-de-dados/ceis/" not in cgu.ceis_download_url:
+        raise SystemExit(f"CEIS download is not the Portal dated path: {cgu.ceis_download_url}")
+    if "/download-de-dados/cnep/" not in cgu.cnep_download_url:
+        raise SystemExit(f"CNEP download is not the Portal dated path: {cgu.cnep_download_url}")
+    _assert_cgu_host_refused()
     return {
         "ocds_jsonl": ocds.jsonl_url,
         "rfb_index": rfb.index_url,
@@ -571,6 +618,8 @@ def _assert_official_urls(settings: Settings) -> dict:
         "pncp_openapi": pncp.consulta_openapi,
         "tce_sp_zip": tce.zip_url,
         "tce_rs_zip": tce_rs.zip_url,
+        "cgu_ceis_zip": cgu.ceis_zip_url,
+        "cgu_cnep_zip": cgu.cnep_zip_url,
     }
 
 
@@ -662,6 +711,12 @@ def _assert_write_once(settings: Settings) -> None:
         raise SystemExit("tce_rs_licitacon reland produced a new content-hashed key")
     if len(store.list_parquet(TCE_RS_SOURCE)) != len(tce_rs_first):
         raise SystemExit("tce_rs_licitacon reland wrote a second parquet")
+    cgu_first = store.list_parquet(CGU_SOURCE)
+    ref, _ = land_cgu_ceis_cnep(settings, store)
+    if ref.key not in cgu_first:
+        raise SystemExit("cgu_ceis_cnep reland produced a new content-hashed key")
+    if len(store.list_parquet(CGU_SOURCE)) != len(cgu_first):
+        raise SystemExit("cgu_ceis_cnep reland wrote a second parquet")
 
 
 class _RecordSleep:
@@ -992,6 +1047,122 @@ def _assert_tce_rs_not_public(settings: Settings) -> None:
     ]
     if leaked:
         raise SystemExit(f"TCE-RS participant proposal leaked into warehouse: {leaked}")
+
+
+def _assert_cgu_host_refused() -> None:
+    try:
+        assert_official_host("https://evil.example/20240315_CEIS.zip", CGU_HOSTS)
+    except RuntimeError:
+        pass
+    else:
+        raise SystemExit("CGU allowlist accepted a non-official host")
+    try:
+        assert_cgu_zip_url("https://evil.example/PortalDaTransparencia/saida/ceis/20240315_CEIS.zip", "ceis")
+    except RuntimeError as exc:
+        if "refusing non-official host" not in str(exc) and "not official" not in str(exc):
+            raise SystemExit(f"CGU zip parser failed for the wrong reason: {exc}") from exc
+    else:
+        raise SystemExit("CGU zip parser accepted a non-official host")
+
+
+def _assert_cgu_ceis_cnep_landing(settings: Settings) -> None:
+    if settings.sanctions_dir is None:
+        raise SystemExit("SANCTIONS_DIR fixture is missing")
+    if settings.sanctions_fetch:
+        raise SystemExit("fixture mode resolved a live CGU fetch")
+    store = LandingStore(settings)
+    keys = [k for k in store.list_parquet(CGU_SOURCE) if k.endswith(".parquet")]
+    if not keys:
+        raise SystemExit("no cgu_ceis_cnep parquet in landing")
+    hashes = set()
+    cadastros = set()
+    for key in keys:
+        if "date=" not in key:
+            raise SystemExit(f"cgu_ceis_cnep not partitioned by date: {key}")
+        digest = Path(key).stem
+        if len(digest) != 64:
+            raise SystemExit(f"cgu_ceis_cnep key is not content-hashed sha256: {key}")
+        hashes.add(digest)
+        df = store.read_parquet(key)
+        if df.is_empty():
+            raise SystemExit("cgu_ceis_cnep landed empty from fixture")
+        blobs = [str(v) for col in df.columns for v in df[col].to_list()]
+        joined = " ".join(blobs)
+        assert_no_raw_cpf(blobs)
+        if RAW_CPF in joined:
+            raise SystemExit("cgu_ceis_cnep stored a raw 11-digit CPF")
+        if mask_cpf(RAW_CPF) not in joined:
+            raise SystemExit("cgu_ceis_cnep missing masked CPF")
+        cad_col = _require_col(df, "cadastro")
+        cadastros |= {fold(str(v)) for v in df[cad_col].to_list()}
+        for token in (SANCTION_CNPJ_A, SANCTION_CNPJ_CNEP, SANCTION_CNPJ_B, SANCTION_CNPJ_C, SANCTION_CNPJ_D):
+            if token not in joined:
+                raise SystemExit(f"cgu_ceis_cnep dropped planted CNPJ {token}")
+        if SANCTION_CNPJ_E in joined:
+            raise SystemExit("cgu_ceis_cnep planted a clean CNPJ as sanctioned")
+    if "ceis" not in cadastros or "cnep" not in cadastros:
+        raise SystemExit(f"cgu_ceis_cnep missing CEIS or CNEP cadastro: {sorted(cadastros)}")
+    if len(hashes) != 1:
+        raise SystemExit(f"cgu_ceis_cnep hash is not stable: {hashes}")
+    for key in keys:
+        meta_key = key[: -len(".parquet")] + ".source.json"
+        if not store.exists(meta_key):
+            raise SystemExit(f"cgu_ceis_cnep missing source.json for {key}")
+        meta = json.loads(store.get(meta_key).decode())
+        if meta.get("mode") != "fixture":
+            raise SystemExit(f"cgu_ceis_cnep fixture landing mode is not fixture: {meta}")
+        if meta.get("public") is not False or meta.get("explorer") is not False:
+            raise SystemExit("cgu_ceis_cnep landing is not internal")
+
+
+def _assert_sanction_flags(items, flags, stored) -> None:
+    planted = _flagged_cnpjs(items, flags)
+    if planted != set(SANCTION_OVERLAP):
+        raise SystemExit(f"sanction flags CNPJs {sorted(planted)} != planted overlap {sorted(SANCTION_OVERLAP)}")
+    leaked = planted & set(SANCTION_CLEAN)
+    if leaked:
+        raise SystemExit(f"sanction flags included non-overlap CNPJs {sorted(leaked)}")
+    deltas = [str(row.get("delta") or "") for row in flags.iter_rows(named=True) if str(row.get("kind") or "") == "sanctioned_ceis_cnep"]
+    if not any("CEIS" in delta for delta in deltas):
+        raise SystemExit("sanction flags missed the CEIS cadastro")
+    if not any("CNEP" in delta for delta in deltas):
+        raise SystemExit("sanction flags missed the CNEP cadastro")
+    kinds = {str(row["kind"]) for row in stored}
+    if "sanctioned_ceis_cnep" not in kinds:
+        raise SystemExit("warehouse missing sanctioned_ceis_cnep after write_flags")
+    id_to_cnpj = {}
+    for row in items.iter_rows(named=True):
+        iid = item_id(str(row.get("pncp_id") or ""), str(row.get("record_id") or ""))
+        digits = "".join(c for c in str(row.get("fornecedor_cnpj") or "") if c.isdigit())
+        id_to_cnpj[iid] = digits
+    ware = set()
+    for row in stored:
+        if str(row.get("kind") or "") != "sanctioned_ceis_cnep":
+            continue
+        if str(row.get("state") or "") != "detected":
+            raise SystemExit(f"sanctioned_ceis_cnep state is not detected: {row.get('state')}")
+        cnpj = id_to_cnpj.get(str(row.get("itemId") or ""))
+        if cnpj:
+            ware.add(cnpj)
+    if ware != set(SANCTION_OVERLAP):
+        raise SystemExit(f"warehouse sanction CNPJs {sorted(ware)} != planted overlap {sorted(SANCTION_OVERLAP)}")
+    if ware & set(SANCTION_CLEAN):
+        raise SystemExit(f"warehouse flagged non-overlap CNPJs {sorted(ware & set(SANCTION_CLEAN))}")
+
+
+def _flagged_cnpjs(items, flags) -> set[str]:
+    by_rec = {}
+    for row in items.iter_rows(named=True):
+        digits = "".join(c for c in str(row.get("fornecedor_cnpj") or "") if c.isdigit())
+        by_rec[str(row.get("record_id") or "")] = digits
+    out: set[str] = set()
+    for row in flags.iter_rows(named=True):
+        if str(row.get("kind") or "") != "sanctioned_ceis_cnep":
+            continue
+        cnpj = by_rec.get(str(row.get("record_id") or ""))
+        if cnpj:
+            out.add(cnpj)
+    return out
 
 
 def _require_col(df, needle: str) -> str:

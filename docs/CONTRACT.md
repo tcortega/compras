@@ -371,6 +371,12 @@ Internal publication routes exist and are tested.
 `GET /api/internal/flags/{id}/audit` reads `flag_audit` for that row.
 That list is not linked from the explorer.
 Staging triage UI lives at `/interno/triagem` and is not in the public shell nav.
+Staging coverage counts live at `/interno/cobertura` and are not in the public shell nav.
+That page reads `GET /api/internal/flags` and shows n per detector kind.
+The warehouse has no daily grain table, so the page shows last-run day from `detectedAt`.
+If distinct detection days exist, it shows n per kind per day.
+Coverage denominator stays on that aggregate.
+A mixed-UF slice leaves `coverage.uf` empty.
 No explorer route may return a flag field.
 No explorer route may return an exclusion reason.
 No explorer route may return adjacency or a shared-partner count.

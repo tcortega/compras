@@ -13,6 +13,7 @@ export const routes = {
   metodologia: '/metodologia',
   triagem: '/interno/triagem',
   triagemItem: (id: string) => `/interno/triagem/${id}` as const,
+  coberturaInterno: '/interno/cobertura',
 } as const
 
 export const navPrimary = [

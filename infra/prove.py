@@ -590,6 +590,8 @@ def main() -> int:
     assert_served_page(home, "web /")
     if 'href="/interno/triagem"' in home:
         raise SystemExit("public shell linked staging triage")
+    if 'href="/interno/cobertura"' in home:
+        raise SystemExit("public shell linked staging coverage")
     folded = home.casefold()
     if "volta redonda" not in folded:
         raise SystemExit("web / missing Volta Redonda")
@@ -1849,6 +1851,29 @@ def main() -> int:
         raise SystemExit("web /interno/triagem missing coverage n")
     if "Triagem de indícios" not in triage:
         raise SystemExit("web /interno/triagem missing title")
+    interno_cob = get_text(f"{WEB}/interno/cobertura")
+    deny_stub(interno_cob, "web /interno/cobertura")
+    if BANNED_COPY.search(interno_cob):
+        raise SystemExit("web /interno/cobertura leaked banned copy")
+    if "Cobertura interna" not in interno_cob:
+        raise SystemExit("web /interno/cobertura missing title")
+    if "Contagens por detector" not in interno_cob:
+        raise SystemExit("web /interno/cobertura missing detector counts")
+    if "n=" not in interno_cob:
+        raise SystemExit("web /interno/cobertura missing coverage n")
+    for kind in (
+        "sanctioned_ceis_cnep",
+        "cnpj_age",
+        "cnpj_age_info",
+        "fracionamento",
+        "fracionamento_cluster",
+        "retroactive_edit",
+        "cnae_mismatch",
+    ):
+        if kind not in interno_cob:
+            raise SystemExit(f"web /interno/cobertura missing {kind}")
+    if STAT_HOMOLOGADO.search(interno_cob):
+        raise SystemExit("web /interno/cobertura showed Homologado")
     deny_flags(orgaos, f"{API}/api/orgaos")
     deny_flags(items, f"{API}/api/items")
     deny_flags(item, f"{API}/api/items/{iid}")
@@ -1862,8 +1887,17 @@ def assert_served_page(html: str, where: str) -> None:
     deny_stub(html, where)
     if BANNED_COPY.search(html):
         raise SystemExit(f"{where} leaked banned copy")
-    if "metodologia" not in where and "cnae_mismatch" in html:
-        raise SystemExit(f"{where} leaked cnae_mismatch")
+    if "metodologia" not in where and "interno" not in where:
+        for kind in (
+            "cnae_mismatch",
+            "sanctioned_ceis_cnep",
+            "cnpj_age",
+            "fracionamento",
+            "retroactive_edit",
+            "qty_unit_price_neq_total",
+        ):
+            if kind in html:
+                raise SystemExit(f"{where} leaked {kind}")
     if not re.search(r"n=\d+", html):
         raise SystemExit(f"{where} missing coverage n")
     if not any(token in html for token in ("UF RJ", "UF SP", "UF RS", "UF SC", "UF MG", "UF PR", "UF BA", "UF PE", "UF GO", "UF ES", "UF PB", "UF CE", "UF MA", "UF AL", "UF MS", "UF PA", "UF MT", "UF RO", "UF RN", "UF AC", "UF AP", "UF RR", "UF mista", "filtro sem registros")):

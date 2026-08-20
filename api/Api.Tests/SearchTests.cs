@@ -147,9 +147,9 @@ public sealed class MeiliApiFixture : ComprasApiFixture
 		await Wait(http, settings);
 		var docs = await Put(http, "indexes/compras/documents?primaryKey=id", new object[]
 		{
-			new { id = $"item:{SliceIds.Item1}", kind = "item", entityId = SliceIds.Item1.ToString(), text = "Resma papel A4" },
-			new { id = $"orgao:{SliceIds.Orgao}", kind = "orgao", entityId = SliceIds.Orgao.ToString(), text = "Municipio de Volta Redonda" },
-			new { id = $"fornecedor:{SliceIds.Fornecedor}", kind = "fornecedor", entityId = SliceIds.Fornecedor.ToString(), text = "Papelaria Central Ltda" },
+			new { id = $"item_{SliceIds.Item1}", kind = "item", entityId = SliceIds.Item1.ToString(), text = "Resma papel A4" },
+			new { id = $"orgao_{SliceIds.Orgao}", kind = "orgao", entityId = SliceIds.Orgao.ToString(), text = "Municipio de Volta Redonda" },
+			new { id = $"fornecedor_{SliceIds.Fornecedor}", kind = "fornecedor", entityId = SliceIds.Fornecedor.ToString(), text = "Papelaria Central Ltda" },
 		});
 		await Wait(http, docs);
 		return true;
@@ -183,7 +183,10 @@ public sealed class MeiliApiFixture : ComprasApiFixture
 				if (string.Equals(status, "succeeded", StringComparison.Ordinal))
 					return;
 				if (status is "failed" or "canceled")
-					throw new InvalidOperationException($"meili task {id} {status}");
+				{
+					var error = task.TryGetProperty("error", out var err) ? err.ToString() : "";
+					throw new InvalidOperationException($"meili task {id} {status}: {error}");
+				}
 				await Task.Delay(200);
 			}
 

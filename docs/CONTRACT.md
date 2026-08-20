@@ -279,6 +279,7 @@ No ranking.
 - `GET /api/items/{id}`
 - `GET /api/busca` reads the Meilisearch index of `item.descricao`, `fornecedor.razaoSocial`, and `orgao.razaoSocial`.
 Documents are factual text only.
+The document primary key is `{kind}_{entityId}` so re-sync is idempotent and Meilisearch accepts the identifier.
 No flag fields, no detector scores, no adjacency, and no CPF.
 Empty `q` keeps the slice coverage denominator and invents no hits.
 A mixed-UF search leaves `coverage.uf` empty.

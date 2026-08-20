@@ -57,7 +57,7 @@ async function withSearch(page: SearchPage): Promise<SearchPage> {
   return {
     ...page,
     coverage: {
-      n: page.coverage.n,
+      n: slice.n,
       uf: page.source === 'meilisearch' || !page.coverage.uf ? null : page.coverage.uf,
       quarter: page.coverage.quarter ?? slice.quarter,
       methodologyVersion: page.coverage.methodologyVersion || slice.methodologyVersion,

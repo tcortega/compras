@@ -56,7 +56,7 @@ public static partial class Search
 			Orgaos = orgaos,
 			Fornecedores = fornecedores,
 			Items = items,
-			Coverage = Slice.Page(items.Coverage.N, uf: null, quarter: null, methodology),
+			Coverage = slice,
 			Source = SearchPage.SourceMeilisearch,
 		};
 	}

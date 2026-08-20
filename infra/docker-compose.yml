@@ -133,7 +133,7 @@ services:
     volumes:
       - meili_data:/meili_data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7700/health"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:7700/health || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 20

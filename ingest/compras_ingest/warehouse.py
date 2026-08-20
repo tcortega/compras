@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from datetime import datetime, timezone
 from decimal import Decimal
 from pathlib import Path
@@ -744,14 +745,23 @@ def _f(value):
     return float(value) if value is not None else None
 
 
+_DOLLAR_TAG = re.compile(r"\$[A-Za-z0-9_]*\$")
+
+
 def _split_sql(sql: str) -> list[str]:
     parts = []
     buf = []
+    dollar = None
     for line in sql.splitlines():
-        if line.strip().startswith("--"):
+        if dollar is None and line.strip().startswith("--"):
             continue
         buf.append(line)
-        if line.strip().endswith(";"):
+        for tag in _DOLLAR_TAG.findall(line):
+            if dollar is None:
+                dollar = tag
+            elif tag == dollar:
+                dollar = None
+        if dollar is None and line.strip().endswith(";"):
             stmt = "\n".join(buf).strip().rstrip(";")
             if stmt:
                 parts.append(stmt)

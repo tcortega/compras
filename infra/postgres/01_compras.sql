@@ -151,3 +151,52 @@ ALTER TABLE item ADD COLUMN IF NOT EXISTS "valorPorUnidadeCanonica" numeric(18, 
 ALTER TABLE item ADD COLUMN IF NOT EXISTS "specConcentracao" text;
 ALTER TABLE item ADD COLUMN IF NOT EXISTS "specDosagem" text;
 ALTER TABLE item ADD COLUMN IF NOT EXISTS "specTamanho" text;
+
+CREATE TABLE IF NOT EXISTS flag_audit (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "flagId" uuid NOT NULL REFERENCES flag (id),
+  "fromState" text CHECK ("fromState" IS NULL OR "fromState" IN (
+    'detected', 'internal_review', 'notified', 'published', 'resolved', 'retracted'
+  )),
+  "toState" text NOT NULL CHECK ("toState" IN (
+    'detected', 'internal_review', 'notified', 'published', 'resolved', 'retracted'
+  )),
+  at timestamptz NOT NULL,
+  actor text NOT NULL DEFAULT 'internal/staging',
+  reason text,
+  delta text
+);
+
+CREATE INDEX IF NOT EXISTS flag_audit_flag_idx ON flag_audit ("flagId");
+CREATE INDEX IF NOT EXISTS flag_audit_at_idx ON flag_audit (at);
+
+CREATE OR REPLACE FUNCTION flag_enforce_state() RETURNS trigger AS $flag_state$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    IF NEW.state IS DISTINCT FROM 'detected' THEN
+      RAISE EXCEPTION 'illegal flag state transition: -> %', NEW.state;
+    END IF;
+    INSERT INTO flag_audit ("flagId", "fromState", "toState", at, actor, delta)
+    VALUES (NEW.id, NULL, NEW.state, NEW."createdAt", 'internal/staging', NEW.delta);
+    RETURN NEW;
+  END IF;
+  IF NEW.state IS NOT DISTINCT FROM OLD.state THEN
+    RETURN NEW;
+  END IF;
+  IF (OLD.state = 'detected' AND NEW.state = 'internal_review')
+     OR (OLD.state = 'internal_review' AND NEW.state = 'notified')
+     OR (OLD.state = 'notified' AND NEW.state = 'published')
+     OR (OLD.state = 'published' AND NEW.state IN ('resolved', 'retracted')) THEN
+    INSERT INTO flag_audit ("flagId", "fromState", "toState", at, actor)
+    VALUES (NEW.id, OLD.state, NEW.state, NEW."updatedAt", 'internal/staging');
+    RETURN NEW;
+  END IF;
+  RAISE EXCEPTION 'illegal flag state transition: % -> %', OLD.state, NEW.state;
+END;
+$flag_state$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS flag_enforce_state ON flag;
+CREATE TRIGGER flag_enforce_state
+AFTER INSERT OR UPDATE OF state ON flag
+FOR EACH ROW
+EXECUTE FUNCTION flag_enforce_state();

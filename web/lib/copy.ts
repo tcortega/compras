@@ -17,6 +17,8 @@ export const SLICE_MUNICIPIOS = [
   { nome: 'Londrina', uf: 'PR', ibge: '4113700' },
 ] as const
 
+export const SLICE_BRAND = 'Sete municípios · 2024'
+
 export const SLICE_LABEL =
   'Volta Redonda e Niterói (RJ), Bauru (SP), Caxias do Sul (RS), Joinville (SC), Uberlândia (MG) e Londrina (PR) · 2024'
 

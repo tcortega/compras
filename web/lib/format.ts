@@ -92,3 +92,25 @@ export function formatPoder(poder: string): string {
   }
   return map[poder] ?? poder
 }
+
+export function hasCanonicalUnit(unit: string | null | undefined): unit is string {
+  return Boolean(unit) && unit !== 'unknown'
+}
+
+export function formatCanonicalUnit(unit: string | null | undefined): string {
+  return hasCanonicalUnit(unit) ? unit : 'não mapeada'
+}
+
+export function formatUnitPair(
+  unidadeMedida: string,
+  unidadeCanonica: string | null | undefined,
+): string {
+  return hasCanonicalUnit(unidadeCanonica) ? `${unidadeMedida} · ${unidadeCanonica}` : unidadeMedida
+}
+
+export function hasWarehouseBasePrice(row: {
+  unidadeCanonica?: string | null
+  valorPorUnidadeCanonica?: number | null
+}): boolean {
+  return hasCanonicalUnit(row.unidadeCanonica) && row.valorPorUnidadeCanonica != null
+}

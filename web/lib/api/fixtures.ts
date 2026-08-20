@@ -476,6 +476,8 @@ function item(
     unidadeCanonica,
     valorUnitario,
     valorTotal: Number((quantidade * valorUnitario).toFixed(2)),
+    valorPorUnidadeCanonica:
+      unidadeCanonica && unidadeCanonica !== 'unknown' ? valorUnitario : null,
     uf,
     quarter,
     snapshotId: SNAPSHOT_ID,
@@ -501,7 +503,7 @@ export const items: Item[] = [
   item(12, ids.ctPapel, ids.fornPapel, 'Toner compatível impressora laser', '476120', 120, 'unidade', 'un', 189.0, 'RJ', '2024-Q2', T1),
   item(13, ids.ctPapel, ids.fornPapel, 'Caneta esferográfica azul', '476130', 4_000, 'unidade', 'un', 0.85, 'RJ', '2024-Q2', T1),
   item(14, ids.ctObra, ids.fornObra, 'CBUQ capa de rolamento', '412040', 2_800, 't', 't', 780.0, 'RJ', '2024-Q2', T1),
-  item(15, ids.ctObra, ids.fornObra, 'Sinalização provisória de obra', '412041', 1, 'serviço', null, 86_400.0, 'RJ', '2024-Q2', T1),
+  item(15, ids.ctObra, ids.fornObra, 'Sinalização provisória de obra', '412041', 1, 'serviço', 'unknown', 86_400.0, 'RJ', '2024-Q2', T1),
   item(16, ids.ctLab, ids.fornLab, 'Hemograma completo', '864020', 18_000, 'exame', 'un', 8.4, 'RJ', '2024-Q3', T2),
   item(17, ids.ctLab, ids.fornLab, 'Glicemia em jejum', '864021', 12_000, 'exame', 'un', 4.1, 'RJ', '2024-Q3', T2),
   item(18, ids.ctLab, ids.fornLab, 'TSH', '864022', 4_800, 'exame', 'un', 12.5, 'RJ', '2024-Q3', T2),

@@ -4,13 +4,14 @@ import polars as pl
 
 from compras_detect.tier1.cnae_mismatch import detect_cnae_mismatch
 from compras_detect.tier1.cnpj_age import detect_cnpj_age
+from compras_detect.tier1.fracionamento import KIND_CLUSTER as KIND_FRAC_CLUSTER
+from compras_detect.tier1.fracionamento import KIND_OVER as KIND_FRAC
 from compras_detect.tier1.fracionamento import detect_fracionamento
 from compras_detect.tier1.mismatch import detect_qty_price_mismatch
 from compras_detect.tier1.retroactive_edit import detect_retroactive_edits
 from compras_detect.tier1.sanctioned import detect_sanctioned
 
 KIND_QTY = "qty_unit_price_neq_total"
-KIND_FRAC = "fracionamento"
 KIND_AGE = "cnpj_age"
 KIND_AGE_INFO = "cnpj_age_info"
 KIND_CNAE = "cnae_mismatch"

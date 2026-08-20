@@ -55,6 +55,8 @@ PUBLISHED = {
     "3136702": ("municipio de juiz de fora", "MG"),
     "4108304": ("municipio de foz do iguacu", "PR"),
     "4316907": ("municipio de santa maria", "RS"),
+    "3143302": ("municipio de montes claros", "MG"),
+    "3127701": ("municipio de governador valadares", "MG"),
 }
 
 
@@ -63,7 +65,7 @@ def main() -> int:
     deny_flags(orgaos, f"{API}/api/orgaos")
     deny_stub(json.dumps(orgaos, ensure_ascii=False), "api /api/orgaos")
     items_page = orgaos.get("items") or []
-    if len(items_page) < 29:
+    if len(items_page) < 31:
         raise SystemExit(f"api /api/orgaos returned {len(items_page)} rows, need the published slice")
     by_ibge = {str(row.get("municipioIbge") or ""): row for row in items_page}
     for ibge, (nome, uf) in PUBLISHED.items():
@@ -80,7 +82,7 @@ def main() -> int:
     orgao_cov = orgaos.get("coverage") or {}
     if orgao_cov.get("uf") not in (None, ""):
         raise SystemExit(f"mixed orgao list invented a UF: {orgao_cov}")
-    if not isinstance(orgao_cov.get("n"), int) or orgao_cov["n"] < 29:
+    if not isinstance(orgao_cov.get("n"), int) or orgao_cov["n"] < 31:
         raise SystemExit(f"api orgaos coverage.n missing the extra slice: {orgao_cov}")
     if not orgao_cov.get("methodologyVersion"):
         raise SystemExit(f"api orgaos coverage missing methodologyVersion: {orgao_cov}")
@@ -258,6 +260,16 @@ def main() -> int:
     santa_rows = santa.get("items") or []
     if len(santa_rows) != 1 or str(santa_rows[0].get("municipioIbge") or "") != "4316907":
         raise SystemExit(f"api municipio filter 4316907 failed: {santa_rows}")
+    montes = get_json(f"{API}/api/orgaos?municipioIbge=3143302&skip=0&take=50")
+    deny_flags(montes, f"{API}/api/orgaos?municipioIbge=3143302")
+    montes_rows = montes.get("items") or []
+    if len(montes_rows) != 1 or str(montes_rows[0].get("municipioIbge") or "") != "3143302":
+        raise SystemExit(f"api municipio filter 3143302 failed: {montes_rows}")
+    valadares = get_json(f"{API}/api/orgaos?municipioIbge=3127701&skip=0&take=50")
+    deny_flags(valadares, f"{API}/api/orgaos?municipioIbge=3127701")
+    valadares_rows = valadares.get("items") or []
+    if len(valadares_rows) != 1 or str(valadares_rows[0].get("municipioIbge") or "") != "3127701":
+        raise SystemExit(f"api municipio filter 3127701 failed: {valadares_rows}")
 
     orgao = by_ibge["3306305"]
     oid = orgao["id"]
@@ -390,9 +402,13 @@ def main() -> int:
         raise SystemExit("web / missing Foz do Iguaçu")
     if "santa maria" not in folded:
         raise SystemExit("web / missing Santa Maria")
+    if "montes claros" not in folded:
+        raise SystemExit("web / missing Montes Claros")
+    if "governador valadares" not in folded:
+        raise SystemExit("web / missing Governador Valadares")
     if "UF mista" not in home:
         raise SystemExit("web / missing honest mixed UF")
-    if "Vinte e nove municípios" not in home:
+    if "Trinta e um municípios" not in home:
         raise SystemExit("web / missing short brand kicker")
     if "UF Brasil" in home or "total nacional" in folded:
         raise SystemExit("web / invented a national total")
@@ -458,6 +474,10 @@ def main() -> int:
         raise SystemExit("web /orgaos missing Foz do Iguaçu")
     if "santa maria" not in orgaos_fold:
         raise SystemExit("web /orgaos missing Santa Maria")
+    if "montes claros" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing Montes Claros")
+    if "governador valadares" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing Governador Valadares")
     if "UF mista" not in orgaos_html:
         raise SystemExit("web /orgaos missing honest mixed UF")
 
@@ -831,6 +851,34 @@ def main() -> int:
     if "UF RS" not in santa_html:
         raise SystemExit("web Santa Maria filter missing UF RS")
 
+    montes_html = get_text(f"{WEB}/orgaos?municipioIbge=3143302")
+    assert_served_page(montes_html, "web /orgaos?municipioIbge=3143302")
+    montes_table = table_html(montes_html)
+    if "municipio de montes claros" not in montes_table.casefold() and "município de montes claros" not in montes_table.casefold():
+        raise SystemExit("web /orgaos?municipioIbge=3143302 missing Montes Claros")
+    if "municipio de governador valadares" in montes_table.casefold() or "município de governador valadares" in montes_table.casefold():
+        raise SystemExit("web municipio filter leaked Governador Valadares")
+    if "prefeitura municipal de volta redonda" in montes_table.casefold():
+        raise SystemExit("web municipio filter leaked Volta Redonda")
+    if not re.search(r"n=1", montes_html):
+        raise SystemExit("web Montes Claros filter missing n=1")
+    if "UF MG" not in montes_html:
+        raise SystemExit("web Montes Claros filter missing UF MG")
+
+    valadares_html = get_text(f"{WEB}/orgaos?municipioIbge=3127701")
+    assert_served_page(valadares_html, "web /orgaos?municipioIbge=3127701")
+    valadares_table = table_html(valadares_html)
+    if "municipio de governador valadares" not in valadares_table.casefold() and "município de governador valadares" not in valadares_table.casefold():
+        raise SystemExit("web /orgaos?municipioIbge=3127701 missing Governador Valadares")
+    if "municipio de montes claros" in valadares_table.casefold() or "município de montes claros" in valadares_table.casefold():
+        raise SystemExit("web municipio filter leaked Montes Claros")
+    if "prefeitura municipal de volta redonda" in valadares_table.casefold():
+        raise SystemExit("web municipio filter leaked Volta Redonda")
+    if not re.search(r"n=1", valadares_html):
+        raise SystemExit("web Governador Valadares filter missing n=1")
+    if "UF MG" not in valadares_html:
+        raise SystemExit("web Governador Valadares filter missing UF MG")
+
     orgao_html = get_text(f"{WEB}/orgaos/{oid}")
     assert_served_page(orgao_html, "web /orgaos/{id}")
     if STAT_HOMOLOGADO.search(orgao_html):
@@ -964,6 +1012,10 @@ def main() -> int:
         raise SystemExit("web /cobertura missing Foz do Iguaçu IBGE")
     if "4316907" not in cobertura:
         raise SystemExit("web /cobertura missing Santa Maria IBGE")
+    if "3143302" not in cobertura:
+        raise SystemExit("web /cobertura missing Montes Claros IBGE")
+    if "3127701" not in cobertura:
+        raise SystemExit("web /cobertura missing Governador Valadares IBGE")
     if "não é um total nacional" not in cobertura:
         raise SystemExit("web /cobertura missing disclaimer")
     if "UF mista" not in cobertura:

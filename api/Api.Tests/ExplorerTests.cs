@@ -1208,6 +1208,48 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Coverage = s_taubateOrgaoCoverage,
 	};
 
+	private static readonly Coverage s_cascavelOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "PR",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_cascavel = new()
+	{
+		Id = SliceIds.OrgaoCascavel,
+		Cnpj = "76208867000107",
+		RazaoSocial = "Municipio de Cascavel",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "PR",
+		MunicipioIbge = "4104808",
+		MunicipioNome = "Cascavel",
+		Coverage = s_cascavelOrgaoCoverage,
+	};
+
+	private static readonly Coverage s_juizDeForaOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "MG",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_juizDeFora = new()
+	{
+		Id = SliceIds.OrgaoJuizDeFora,
+		Cnpj = "18338178000102",
+		RazaoSocial = "Municipio de Juiz de Fora",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "MG",
+		MunicipioIbge = "3136702",
+		MunicipioNome = "Juiz de Fora",
+		Coverage = s_juizDeForaOrgaoCoverage,
+	};
+
 	private static readonly ItemRecord s_itemDourados = new()
 	{
 		Id = SliceIds.ItemDourados,
@@ -1468,6 +1510,58 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		},
 	};
 
+	private static readonly ItemRecord s_itemCascavel = new()
+	{
+		Id = SliceIds.ItemCascavel,
+		ContratacaoId = SliceIds.ContratacaoCascavel,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Motocicleta",
+		Catmat = "318890",
+		Catser = null,
+		Quantidade = 3m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 65370m,
+		ValorTotal = 196110m,
+		Uf = "PR",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "PR",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
+	private static readonly ItemRecord s_itemJuizDeFora = new()
+	{
+		Id = SliceIds.ItemJuizDeFora,
+		ContratacaoId = SliceIds.ContratacaoJuizDeFora,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Pembrolizumabe",
+		Catmat = "440269",
+		Catser = null,
+		Quantidade = 10m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 16021.4m,
+		ValorTotal = 160214m,
+		Uf = "MG",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "MG",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
 	[Fact]
 	public async Task FullCycle_BrowseMunicipioAndUf()
 	{
@@ -1542,13 +1636,13 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(
 			new Coverage
 			{
-				N = 2,
+				N = 3,
 				Uf = "PR",
 				Quarter = SliceIds.Quarter,
 				MethodologyVersion = SliceIds.Methodology,
 			},
 			londrinaPage.Coverage);
-		Assert.Equal(new[] { s_londrina, s_maringa }, londrinaPage.Items);
+		Assert.Equal(new[] { s_cascavel, s_londrina, s_maringa }, londrinaPage.Items);
 		await ValidateOrgao(client, s_londrina);
 
 		var feiraPage = await client.ListOrgaos(municipioIbge: "2910800", quarter: SliceIds.Quarter);
@@ -1785,6 +1879,32 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(new[] { s_taubate }, taubatePage.Items);
 		await ValidateOrgao(client, s_taubate);
 
+		var cascavelPage = await client.ListOrgaos(municipioIbge: "4104808", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			cascavelPage.Coverage);
+		Assert.Equal(new[] { s_cascavel }, cascavelPage.Items);
+		await ValidateOrgao(client, s_cascavel);
+
+		var juizDeForaPage = await client.ListOrgaos(municipioIbge: "3136702", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			juizDeForaPage.Coverage);
+		Assert.Equal(new[] { s_juizDeFora }, juizDeForaPage.Items);
+		await ValidateOrgao(client, s_juizDeFora);
+
 		var mixed = await client.ListOrgaos(quarter: SliceIds.Quarter);
 		Assert.Equal("", mixed.Coverage.Uf);
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3306305", StringComparison.Ordinal));
@@ -1812,6 +1932,8 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "1400472", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "4115200", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3554102", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "4104808", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3136702", StringComparison.Ordinal));
 
 		var spItems = await client.ListItems(uf: "SP", quarter: SliceIds.Quarter);
 		Assert.Equal(
@@ -1871,13 +1993,13 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(
 			new Coverage
 			{
-				N = 2,
+				N = 3,
 				Uf = "PR",
 				Quarter = SliceIds.Quarter,
 				MethodologyVersion = SliceIds.Methodology,
 			},
 			prItems.Coverage);
-		Assert.Equal(new[] { s_itemLondrina, s_itemMaringa }, prItems.Items);
+		Assert.Equal(new[] { s_itemLondrina, s_itemMaringa, s_itemCascavel }, prItems.Items);
 		await ValidateItem(client, new()
 		{
 			Item = s_itemLondrina,
@@ -2125,6 +2247,22 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 			OrgaoRazaoSocial = "Municipio de Taubate",
 			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
 			ContratacaoPncpId = "45176005000108-1-000706/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemCascavel,
+			OrgaoId = SliceIds.OrgaoCascavel,
+			OrgaoRazaoSocial = "Municipio de Cascavel",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "76208867000107-1-000325/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemJuizDeFora,
+			OrgaoId = SliceIds.OrgaoJuizDeFora,
+			OrgaoRazaoSocial = "Municipio de Juiz de Fora",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "18338178000102-1-000200/2024",
 		});
 
 		var empty = new Coverage

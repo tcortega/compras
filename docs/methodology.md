@@ -37,8 +37,21 @@ O warehouse é o contrato.
 O Python nunca chama o C#.
 O C# nunca executa um detector.
 
+O classificador CATMAT/CATSER é interno ao normalize.
+Ele só preenche item sem código oficial, por hash da descrição, embedding local e kNN com margem alta.
+Caso de margem baixa permanece sem código.
+Código `knn` atribuído não é alerta público.
+A cobertura medida da Fase 0 em Volta Redonda 2024 permanece 81.75%.
+Esse número não é reescrito como se o classificador já tivesse rodado nesse recorte.
+
 `unidadeMedida` é texto livre.
 Cada item recebe `unidadeCanonica` a partir da tabela em `normalize/compras_normalize/data/unidade_medida.csv`.
+Caixa ou pacote com contagem explícita usa esse fator e a unidade interna.
+Caixa ou pacote sem contagem permanece no catálogo (`CX` vira `cx`, fator 1).
 Unidade sem correspondência permanece `unknown`.
 `valorPorUnidadeCanonica` é o preço por unidade canônica (`valorUnitario / to_base_factor`).
 Unidade desconhecida não inventa preço comparável.
+
+`specConcentracao`, `specDosagem` e `specTamanho` guardam o token extraído da descrição.
+Ausência de token permanece nula.
+Esses campos não aparecem no explorador público.

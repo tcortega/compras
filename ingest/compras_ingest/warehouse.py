@@ -97,6 +97,9 @@ def write_entities(settings: Settings, items: pl.DataFrame) -> dict[str, int]:
                 "valorPorUnidadeCanonica": parse_decimal(
                     row.get("valor_por_unidade_canonica") or row.get("valor_unitario_base")
                 ),
+                "specConcentracao": row.get("spec_concentracao") or None,
+                "specDosagem": row.get("spec_dosagem") or None,
+                "specTamanho": row.get("spec_tamanho") or None,
                 "uf": row.get("uf_item") or row.get("uf") or "",
                 "quarter": row.get("quarter") or "",
                 "snapshotId": row.get("snapshot_id") or "",
@@ -138,6 +141,9 @@ def write_facts(settings: Settings, items: pl.DataFrame) -> int:
         "valor_total",
         "valor_unitario_base",
         "valor_por_unidade_canonica",
+        "spec_concentracao",
+        "spec_dosagem",
+        "spec_tamanho",
         "uf",
         "quarter",
         "snapshot_id",
@@ -169,6 +175,9 @@ def write_facts(settings: Settings, items: pl.DataFrame) -> int:
                 _f(parse_decimal(row.get("valor_total"))),
                 _f(parse_decimal(row.get("valor_por_unidade_canonica") or row.get("valor_unitario_base"))),
                 _f(parse_decimal(row.get("valor_por_unidade_canonica") or row.get("valor_unitario_base"))),
+                row.get("spec_concentracao") or None,
+                row.get("spec_dosagem") or None,
+                row.get("spec_tamanho") or None,
                 row.get("uf_item") or row.get("uf") or "",
                 row.get("quarter") or "",
                 row.get("snapshot_id") or "",
@@ -332,7 +341,10 @@ def fetch_item_facts(settings: Settings) -> list[dict]:
           unidade_canonica,
           valor_unitario,
           valor_unitario_base,
-          valor_por_unidade_canonica
+          valor_por_unidade_canonica,
+          spec_concentracao,
+          spec_dosagem,
+          spec_tamanho
         FROM {settings.clickhouse_database}.item_fact
         FINAL
         """
@@ -484,12 +496,14 @@ def _upsert_items(conn, rows: list[dict], now) -> None:
       id, "contratacaoId", "fornecedorId", descricao, catmat, catser,
       quantidade, "unidadeMedida", "unidadeCanonica", "valorUnitario", "valorTotal",
       "valorPorUnidadeCanonica",
+      "specConcentracao", "specDosagem", "specTamanho",
       uf, quarter, "snapshotId", "methodologyVersion",
       suspended, "createdAt", "updatedAt"
     ) VALUES (
       %(id)s, %(contratacaoId)s, %(fornecedorId)s, %(descricao)s, %(catmat)s, %(catser)s,
       %(quantidade)s, %(unidadeMedida)s, %(unidadeCanonica)s, %(valorUnitario)s, %(valorTotal)s,
       %(valorPorUnidadeCanonica)s,
+      %(specConcentracao)s, %(specDosagem)s, %(specTamanho)s,
       %(uf)s, %(quarter)s, %(snapshotId)s, %(methodologyVersion)s,
       false, %(now)s, %(now)s
     )
@@ -504,6 +518,9 @@ def _upsert_items(conn, rows: list[dict], now) -> None:
       "valorUnitario" = EXCLUDED."valorUnitario",
       "valorTotal" = EXCLUDED."valorTotal",
       "valorPorUnidadeCanonica" = EXCLUDED."valorPorUnidadeCanonica",
+      "specConcentracao" = EXCLUDED."specConcentracao",
+      "specDosagem" = EXCLUDED."specDosagem",
+      "specTamanho" = EXCLUDED."specTamanho",
       uf = EXCLUDED.uf,
       quarter = EXCLUDED.quarter,
       "snapshotId" = EXCLUDED."snapshotId",

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 import tempfile
 from dataclasses import replace
@@ -82,12 +83,19 @@ from compras_ingest.warehouse import (
     fetch_one_orgao,
     fetch_raw_text_blobs,
     item_columns,
+    write_entities,
+    write_facts,
     write_flags,
 )
 from compras_ingest.ids import item_id
 from decimal import Decimal
 
+from compras_normalize.catalog import load_catalog_from_dir
+from compras_normalize.classifier import QUALITY_EXACT, QUALITY_KNN, QUALITY_NONE, description_hash
+from compras_normalize.items import normalize_frame
 from compras_normalize.text import fold, parse_decimal
+from compras_normalize.units import load_unit_table
+from compras_ingest.csvio import read_csv
 
 
 ORGAO_CNPJ = "29477000000180"
@@ -126,6 +134,22 @@ TCE_RS_TABLES = {
     "LICITACAO",
     "LOTE",
     "ITEM",
+}
+A2_PNCP = "29477000000180-1-2024-00A201"
+A2_PAPEL = "111111"
+A2_CANETA = "333333"
+A2_DIPIRONA = "222222"
+A2_EXPECTED = {
+    "a2-knn-papel": (A2_PAPEL, QUALITY_KNN),
+    "a2-knn-papel-2": (A2_PAPEL, QUALITY_KNN),
+    "a2-amb": ("", QUALITY_NONE),
+    "a2-exact": (A2_CANETA, QUALITY_EXACT),
+    "a2-spec-med": (A2_DIPIRONA, QUALITY_EXACT),
+    "a2-spec-empty": ("", QUALITY_NONE),
+    "a2-cx-com": (A2_PAPEL, QUALITY_EXACT),
+    "a2-pct": (A2_PAPEL, QUALITY_EXACT),
+    "a2-cx": (A2_PAPEL, QUALITY_EXACT),
+    "a2-foobar": (A2_PAPEL, QUALITY_EXACT),
 }
 DATA_ERROR_SNAPSHOT = "data-error-golden"
 DATA_ERROR_EXPECTED = {
@@ -207,6 +231,8 @@ EXTRA_ORGAOS = (
 
 
 def main() -> int:
+    os.environ["COMPRAS_E2E"] = "1"
+    os.environ["CLASSIFIER_FIXTURE"] = "1"
     settings = Settings.from_env()
     _check_defs()
     with _official_hosts_blocked():
@@ -220,6 +246,7 @@ def main() -> int:
         _assert_cgu_ceis_cnep_landing(settings)
         _assert_write_once(settings)
         _assert_data_error_suite(settings, result.items)
+        _assert_a2(settings)
     _assert_tce_sp_not_public(settings)
     _assert_tce_rs_not_public(settings)
     orgao = fetch_one_orgao(settings, ORGAO_CNPJ)
@@ -368,6 +395,134 @@ def _assert_data_error_suite(settings: Settings, main_items) -> None:
         raise SystemExit("warehouse write path did not persist qty_unit_price_neq_total exclusion")
     if main_iid not in stored_ids:
         raise SystemExit("excluded main-slice item missing from postgres item")
+
+
+def _a2_dir() -> Path:
+    here = Path(__file__).resolve()
+    for p in here.parents:
+        cand = p / "normalize" / "fixtures" / "a2"
+        if cand.exists():
+            return cand
+    raise SystemExit("normalize/fixtures/a2 missing")
+
+
+def _assert_a2(settings: Settings) -> None:
+    os.environ["CLASSIFIER_FIXTURE"] = "1"
+    if os.environ.get("CLASSIFIER_LLM", "").strip():
+        raise SystemExit("e2e must not enable CLASSIFIER_LLM")
+    root = _a2_dir()
+    catalog = load_catalog_from_dir(root / "catalog")
+    units = load_unit_table()
+    raw = read_csv(root / "items.csv")
+    first = normalize_frame(raw, catalog, units, None, "a2-golden", settings.methodology_version)
+    if first.height != len(A2_EXPECTED):
+        raise SystemExit(f"a2 fixture row count drifted: {first.height}")
+    got = {}
+    knn_only = []
+    by_hash: dict[str, set[str]] = {}
+    for row in first.iter_rows(named=True):
+        rid = str(row.get("record_id") or "")
+        got[rid] = (str(row.get("catmat") or ""), str(row.get("catmat_match_quality") or ""))
+        if got[rid][1] == QUALITY_KNN:
+            knn_only.append(rid)
+        desc_key = fold(str(row.get("descricao") or ""))
+        by_hash.setdefault(description_hash(desc_key), set()).add(desc_key)
+    if got != {k: (code, q) for k, (code, q) in A2_EXPECTED.items()}:
+        raise SystemExit(f"a2 assignments mismatch got={got} expected={A2_EXPECTED}")
+    if set(knn_only) != {"a2-knn-papel", "a2-knn-papel-2"}:
+        raise SystemExit(f"a2 knn assignments were not the planted pair: {knn_only}")
+    for digest, descs in by_hash.items():
+        if len(descs) != 1:
+            raise SystemExit(f"a2 description hash collision: {digest} {descs}")
+    embeds_first = catalog.cache.embeds
+    hits_first = catalog.cache.hits
+    if embeds_first != 3:
+        raise SystemExit(f"a2 embed count {embeds_first} != 3 distinct uncoded descriptions")
+    if hits_first < 1:
+        raise SystemExit("a2 duplicate description re-embedded instead of cache lookup")
+    second = normalize_frame(raw, catalog, units, None, "a2-golden", settings.methodology_version)
+    if catalog.cache.embeds != embeds_first:
+        raise SystemExit("a2 second normalize re-embedded instead of cache lookup")
+    if catalog.cache.hits <= hits_first:
+        raise SystemExit("a2 second normalize did not hit the description-hash cache")
+    by_rid = {str(r["record_id"]): r for r in first.iter_rows(named=True)}
+    papel_hash = description_hash(fold(str(by_rid["a2-knn-papel"].get("descricao") or "")))
+    papel_hash_2 = description_hash(fold(str(by_rid["a2-knn-papel-2"].get("descricao") or "")))
+    if papel_hash != papel_hash_2:
+        raise SystemExit("a2 duplicate descriptions did not share a hash")
+    med = by_rid["a2-spec-med"]
+    if str(med.get("spec_concentracao") or "") != "500mg/ml":
+        raise SystemExit(f"a2 spec concentracao drifted: {med.get('spec_concentracao')}")
+    if str(med.get("spec_tamanho") or "") != "20ml":
+        raise SystemExit(f"a2 spec tamanho drifted: {med.get('spec_tamanho')}")
+    if str(med.get("spec_dosagem") or "") != "":
+        raise SystemExit(f"a2 spec invented dosagem: {med.get('spec_dosagem')}")
+    empty = by_rid["a2-spec-empty"]
+    if any(str(empty.get(c) or "") for c in ("spec_concentracao", "spec_dosagem", "spec_tamanho")):
+        raise SystemExit(f"a2 empty spec invented tokens: {empty}")
+    exact = by_rid["a2-exact"]
+    if str(exact.get("catmat") or "") != A2_CANETA or str(exact.get("catmat_match_quality") or "") != QUALITY_EXACT:
+        raise SystemExit("a2 official code was overwritten by classifier")
+    caixa = by_rid["a2-cx-com"]
+    if str(caixa.get("unidade_canonica") or "") != "un":
+        raise SystemExit(f"CAIXA COM 10 canonical is not un: {caixa.get('unidade_canonica')}")
+    if parse_decimal(caixa.get("valor_por_unidade_canonica")) != parse_decimal(caixa.get("valor_unitario")) / 10:
+        raise SystemExit("CAIXA COM 10 factor is not 10")
+    pacote = by_rid["a2-pct"]
+    if parse_decimal(pacote.get("valor_por_unidade_canonica")) != parse_decimal(pacote.get("valor_unitario")) / 100:
+        raise SystemExit("PACOTE C/ 100 factor is not 100")
+    cx = by_rid["a2-cx"]
+    if str(cx.get("unidade_canonica") or "") != "cx":
+        raise SystemExit(f"CX without count left canonical {cx.get('unidade_canonica')}")
+    if parse_decimal(cx.get("valor_por_unidade_canonica")) != parse_decimal(cx.get("valor_unitario")):
+        raise SystemExit("CX without count invented a multiplier")
+    foobar = by_rid["a2-foobar"]
+    if str(foobar.get("unidade_canonica") or "") != "unknown":
+        raise SystemExit(f"FOOBAR invented unit {foobar.get('unidade_canonica')}")
+    if foobar.get("valor_por_unidade_canonica") not in (None, ""):
+        raise SystemExit("FOOBAR invented a canonical price")
+    write_entities(settings, first)
+    write_facts(settings, first)
+    cols = item_columns(settings)
+    for col in ("specConcentracao", "specDosagem", "specTamanho"):
+        if col not in cols:
+            raise SystemExit(f"postgres item missing {col}")
+    ch_cols = fact_columns(settings)
+    for col in ("spec_concentracao", "spec_dosagem", "spec_tamanho"):
+        if col not in ch_cols:
+            raise SystemExit(f"clickhouse item_fact missing {col}")
+    contratacao = fetch_contratacao(settings, A2_PNCP)
+    if contratacao is None:
+        raise SystemExit(f"missing a2 contratacao {A2_PNCP}")
+    stored = fetch_items_for(settings, str(contratacao["id"]))
+    by_desc = {str(row.get("descricao") or ""): row for row in stored}
+    med_pg = by_desc.get("DIPIRONA SODICA 500MG/ML SOL INJ 20ML")
+    if med_pg is None:
+        raise SystemExit("a2 spec row missing from postgres item")
+    if str(med_pg.get("specConcentracao") or "") != "500mg/ml":
+        raise SystemExit(f"postgres specConcentracao drifted: {med_pg.get('specConcentracao')}")
+    if str(med_pg.get("specTamanho") or "") != "20ml":
+        raise SystemExit(f"postgres specTamanho drifted: {med_pg.get('specTamanho')}")
+    if str(med_pg.get("catmat") or "") != A2_DIPIRONA:
+        raise SystemExit("a2 spec official catmat was overwritten in warehouse")
+    empty_pg = [row for row in stored if str(row.get("descricao") or "") == "SERVICO AVULSO EVENTUAL"]
+    if not empty_pg:
+        raise SystemExit("a2 empty spec row missing from postgres item")
+    if any(empty_pg[0].get(c) not in (None, "") for c in ("specConcentracao", "specDosagem", "specTamanho")):
+        raise SystemExit("postgres invented spec tokens on a numberless description")
+    facts = fetch_item_facts(settings)
+    med_facts = [row for row in facts if str(row.get("spec_concentracao") or "") == "500mg/ml"]
+    if not med_facts:
+        raise SystemExit("clickhouse item_fact missing planted spec_concentracao")
+    if str(med_facts[0].get("spec_tamanho") or "") != "20ml":
+        raise SystemExit(f"clickhouse spec_tamanho drifted: {med_facts[0].get('spec_tamanho')}")
+    # second frame must match first assignments exactly
+    second_got = {
+        str(row.get("record_id") or ""): (str(row.get("catmat") or ""), str(row.get("catmat_match_quality") or ""))
+        for row in second.iter_rows(named=True)
+    }
+    if second_got != got:
+        raise SystemExit(f"a2 second pass drifted assignments: {second_got}")
 
 
 def _assert_units(settings, normalized) -> None:

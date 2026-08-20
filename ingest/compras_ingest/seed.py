@@ -158,7 +158,7 @@ def main() -> int:
     if counts["orgao"] < 59:
         raise SystemExit(f"warehouse orgao count {counts['orgao']} < 59")
     print("seed ok")
-    print(f"entities={result.entity_counts} facts={result.fact_rows} flags={result.flag_rows}")
+    print(f"entities={result.entity_counts} facts={result.fact_rows} flags={result.flag_rows} adjacencies={result.adjacency_rows}")
     print(f"counts={counts}")
     return 0
 

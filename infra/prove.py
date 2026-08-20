@@ -22,8 +22,9 @@ STUB_MARKERS = (
     "Distribuidora de Medicamentos Serra",
     "sha256:dev-slice-vr-2024",
 )
-BANNED_COPY = re.compile(r"fraude|corrupto|roubo|flag|ranking", re.I)
+BANNED_COPY = re.compile(r"fraude|corrupto|roubo|flag|ranking|adjacenc|shared_qsa", re.I)
 FLAG_KEY = re.compile(r"flag", re.I)
+ADJACENCY_KEY = re.compile(r"adjacenc|shared_qsa|shared_address|shared_phone|shared_email|shared.?partner", re.I)
 STAT_HOMOLOGADO = re.compile(r'class="kicker">Homologado')
 PUBLISHED = {
     "3306305": ("volta redonda", "RJ"),
@@ -1804,6 +1805,8 @@ def deny_flags(payload: object, where: str) -> None:
         for key, value in payload.items():
             if FLAG_KEY.search(str(key)):
                 raise SystemExit(f"{where} leaked public flag field {key}")
+            if ADJACENCY_KEY.search(str(key)):
+                raise SystemExit(f"{where} leaked public adjacency field {key}")
             deny_flags(value, where)
         return
     if isinstance(payload, list):

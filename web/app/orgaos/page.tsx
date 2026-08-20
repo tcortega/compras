@@ -26,9 +26,9 @@ export default async function OrgaosPage({ searchParams }: { searchParams: Promi
         q={req.q}
         extra={
           <>
-            <label className="field">
+            <label className="field field-uf">
               <span>UF</span>
-              <input name="uf" defaultValue={req.uf ?? ''} maxLength={2} />
+              <input name="uf" defaultValue={req.uf ?? ''} maxLength={2} autoCapitalize="characters" />
             </label>
             <label className="field">
               <span>Esfera</span>

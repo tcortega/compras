@@ -1,6 +1,6 @@
 import { Money } from '@/components/Money'
 import type { Column } from '@/components/DataTable'
-import { formatCnpj, formatDate, formatEsfera, formatNumber, formatSource } from '@/lib/format'
+import { formatCnpj, formatDate, formatDecimal, formatEsfera, formatSource } from '@/lib/format'
 import { routes } from '@/lib/routes'
 import type { Contratacao, Fornecedor, Item, Orgao } from '@/lib/types'
 
@@ -13,6 +13,7 @@ export const orgaoColumns: Column<Orgao>[] = [
   {
     key: 'cnpj',
     header: 'CNPJ',
+    mono: true,
     cell: (row) => formatCnpj(row.cnpj),
   },
   {
@@ -41,11 +42,13 @@ export const fornecedorColumns: Column<Fornecedor>[] = [
   {
     key: 'cnpj',
     header: 'CNPJ',
+    mono: true,
     cell: (row) => formatCnpj(row.cnpj),
   },
   {
     key: 'cnae',
     header: 'CNAE',
+    mono: true,
     cell: (row) => row.cnae ?? 'n/d',
   },
   {
@@ -93,13 +96,14 @@ export const itemColumns: Column<Item>[] = [
   {
     key: 'catmat',
     header: 'CATMAT',
+    mono: true,
     cell: (row) => row.catmat ?? 'n/d',
   },
   {
     key: 'qty',
     header: 'Qtd',
     align: 'right',
-    cell: (row) => formatNumber(row.quantidade),
+    cell: (row) => formatDecimal(row.quantidade),
   },
   {
     key: 'un',

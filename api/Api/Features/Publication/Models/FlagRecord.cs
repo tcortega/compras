@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Api.Persistence.Entities;
 
 namespace Api.Features.Publication.Models;
@@ -40,6 +41,27 @@ public sealed record FlagRecord
 
 	public static FlagRecord FromEntity(Flag flag) =>
 		new()
+		{
+			Id = flag.Id,
+			ItemId = flag.ItemId,
+			Kind = flag.Kind,
+			State = flag.State,
+			DetectedAt = flag.DetectedAt,
+			NotifiedAt = flag.NotifiedAt,
+			PublishAfter = flag.PublishAfter,
+			PublishedAt = flag.PublishedAt,
+			Delta = flag.Delta,
+			SourceUrl = flag.SourceUrl,
+			SnapshotId = flag.SnapshotId,
+			MethodologyVersion = flag.MethodologyVersion,
+			ReplyText = flag.ReplyText,
+			RepliedAt = flag.RepliedAt,
+			Suspended = flag.Suspended,
+			Framing = FramingText,
+		};
+
+	public static Expression<Func<Flag, FlagRecord>> Project() =>
+		flag => new FlagRecord
 		{
 			Id = flag.Id,
 			ItemId = flag.ItemId,

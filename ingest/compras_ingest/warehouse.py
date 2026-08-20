@@ -256,6 +256,30 @@ def fetch_items_for(settings: Settings, contratacao_uuid: str) -> list[dict]:
         )
 
 
+def fetch_flags(
+    settings: Settings,
+    *,
+    kind: str | None = None,
+    state: str | None = None,
+    item_id: str | None = None,
+) -> list[dict]:
+    clauses: list[str] = []
+    params: dict = {}
+    if kind:
+        clauses.append("kind = %(kind)s")
+        params["kind"] = kind
+    if state:
+        clauses.append("state = %(state)s")
+        params["state"] = state
+    if item_id:
+        clauses.append('"itemId" = %(item_id)s')
+        params["item_id"] = item_id
+    where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+    sql = f'SELECT * FROM flag {where} ORDER BY kind, "itemId", id'
+    with psycopg.connect(settings.postgres_dsn, row_factory=dict_row) as conn:
+        return list(conn.execute(sql, params).fetchall())
+
+
 def fetch_raw_text_blobs(settings: Settings) -> list[str]:
     blobs: list[str] = []
     with psycopg.connect(settings.postgres_dsn, row_factory=dict_row) as conn:

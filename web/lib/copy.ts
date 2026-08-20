@@ -21,12 +21,14 @@ export const SLICE_MUNICIPIOS = [
   { nome: 'Vila Velha', uf: 'ES', ibge: '3205200' },
   { nome: 'Campina Grande', uf: 'PB', ibge: '2504009' },
   { nome: 'Caucaia', uf: 'CE', ibge: '2303709' },
+  { nome: 'Imperatriz', uf: 'MA', ibge: '2105302' },
+  { nome: 'Arapiraca', uf: 'AL', ibge: '2700300' },
 ] as const
 
-export const SLICE_BRAND = 'Treze municípios · 2024'
+export const SLICE_BRAND = 'Quinze municípios · 2024'
 
 export const SLICE_LABEL =
-  'Volta Redonda e Niterói (RJ), Bauru (SP), Caxias do Sul (RS), Joinville (SC), Uberlândia (MG), Londrina (PR), Feira de Santana (BA), Caruaru (PE), Anápolis (GO), Vila Velha (ES), Campina Grande (PB) e Caucaia (CE) · 2024'
+  'Volta Redonda e Niterói (RJ), Bauru (SP), Caxias do Sul (RS), Joinville (SC), Uberlândia (MG), Londrina (PR), Feira de Santana (BA), Caruaru (PE), Anápolis (GO), Vila Velha (ES), Campina Grande (PB), Caucaia (CE), Imperatriz (MA) e Arapiraca (AL) · 2024'
 
 export const copy = {
   coverageIncomplete:

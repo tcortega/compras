@@ -62,7 +62,8 @@ def _normalize_row(
     price_base = _price_per_canonical(unit, unit_price, qty, total)
     publicado = parse_datetime(_first(row, "datapublicacaopncp", "datainclusaopncp"))
     resultado = parse_date(_first(row, "dataresultado", "data_resultado"))
-    award = parse_date(_first(row, "award_date")) or resultado or (publicado.date() if publicado else None)
+    item_pub = parse_date(_first(row, "datainclusaopncp"))
+    award = parse_date(_first(row, "award_date")) or resultado or item_pub
     fornecedor_cnpj = _digits(_first(row, "codfornecedor", "nifornecedor", "fornecedor_cnpj"))
     opened_on = None
     cnae = None

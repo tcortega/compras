@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import polars as pl
 
-from compras_detect.tier1.common import award_date, flag, to_frame
+from compras_detect.tier1.common import flag, to_frame
 from compras_normalize.text import parse_date
 
 FLAG_DAYS = 90
@@ -15,7 +15,7 @@ def detect_cnpj_age(items: pl.DataFrame) -> pl.DataFrame:
     rows: list[dict] = []
     for row in items.iter_rows(named=True):
         opened = parse_date(row.get("opened_on"))
-        award = award_date(row)
+        award = parse_date(row.get("award_date") or row.get("data_resultado"))
         if opened is None or award is None:
             continue
         age_days = (award - opened).days

@@ -140,9 +140,6 @@ export function RotulosApp({ initial }: { initial: RotulosView }) {
           <h1>{item.descricao || rotulosCopy.title}</h1>
           <FieldList
             fields={[
-              { label: rotulosCopy.packet, value: item.packet, mono: true },
-              { label: rotulosCopy.city, value: item.city },
-              { label: rotulosCopy.year, value: item.year, mono: true },
               { label: rotulosCopy.unit, value: item.unidadeMedida },
               { label: rotulosCopy.quantity, value: formatDecimal(item.quantidade) },
               { label: rotulosCopy.unitEstimate, value: <Money value={item.valorUnitarioEstimado} /> },

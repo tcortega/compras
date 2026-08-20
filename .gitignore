@@ -37,6 +37,8 @@ obj/
 # node
 node_modules/
 .next/
+.next-rotulos-off/
+web/tmp/
 
 # secrets
 .env

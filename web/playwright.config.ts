@@ -24,7 +24,7 @@ export default defineConfig({
         },
         {
           command:
-            'STAGING_TRIAGE=0 NEXT_DIST_DIR=/tmp/compras-rotulos-off-next npx next dev --port 3002',
+            'STAGING_TRIAGE=0 NEXT_DIST_DIR=.next-rotulos-off npx next dev --port 3002',
           url: 'http://127.0.0.1:3002',
           reuseExistingServer: !process.env.CI,
           timeout: 120_000,

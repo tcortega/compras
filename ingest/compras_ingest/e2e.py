@@ -11,6 +11,12 @@ import httpx
 
 from compras_detect.data_error import anomaly_pool, detect_data_errors
 from compras_detect.tier1 import run_tier1
+from compras_detect.tier1.fracionamento import (
+    KIND_CLUSTER as FRAC_CLUSTER_KIND,
+    KIND_OVER as FRAC_OVER_KIND,
+    THRESH_PATH,
+    load_thresholds,
+)
 from compras_ingest.cpf import assert_no_raw_cpf, mask_cpf
 from compras_ingest.landing import LandingStore
 from compras_ingest.official import (
@@ -156,6 +162,36 @@ AGE_SILENT_IDS = frozenset(
         "I-2024-B2-NOAWARD",
     }
 )
+FRAC_OVER_IDS = frozenset({"I-2024-B3-OVER-1", "I-2024-B3-OVER-2", "I-2024-B3-OVER-3"})
+FRAC_CLUSTER_IDS = frozenset({"I-2024-B3-CLUSTER-1", "I-2024-B3-CLUSTER-2", "I-2024-B3-CLUSTER-3"})
+FRAC_SILENT_IDS = frozenset(
+    {
+        "I-2024-000004",
+        "I-2024-000005",
+        "I-2024-000006",
+        "I-2024-B3-BIG-1",
+        "I-2024-B3-BIG-2",
+        "I-2024-B3-OTHERCLS",
+        "I-2024-B3-PREGAO-1",
+        "I-2024-B3-PREGAO-2",
+        "I-2024-B3-PREGAO-3",
+        "I-2025-B3-OTHERYR-1",
+        "I-2025-B3-OTHERYR-2",
+    }
+)
+FRAC_KINDS = frozenset({FRAC_OVER_KIND, FRAC_CLUSTER_KIND})
+FRAC_OFFICIAL_HOSTS = ("planalto.gov.br", "in.gov.br", "compras.gov.br", "gov.br")
+FRAC_DELTA_TOKENS = (
+    "orgao=",
+    "class_key=",
+    "year=",
+    "n=",
+    "sum=",
+    "threshold=",
+    "decree=",
+    "kind=",
+    "rule=",
+)
 TCE_RS_TABLES = {
     "LICITANTE",
     "PROPOSTA",
@@ -265,6 +301,7 @@ def main() -> int:
     os.environ["CLASSIFIER_FIXTURE"] = "1"
     settings = Settings.from_env()
     _check_defs()
+    _assert_fracionamento_table()
     with _official_hosts_blocked():
         official = _assert_official_urls(settings)
         _assert_pncp_spacing_and_resume(settings)
@@ -310,6 +347,7 @@ def main() -> int:
     kinds = {str(row["kind"]) for row in stored}
     _assert_sanction_flags(result.items, result.flags, stored)
     _assert_cnpj_age_flags(result.items, result.flags, stored)
+    _assert_fracionamento_flags(result.items, flags, stored)
     if "qty_unit_price_neq_total" not in kinds:
         raise SystemExit("warehouse missing qty_unit_price_neq_total after write_flags")
     if "retroactive_edit" not in kinds:
@@ -318,6 +356,10 @@ def main() -> int:
         raise SystemExit("warehouse missing cnpj_age after write_flags")
     if AGE_INFO_KIND not in kinds:
         raise SystemExit("warehouse missing cnpj_age_info after write_flags")
+    if FRAC_OVER_KIND not in kinds:
+        raise SystemExit("warehouse missing fracionamento after write_flags")
+    if FRAC_CLUSTER_KIND not in kinds:
+        raise SystemExit("warehouse missing fracionamento_cluster after write_flags")
     for row in stored:
         if not row.get("itemId"):
             raise SystemExit("warehouse flag missing itemId")
@@ -1342,6 +1384,159 @@ def _assert_sanction_flags(items, flags, stored) -> None:
         raise SystemExit(f"warehouse sanction CNPJs {sorted(ware)} != planted overlap {sorted(SANCTION_OVERLAP)}")
     if ware & set(SANCTION_CLEAN):
         raise SystemExit(f"warehouse flagged non-overlap CNPJs {sorted(ware & set(SANCTION_CLEAN))}")
+
+
+def _frac_amounts():
+    table = load_thresholds()
+    t24 = table[(2024, "compras")].amount
+    t25 = table[(2025, "compras")].amount
+    q = Decimal("0.01")
+    return {
+        "over": (t24 * Decimal(2) / Decimal(5)).quantize(q),
+        "cluster": (t24 * Decimal(91) / Decimal(100)).quantize(q),
+        "big": t24,
+        "small": (t24 / Decimal(10)).quantize(q),
+        "other_year": ((t24 + t25) / Decimal(4)).quantize(q),
+        "t24": t24,
+        "t25": t25,
+    }
+
+
+def _assert_fracionamento_table() -> None:
+    from urllib.parse import urlparse
+
+    table = load_thresholds()
+    years = {year for year, _kind in table}
+    if 2024 not in years or 2025 not in years:
+        raise SystemExit(f"threshold table missing 2024 or 2025: {sorted(years)}")
+    money = set()
+    for row in table.values():
+        host = (urlparse(row.url).hostname or "").lower()
+        if not any(host == h or host.endswith("." + h) for h in FRAC_OFFICIAL_HOSTS):
+            raise SystemExit(f"threshold url host is not official: {row.url}")
+        money.add(str(row.amount))
+        money.add(str(row.amount).split(".")[0])
+    detect_root = Path(THRESH_PATH).resolve().parents[1]
+    hits = []
+    for path in detect_root.rglob("*.py"):
+        text = path.read_text(encoding="utf-8")
+        for token in sorted(money, key=len, reverse=True):
+            if len(token) < 4:
+                continue
+            if token in text:
+                hits.append(f"{path.name}:{token}")
+    if hits:
+        raise SystemExit(f"detector python contains threshold money literals: {hits}")
+
+
+def _assert_fracionamento_flags(items, flags, stored) -> None:
+    want = _frac_amounts()
+    by_rec = {}
+    for row in items.iter_rows(named=True):
+        rid = str(row.get("record_id") or "")
+        by_rec[rid] = row
+    planted = FRAC_OVER_IDS | FRAC_CLUSTER_IDS | FRAC_SILENT_IDS
+    for rid in planted:
+        if rid not in by_rec:
+            raise SystemExit(f"fracionamento fixture missing normalized item {rid}")
+    for rid in FRAC_OVER_IDS:
+        got = parse_decimal(by_rec[rid].get("valor_total"))
+        if got != want["over"]:
+            raise SystemExit(f"{rid} amount {got} != table-derived over {want['over']}")
+    for rid in FRAC_CLUSTER_IDS:
+        got = parse_decimal(by_rec[rid].get("valor_total"))
+        if got != want["cluster"]:
+            raise SystemExit(f"{rid} amount {got} != table-derived cluster {want['cluster']}")
+    if parse_decimal(by_rec["I-2024-B3-BIG-1"].get("valor_total")) != want["big"]:
+        raise SystemExit("BIG-1 amount is not the loaded 2024 compras threshold")
+    if parse_decimal(by_rec["I-2024-B3-BIG-2"].get("valor_total")) != want["small"]:
+        raise SystemExit("BIG-2 amount is not table-derived small")
+    if parse_decimal(by_rec["I-2024-B3-OTHERCLS"].get("valor_total")) != want["small"]:
+        raise SystemExit("OTHERCLS amount is not table-derived small")
+    for rid in ("I-2024-B3-PREGAO-1", "I-2024-B3-PREGAO-2", "I-2024-B3-PREGAO-3"):
+        if parse_decimal(by_rec[rid].get("valor_total")) != want["over"]:
+            raise SystemExit(f"{rid} amount is not the same table-derived over amount")
+    year_sum = Decimal("0")
+    for rid in ("I-2025-B3-OTHERYR-1", "I-2025-B3-OTHERYR-2"):
+        got = parse_decimal(by_rec[rid].get("valor_total"))
+        if got != want["other_year"]:
+            raise SystemExit(f"{rid} amount {got} != table-derived other-year {want['other_year']}")
+        year_sum += got
+    if year_sum <= want["t24"] or year_sum >= want["t25"]:
+        raise SystemExit(f"OTHER YEAR sum {year_sum} does not sit between 2024 and 2025 thresholds")
+
+    got_over: set[str] = set()
+    got_cluster: set[str] = set()
+    for row in flags.iter_rows(named=True):
+        kind = str(row.get("kind") or "")
+        if kind not in FRAC_KINDS:
+            continue
+        rid = str(row.get("record_id") or "")
+        delta = str(row.get("delta") or "")
+        for token in FRAC_DELTA_TOKENS:
+            if token not in delta:
+                raise SystemExit(f"{rid} {kind} delta missing {token}: {delta}")
+        if "class_key=codigo_classe:" not in delta:
+            raise SystemExit(f"{rid} {kind} delta missing class_key=codigo_classe: {delta}")
+        if kind == FRAC_CLUSTER_KIND:
+            if "rule=cluster" not in delta:
+                raise SystemExit(f"{rid} cluster delta missing rule=cluster: {delta}")
+            got_cluster.add(rid)
+        else:
+            if "rule=over_sum" not in delta:
+                raise SystemExit(f"{rid} over delta missing rule=over_sum: {delta}")
+            got_over.add(rid)
+    if got_over != set(FRAC_OVER_IDS):
+        raise SystemExit(f"fracionamento record_ids {sorted(got_over)} != planted over {sorted(FRAC_OVER_IDS)}")
+    if got_cluster != set(FRAC_CLUSTER_IDS):
+        raise SystemExit(
+            f"fracionamento_cluster record_ids {sorted(got_cluster)} != planted cluster {sorted(FRAC_CLUSTER_IDS)}"
+        )
+    leaked = (got_over | got_cluster) & set(FRAC_SILENT_IDS)
+    if leaked:
+        raise SystemExit(f"fracionamento flagged silent plants {sorted(leaked)}")
+    extra = (got_over | got_cluster) - set(FRAC_OVER_IDS | FRAC_CLUSTER_IDS)
+    if extra:
+        raise SystemExit(f"fracionamento flagged unexpected records {sorted(extra)}")
+
+    id_to_rid = {
+        item_id(str(row.get("pncp_id") or ""), str(row.get("record_id") or "")): str(row.get("record_id") or "")
+        for row in items.iter_rows(named=True)
+    }
+    ware_over: set[str] = set()
+    ware_cluster: set[str] = set()
+    for row in stored:
+        kind = str(row.get("kind") or "")
+        if kind not in FRAC_KINDS:
+            continue
+        if str(row.get("state") or "") != "detected":
+            raise SystemExit(f"{kind} state is not detected: {row.get('state')}")
+        if row.get("publishedAt") not in (None, ""):
+            raise SystemExit(f"{kind} publishedAt is set: {row.get('publishedAt')}")
+        rid = id_to_rid.get(str(row.get("itemId") or ""))
+        if not rid:
+            raise SystemExit(f"{kind} itemId not in slice: {row.get('itemId')}")
+        delta = str(row.get("delta") or "")
+        for token in FRAC_DELTA_TOKENS:
+            if token not in delta:
+                raise SystemExit(f"warehouse {rid} {kind} delta missing {token}: {delta}")
+        if kind == FRAC_CLUSTER_KIND:
+            ware_cluster.add(rid)
+        else:
+            ware_over.add(rid)
+    if ware_over != set(FRAC_OVER_IDS):
+        raise SystemExit(f"warehouse fracionamento ids {sorted(ware_over)} != planted over {sorted(FRAC_OVER_IDS)}")
+    if ware_cluster != set(FRAC_CLUSTER_IDS):
+        raise SystemExit(
+            f"warehouse cluster ids {sorted(ware_cluster)} != planted cluster {sorted(FRAC_CLUSTER_IDS)}"
+        )
+    if (ware_over | ware_cluster) & set(FRAC_SILENT_IDS):
+        raise SystemExit("warehouse flagged a silent fracionamento plant")
+    stored_kinds = {str(row["kind"]) for row in stored}
+    if FRAC_OVER_KIND not in stored_kinds:
+        raise SystemExit("warehouse missing fracionamento after write_flags")
+    if FRAC_CLUSTER_KIND not in stored_kinds:
+        raise SystemExit("warehouse missing fracionamento_cluster after write_flags")
 
 
 def _assert_cnpj_age_flags(items, flags, stored) -> None:

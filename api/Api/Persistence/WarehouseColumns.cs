@@ -15,6 +15,6 @@ internal static class WarehouseColumns
 	{
 		if (name.Length <= 1)
 			return name.ToLowerInvariant();
-		return string.Concat(char.ToLowerInvariant(name[0]), name.AsSpan(1));
+		return char.ToLowerInvariant(name[0]) + name[1..];
 	}
 }

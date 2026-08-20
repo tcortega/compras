@@ -18,7 +18,9 @@ O cliente tipado fala só com o contrato de `docs/CONTRACT.md`:
 - `GET /api/items` e `GET /api/items/{id}`
 
 Listas usam `PageRequest` com `skip` e `take`.
-Páginas de entidade usam ISR (`revalidate = 3600`) e `generateStaticParams`.
+Páginas de entidade renderizam sob demanda.
+No compose isso lê a API C#.
+Fora do compose, `API_BASE_URL=stub` lê o recorte em processo.
 
 ## Rodar
 

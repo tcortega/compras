@@ -6,17 +6,15 @@ import { SourceLine } from '@/components/SourceLine'
 import { Stat } from '@/components/Stat'
 import { api, safeDetail } from '@/lib/api'
 import { formatCnpj, formatDecimal, formatMoney, formatQuarter } from '@/lib/format'
-import { explorerDynamic, explorerRevalidate, staticEntityIds } from '@/lib/rendering'
 import { routes } from '@/lib/routes'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
-export const dynamic = explorerDynamic
-export const revalidate = explorerRevalidate
+export const dynamic = 'force-dynamic'
 export const dynamicParams = true
 
 export async function generateStaticParams() {
-  return staticEntityIds(() => api.listItems({ skip: 0, take: 100 }))
+  return []
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {

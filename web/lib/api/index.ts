@@ -1,6 +1,8 @@
+import { cache } from 'react'
 import { createHttpClient } from '@/lib/api/http'
 import { stubClient } from '@/lib/api/stub'
-import type { Coverage, ExplorerClient } from '@/lib/types'
+import { fillCoverage, overlaySlice } from '@/lib/coverage'
+import type { Coverage, ExplorerClient, SkipTakePage } from '@/lib/types'
 
 export { ids } from '@/lib/api/fixtures'
 
@@ -18,20 +20,25 @@ export function getClient(): ExplorerClient {
   return createHttpClient(resolveBase())
 }
 
-export const api: ExplorerClient = {
-  listOrgaos: (req) => getClient().listOrgaos(req),
-  getOrgao: (id) => getClient().getOrgao(id),
-  listFornecedores: (req) => getClient().listFornecedores(req),
-  getFornecedor: (id) => getClient().getFornecedor(id),
-  listContratacoes: (req) => getClient().listContratacoes(req),
-  getContratacao: (id) => getClient().getContratacao(id),
-  listItems: (req) => getClient().listItems(req),
-  getItem: (id) => getClient().getItem(id),
+export const loadSliceCoverage = cache(async (): Promise<Coverage> => {
+  const page = await getClient().listItems({ skip: 0, take: 100 })
+  return fillCoverage(page.coverage, page.items)
+})
+
+async function withSlice<T>(page: SkipTakePage<T>): Promise<SkipTakePage<T>> {
+  const slice = await loadSliceCoverage()
+  return { ...page, coverage: overlaySlice(page.coverage, slice) }
 }
 
-export async function loadSliceCoverage(): Promise<Coverage> {
-  const page = await api.listItems({ skip: 0, take: 100 })
-  return page.coverage
+export const api: ExplorerClient = {
+  listOrgaos: (req) => getClient().listOrgaos(req).then(withSlice),
+  getOrgao: (id) => getClient().getOrgao(id),
+  listFornecedores: (req) => getClient().listFornecedores(req).then(withSlice),
+  getFornecedor: (id) => getClient().getFornecedor(id),
+  listContratacoes: (req) => getClient().listContratacoes(req).then(withSlice),
+  getContratacao: (id) => getClient().getContratacao(id),
+  listItems: (req) => getClient().listItems(req).then(withSlice),
+  getItem: (id) => getClient().getItem(id),
 }
 
 export async function safeDetail<T>(load: () => Promise<T>): Promise<T | null> {

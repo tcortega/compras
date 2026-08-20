@@ -41,5 +41,7 @@ npm start
 npm run e2e
 ```
 
-O E2E cobre busca e drill-down contra o stub.
+`npm run e2e` cobre busca e drill-down contra o stub.
+`npm run e2e:compose` aponta o mesmo spec para o explorador do compose em :3100.
+O spec não assume campos só do stub. CI do compose também roda esse Playwright.
 Não há suíte de unit tests.

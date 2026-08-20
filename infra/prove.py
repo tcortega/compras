@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hit served API list/get and web home. Fail on stub data or public flag fields."""
+"""Hit served API list/get and web pages. Fail on stub data or public flag fields."""
 
 from __future__ import annotations
 
@@ -24,6 +24,7 @@ STUB_MARKERS = (
 )
 BANNED_COPY = re.compile(r"fraude|corrupto|roubo|flag|ranking", re.I)
 FLAG_KEY = re.compile(r"flag", re.I)
+STAT_HOMOLOGADO = re.compile(r'class="kicker">Homologado')
 PUBLISHED = {
     "3306305": ("volta redonda", "RJ"),
     "3303302": ("niteroi", "RJ"),
@@ -101,10 +102,29 @@ def main() -> int:
     deny_flags(item, f"{API}/api/items/{iid}")
     deny_stub(json.dumps(item, ensure_ascii=False), "api get item")
 
+    fornecedores = get_json(f"{API}/api/fornecedores?skip=0&take=50")
+    deny_flags(fornecedores, f"{API}/api/fornecedores")
+    deny_stub(json.dumps(fornecedores, ensure_ascii=False), "api /api/fornecedores")
+    fornecedor_rows = fornecedores.get("items") or []
+    if not fornecedor_rows:
+        raise SystemExit("api /api/fornecedores returned no rows")
+    fid = fornecedor_rows[0]["id"]
+
+    contratacoes = get_json(f"{API}/api/contratacoes?skip=0&take=50")
+    deny_flags(contratacoes, f"{API}/api/contratacoes")
+    deny_stub(json.dumps(contratacoes, ensure_ascii=False), "api /api/contratacoes")
+    contratacao_rows = contratacoes.get("items") or []
+    if not contratacao_rows:
+        raise SystemExit("api /api/contratacoes returned no rows")
+    cid = contratacao_rows[0]["id"]
+
+    by_fornecedor = get_json(f"{API}/api/contratacoes?skip=0&take=50&fornecedorId={fid}")
+    deny_flags(by_fornecedor, f"{API}/api/contratacoes?fornecedorId")
+    if not (by_fornecedor.get("items") or []):
+        raise SystemExit("api /api/contratacoes?fornecedorId returned no rows")
+
     home = get_text(f"{WEB}/")
-    deny_stub(home, "web /")
-    if BANNED_COPY.search(home):
-        raise SystemExit("web / leaked banned copy")
+    assert_served_page(home, "web /")
     folded = home.casefold()
     if "volta redonda" not in folded:
         raise SystemExit("web / missing Volta Redonda")
@@ -112,21 +132,13 @@ def main() -> int:
         raise SystemExit("web / missing Niterói")
     if "bauru" not in folded:
         raise SystemExit("web / missing Bauru")
-    if not re.search(r"n=\d+", home):
-        raise SystemExit("web / missing coverage n")
     if "UF mista" not in home:
         raise SystemExit("web / missing honest mixed UF")
     if "UF Brasil" in home or "total nacional" in folded:
         raise SystemExit("web / invented a national total")
-    if not re.search(r"trimestre|trim\.", home, re.I):
-        raise SystemExit("web / missing trimestre")
-    if not re.search(r"metodologia", home, re.I):
-        raise SystemExit("web / missing metodologia")
 
     orgaos_html = get_text(f"{WEB}/orgaos")
-    deny_stub(orgaos_html, "web /orgaos")
-    if BANNED_COPY.search(orgaos_html):
-        raise SystemExit("web /orgaos leaked banned copy")
+    assert_served_page(orgaos_html, "web /orgaos")
     orgaos_fold = orgaos_html.casefold()
     if "volta redonda" not in orgaos_fold:
         raise SystemExit("web /orgaos missing Volta Redonda")
@@ -134,8 +146,11 @@ def main() -> int:
         raise SystemExit("web /orgaos missing Niterói")
     if "bauru" not in orgaos_fold:
         raise SystemExit("web /orgaos missing Bauru")
+    if "UF mista" not in orgaos_html:
+        raise SystemExit("web /orgaos missing honest mixed UF")
 
     niteroi_html = get_text(f"{WEB}/orgaos?municipioIbge=3303302")
+    assert_served_page(niteroi_html, "web /orgaos?municipioIbge=3303302")
     niteroi_table = table_html(niteroi_html)
     if "niteroi" not in niteroi_table.casefold() and "niterói" not in niteroi_table.casefold():
         raise SystemExit("web /orgaos?municipioIbge=3303302 missing Niterói")
@@ -145,8 +160,11 @@ def main() -> int:
         raise SystemExit("web municipio filter leaked Volta Redonda")
     if not re.search(r"n=1", niteroi_html):
         raise SystemExit("web municipio filter missing n=1")
+    if "UF RJ" not in niteroi_html:
+        raise SystemExit("web municipio filter missing UF RJ")
 
     sp_html = get_text(f"{WEB}/orgaos?uf=SP")
+    assert_served_page(sp_html, "web /orgaos?uf=SP")
     sp_table = table_html(sp_html)
     if "bauru" not in sp_table.casefold():
         raise SystemExit("web /orgaos?uf=SP missing Bauru")
@@ -156,6 +174,64 @@ def main() -> int:
         raise SystemExit("web UF=SP filter leaked Niterói")
     if "UF SP" not in sp_html:
         raise SystemExit("web UF=SP missing coverage UF")
+
+    orgao_html = get_text(f"{WEB}/orgaos/{oid}")
+    assert_served_page(orgao_html, "web /orgaos/{id}")
+    if STAT_HOMOLOGADO.search(orgao_html):
+        raise SystemExit("web /orgaos/{id} used Homologado as a slice total")
+    if "volta redonda" not in orgao_html.casefold():
+        raise SystemExit("web /orgaos/{id} missing Volta Redonda")
+
+    fornecedor_html = get_text(f"{WEB}/fornecedores/{fid}")
+    assert_served_page(fornecedor_html, "web /fornecedores/{id}")
+    if STAT_HOMOLOGADO.search(fornecedor_html):
+        raise SystemExit("web /fornecedores/{id} used Homologado as a slice total")
+
+    contratacao_html = get_text(f"{WEB}/contratacoes/{cid}")
+    assert_served_page(contratacao_html, "web /contratacoes/{id}")
+    if not STAT_HOMOLOGADO.search(contratacao_html):
+        raise SystemExit("web /contratacoes/{id} missing Homologado on the contratação")
+    if not re.search(r"R\$\s*[\d.]+,\d{2}", contratacao_html):
+        raise SystemExit("web /contratacoes/{id} missing money")
+    if not re.search(r"\d{2}/\d{2}/\d{4}", contratacao_html):
+        raise SystemExit("web /contratacoes/{id} missing date")
+
+    item_html = get_text(f"{WEB}/itens/{iid}")
+    assert_served_page(item_html, "web /itens/{id}")
+    if not re.search(r"R\$\s*[\d.]+,\d{2}", item_html):
+        raise SystemExit("web /itens/{id} missing money")
+
+    empty = get_text(f"{WEB}/orgaos?q=zzzz-sem-registro")
+    assert_served_page(empty, "web empty orgaos")
+    if "Nenhum registro neste recorte para o filtro atual." not in empty:
+        raise SystemExit("web empty orgaos missing empty copy")
+    if "n=0" not in empty:
+        raise SystemExit("web empty orgaos missing n=0")
+    if "filtro sem registros" not in empty:
+        raise SystemExit("web empty orgaos invented a UF")
+
+    missing = get_text(f"{WEB}/orgaos/00000000-0000-0000-0000-000000000000", ok=(200, 404))
+    assert_served_page(missing, "web 404")
+    if "não encontrado" not in missing.casefold():
+        raise SystemExit("web 404 missing not-found copy")
+
+    cobertura = get_text(f"{WEB}/cobertura")
+    assert_served_page(cobertura, "web /cobertura")
+    if "3306305" not in cobertura:
+        raise SystemExit("web /cobertura missing VR IBGE")
+    if "3303302" not in cobertura:
+        raise SystemExit("web /cobertura missing Niterói IBGE")
+    if "3506003" not in cobertura:
+        raise SystemExit("web /cobertura missing Bauru IBGE")
+    if "não é um total nacional" not in cobertura:
+        raise SystemExit("web /cobertura missing disclaimer")
+    if "UF mista" not in cobertura:
+        raise SystemExit("web /cobertura must stay mixed-UF")
+
+    metodologia = get_text(f"{WEB}/metodologia")
+    assert_served_page(metodologia, "web /metodologia")
+    if "0.1" in metodologia and "phase1-0.1.0" not in metodologia:
+        raise SystemExit("web /metodologia assumed stub methodology 0.1")
 
     flags = get_json(f"{API}/api/internal/flags?state=detected&skip=0&take=50")
     flag_coverage = flags.get("coverage") or {}
@@ -198,6 +274,20 @@ def main() -> int:
     return 0
 
 
+def assert_served_page(html: str, where: str) -> None:
+    deny_stub(html, where)
+    if BANNED_COPY.search(html):
+        raise SystemExit(f"{where} leaked banned copy")
+    if not re.search(r"n=\d+", html):
+        raise SystemExit(f"{where} missing coverage n")
+    if not any(token in html for token in ("UF RJ", "UF SP", "UF mista", "filtro sem registros")):
+        raise SystemExit(f"{where} missing UF / empty-filter chip")
+    if not re.search(r"trimestre|trim\.", html, re.I):
+        raise SystemExit(f"{where} missing trimestre")
+    if not re.search(r"metodologia", html, re.I):
+        raise SystemExit(f"{where} missing metodologia")
+
+
 def get_json(url: str) -> dict:
     raw = get_text(url)
     try:
@@ -209,14 +299,16 @@ def get_json(url: str) -> dict:
     return data
 
 
-def get_text(url: str) -> str:
+def get_text(url: str, ok: tuple[int, ...] = (200,)) -> str:
     req = urllib.request.Request(url, headers={"accept": "application/json, text/html"})
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
-            if resp.status != 200:
+            if resp.status not in ok:
                 raise SystemExit(f"{url} status {resp.status}")
             return resp.read().decode("utf-8", "replace")
     except urllib.error.HTTPError as exc:
+        if exc.code in ok:
+            return exc.read().decode("utf-8", "replace")
         raise SystemExit(f"{url} status {exc.code}") from exc
     except urllib.error.URLError as exc:
         raise SystemExit(f"{url} unreachable: {exc.reason}") from exc

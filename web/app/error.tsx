@@ -2,11 +2,12 @@
 
 import { Shell } from '@/components/Shell'
 import { copy } from '@/lib/copy'
+import { emptyCoverage } from '@/lib/coverage'
 import { routes } from '@/lib/routes'
 
 export default function Error({ reset }: { error: Error; reset: () => void }) {
   return (
-    <Shell>
+    <Shell coverage={emptyCoverage()}>
       <p className="kicker">Erro</p>
       <h1>{copy.loadError}</h1>
       <p className="lede">A origem não respondeu a este pedido. Tente de novo ou volte ao recorte inicial.</p>

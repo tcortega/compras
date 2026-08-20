@@ -81,11 +81,13 @@ from compras_ingest.ids import item_id
 from compras_ingest.warehouse import (
     fact_columns,
     fetch_all_items,
+    fetch_catalog_codes,
     fetch_contratacao,
     fetch_exclusions,
     fetch_flags,
     fetch_item_facts,
     fetch_items_for,
+    fetch_landing_sources,
     fetch_one_orgao,
     fetch_raw_text_blobs,
     item_columns,
@@ -340,6 +342,7 @@ def main() -> int:
         _assert_a3_labels()
     _assert_tce_sp_not_public(settings)
     _assert_tce_rs_not_public(settings)
+    _assert_coverage_warehouse(settings)
     orgao = fetch_one_orgao(settings, ORGAO_CNPJ)
     if orgao is None:
         raise SystemExit(f"missing orgao {ORGAO_CNPJ}")
@@ -1029,6 +1032,24 @@ def _assert_official_urls(settings: Settings) -> dict:
         "cgu_ceis_zip": cgu.ceis_zip_url,
         "cgu_cnep_zip": cgu.cnep_zip_url,
     }
+
+
+def _assert_coverage_warehouse(settings: Settings) -> None:
+    catalog = fetch_catalog_codes(settings)
+    if len(catalog) < 1:
+        raise SystemExit("warehouse missing catalog_code after land")
+    kinds = {str(row.get("kind") or "") for row in catalog}
+    if "catmat" not in kinds:
+        raise SystemExit("catalog_code missing catmat after land")
+    sources = {str(row.get("name") or ""): row for row in fetch_landing_sources(settings)}
+    for name in ("compras_gov", "receita_cnpj", "ocds", "pncp_consulta", "tce_sp", "tce_rs", "cgu_ceis_cnep"):
+        row = sources.get(name)
+        if row is None:
+            raise SystemExit(f"landing_source missing {name}")
+        if int(row.get("n") or 0) < 1:
+            raise SystemExit(f"landing_source {name} n=0 after land")
+        if row.get("lastUpdate") is None:
+            raise SystemExit(f"landing_source {name} lastUpdate is null after land")
 
 
 def _assert_landing(settings: Settings, sha256: str) -> None:

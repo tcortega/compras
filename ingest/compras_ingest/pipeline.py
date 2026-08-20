@@ -24,7 +24,15 @@ from compras_ingest.sources.cgu_ceis_cnep import land_cgu_ceis_cnep, load_landed
 from compras_ingest.sources.receita_cnpj import cnpj_basicos_from_frame, land_receita_cnpj
 from compras_ingest.sources.tce_rs_licitacon import land_tce_rs_licitacon
 from compras_ingest.sources.tce_sp_licitacao import land_tce_sp_licitacao
-from compras_ingest.warehouse import apply_schema, write_entities, write_exclusions, write_facts, write_flags
+from compras_ingest.warehouse import (
+    apply_schema,
+    write_catalog,
+    write_entities,
+    write_exclusions,
+    write_facts,
+    write_flags,
+    write_landing_sources,
+)
 from compras_normalize.catalog import load_catalog
 from compras_normalize.items import normalize_frame
 from compras_normalize.units import load_unit_table
@@ -103,6 +111,8 @@ def warehouse_from_landing(
     )
     entity_counts = write_entities(settings, items)
     fact_rows = write_facts(settings, items)
+    catalog_rows = write_catalog(settings, catalog_df)
+    landing_sources = write_landing_sources(settings, store)
     catalog_prices = catalog_reference_prices(catalog_df)
     exclusions = detect_data_errors(items, catalog_prices=catalog_prices)
     exclusion_rows = write_exclusions(settings, exclusions, items)
@@ -124,6 +134,8 @@ def warehouse_from_landing(
         },
         "entities": entity_counts,
         "facts": fact_rows,
+        "catalog": catalog_rows,
+        "landing_sources": landing_sources,
         "exclusions": exclusion_rows,
         "anomaly_pool_n": pool.height,
         "anomaly_pool_key": pool_ref.key,

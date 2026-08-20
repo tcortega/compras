@@ -2,7 +2,7 @@ import { cache } from 'react'
 import { createHttpClient } from '@/lib/api/http'
 import { stubClient } from '@/lib/api/stub'
 import { fillCoverage, overlaySlice } from '@/lib/coverage'
-import type { Coverage, ExplorerClient, SkipTakePage } from '@/lib/types'
+import type { CoberturaPayload, Coverage, ExplorerClient, SkipTakePage } from '@/lib/types'
 
 export { ids } from '@/lib/api/fixtures'
 
@@ -25,6 +25,8 @@ export const loadSliceCoverage = cache(async (): Promise<Coverage> => {
   return fillCoverage(page.coverage, page.items)
 })
 
+export const loadCobertura = cache(async (): Promise<CoberturaPayload> => getClient().getCobertura())
+
 async function withSlice<T>(page: SkipTakePage<T>): Promise<SkipTakePage<T>> {
   const slice = await loadSliceCoverage()
   return { ...page, coverage: overlaySlice(page.coverage, slice) }
@@ -39,6 +41,7 @@ export const api: ExplorerClient = {
   getContratacao: (id) => getClient().getContratacao(id),
   listItems: (req) => getClient().listItems(req).then(withSlice),
   getItem: (id) => getClient().getItem(id),
+  getCobertura: () => getClient().getCobertura(),
 }
 
 export async function safeDetail<T>(load: () => Promise<T>): Promise<T | null> {

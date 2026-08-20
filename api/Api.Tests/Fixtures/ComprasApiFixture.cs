@@ -2618,6 +2618,24 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 		db.Fornecedores.AddRange(fornecedor, fornecedorExtra);
 		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina, contratacaoFeira, contratacaoCaruaru, contratacaoAnapolis, contratacaoVilaVelha, contratacaoCampinaGrande, contratacaoCaucaia, contratacaoImperatriz, contratacaoArapiraca, contratacaoDourados, contratacaoMaraba, contratacaoVarzeaGrande, contratacaoJiParana, contratacaoParnamirim, contratacaoCruzeiroDoSul, contratacaoSantana, contratacaoRorainopolis, contratacaoMaringa, contratacaoTaubate, contratacaoCascavel, contratacaoJuizDeFora, contratacaoFoz, contratacaoSantaMaria, contratacaoMontesClaros, contratacaoGovernadorValadares, contratacaoCanoas, contratacaoLages, contratacaoSantarem, contratacaoRioVerde, contratacaoPauloAfonso, contratacaoSaoLourenco, contratacaoCrato, contratacaoAriquemes, contratacaoColatina, contratacaoCastanhal, contratacaoDivinopolis, contratacaoPetropolis, contratacaoIpatinga, contratacaoMacae, contratacaoSantaLuzia, contratacaoNovaFriburgo, contratacaoMarilia, contratacaoBalneario, contratacaoItaqua, contratacaoPraiaGrande, contratacaoSaoJoseDosPinhais, contratacaoSuzano, contratacaoGuaruja, contratacaoCotia, contratacaoParauapebas, contratacaoJacarei, contratacaoItaborai, contratacaoMarica);
 		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina, itemFeira, itemCaruaru, itemAnapolis, itemVilaVelha, itemCampinaGrande, itemCaucaia, itemImperatriz, itemArapiraca, itemDourados, itemMaraba, itemVarzeaGrande, itemJiParana, itemParnamirim, itemCruzeiroDoSul, itemSantana, itemRorainopolis, itemMaringa, itemTaubate, itemCascavel, itemJuizDeFora, itemFoz, itemSantaMaria, itemMontesClaros, itemGovernadorValadares, itemCanoas, itemLages, itemSantarem, itemRioVerde, itemPauloAfonso, itemSaoLourenco, itemCrato, itemAriquemes, itemColatina, itemCastanhal, itemDivinopolis, itemPetropolis, itemIpatinga, itemMacae, itemSantaLuzia, itemNovaFriburgo, itemMarilia, itemBalneario, itemItaqua, itemPraiaGrande, itemSaoJoseDosPinhais, itemSuzano, itemGuaruja, itemCotia, itemParauapebas, itemJacarei, itemItaborai, itemMarica);
+		db.CatalogCodes.AddRange(
+			new CatalogCode { Codigo = "123456", Kind = CatalogKind.Catmat },
+			new CatalogCode { Codigo = "654321", Kind = CatalogKind.Catmat },
+			new CatalogCode { Codigo = "463210", Kind = CatalogKind.Catmat },
+			new CatalogCode { Codigo = "880111", Kind = CatalogKind.Catmat },
+			new CatalogCode { Codigo = "880222", Kind = CatalogKind.Catmat },
+			new CatalogCode { Codigo = "880333", Kind = CatalogKind.Catmat },
+			new CatalogCode { Codigo = "880444", Kind = CatalogKind.Catmat },
+			new CatalogCode { Codigo = "880555", Kind = CatalogKind.Catmat },
+			new CatalogCode { Codigo = "880666", Kind = CatalogKind.Catmat },
+			new CatalogCode { Codigo = "10001", Kind = CatalogKind.Catser });
+		db.LandingSources.Add(new LandingSource
+		{
+			Name = "compras_gov",
+			LastUpdate = Instant.FromUtc(2024, 3, 10, 14, 0),
+			N = 59,
+			SnapshotId = SliceIds.Snapshot,
+		});
 	}
 
 	private static JsonSerializerOptions CreateJson()

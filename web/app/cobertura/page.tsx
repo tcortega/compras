@@ -4,6 +4,7 @@ import { SLICE_IBGE, SLICE_LABEL, copy } from '@/lib/copy'
 import { coverageText } from '@/lib/coverage'
 import type { Metadata } from 'next'
 
+export const revalidate = 3600
 export const metadata: Metadata = { title: 'Cobertura' }
 
 export default async function CoberturaPage() {
@@ -20,7 +21,7 @@ export default async function CoberturaPage() {
         <p>{copy.coverageQuality}</p>
         <p>Lei 8.666/93 foi revogada em 30 de dezembro de 2023. 2024 é o primeiro ano de item municipal centralizado.</p>
         <p>Cobertura municipal nacional não é alcançável antes de cerca de 2027-2028. Nenhum agregado nesta interface afirma o contrário.</p>
-        <p>Todo total na tela mostra n, UF e trimestre. Se o trimestre varia no recorte, o chip diz "vários trimestres".</p>
+        <p>Todo total na tela mostra n, UF e trimestre. Se o trimestre varia no recorte, o chip diz vários trimestres.</p>
       </div>
     </Shell>
   )

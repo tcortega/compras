@@ -3,6 +3,8 @@ import { loadSliceCoverage } from '@/lib/api'
 import { copy } from '@/lib/copy'
 import { routes } from '@/lib/routes'
 
+export const revalidate = 3600
+
 export default async function NotFound() {
   const coverage = await loadSliceCoverage()
   return (

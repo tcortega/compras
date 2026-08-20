@@ -10,10 +10,12 @@ const caxiasName = /Munic[ií]pio de Caxias do Sul/i
 const joinvilleName = /Munic[ií]pio de Joinville/i
 const uberlandiaName = /Munic[ií]pio de Uberl[aâ]ndia/i
 const londrinaName = /Munic[ií]pio de Londrina/i
+const feiraName = /Munic[ií]pio de Feira de Santana/i
+const caruaruName = /Munic[ií]pio de Caruaru/i
 
 async function assertCoverageAndBan(page: Page) {
   await expect(page.getByText(/n=\d+/).first()).toBeVisible()
-  await expect(page.getByText(/UF RJ|UF SP|UF RS|UF SC|UF MG|UF PR|UF mista|filtro sem registros/).first()).toBeVisible()
+  await expect(page.getByText(/UF RJ|UF SP|UF RS|UF SC|UF MG|UF PR|UF BA|UF PE|UF mista|filtro sem registros/).first()).toBeVisible()
   await expect(page.getByText(/trimestre|trim\./i).first()).toBeVisible()
   await expect(page.getByText(/metodologia/i).first()).toBeVisible()
   await expect(page.locator('body')).not.toHaveText(banned)
@@ -26,10 +28,10 @@ test('home cards usam o n da coleção, não o n de itens', async ({ page }) => 
   await page.goto('/')
   await expect(page.getByRole('strong').filter({ hasText: 'Cobertura incompleta' })).toBeVisible()
   await expect(page.getByText(/UF mista/).first()).toBeVisible()
-  await expect(page.getByText(/Caxias do Sul \(RS\), Joinville \(SC\), Uberlândia \(MG\) e Londrina \(PR\)/).first()).toBeVisible()
+  await expect(page.getByText(/Caxias do Sul \(RS\), Joinville \(SC\), Uberlândia \(MG\), Londrina \(PR\), Feira de Santana \(BA\) e Caruaru \(PE\)/).first()).toBeVisible()
   const brand = page.locator('.brand-kicker')
-  await expect(brand).toHaveText(/sete municípios · 2024/i)
-  await expect(brand).not.toHaveText(/Caxias do Sul|Uberlândia|Londrina/)
+  await expect(brand).toHaveText(/nove municípios · 2024/i)
+  await expect(brand).not.toHaveText(/Caxias do Sul|Uberlândia|Londrina|Feira de Santana|Caruaru/)
   const brandBox = await brand.boundingBox()
   const masthead = await page.locator('.masthead-inner').boundingBox()
   expect(brandBox).toBeTruthy()
@@ -50,8 +52,8 @@ test('home cards usam o n da coleção, não o n de itens', async ({ page }) => 
   await expect(itens.getByText(new RegExp(`n=${itensN}`))).toBeVisible()
   expect(orgaosN).not.toEqual(itensN)
   if (!againstCompose) {
-    await expect(orgaos.getByRole('strong')).toHaveText('10')
-    await expect(itens.getByRole('strong')).toHaveText('34')
+    await expect(orgaos.getByRole('strong')).toHaveText('12')
+    await expect(itens.getByRole('strong')).toHaveText('36')
   }
 
   if (againstCompose) {
@@ -116,6 +118,8 @@ test('filtra município IBGE e UF e mantém cobertura no vazio', async ({ page }
   await expect(publishedTable.getByRole('link', { name: joinvilleName })).toBeVisible()
   await expect(publishedTable.getByRole('link', { name: uberlandiaName })).toBeVisible()
   await expect(publishedTable.getByRole('link', { name: londrinaName })).toBeVisible()
+  await expect(publishedTable.getByRole('link', { name: feiraName })).toBeVisible()
+  await expect(publishedTable.getByRole('link', { name: caruaruName })).toBeVisible()
   await expect(page.getByText(/UF mista/).first()).toBeVisible()
   await assertCoverageAndBan(page)
 
@@ -207,6 +211,36 @@ test('filtra município IBGE e UF e mantém cobertura no vazio', async ({ page }
   await expect(page.locator('table.data tbody tr').first()).toBeVisible()
   if (!againstCompose) {
     await expect(page.getByRole('link', { name: /Clindamicina/ })).toBeVisible()
+    await expect(page.getByText(/n=1/).first()).toBeVisible()
+  }
+  await assertCoverageAndBan(page)
+
+  await page.goto('/orgaos?municipioIbge=2910800')
+  const feiraTable = page.locator('table.data')
+  await expect(feiraTable.getByRole('link', { name: feiraName })).toBeVisible()
+  await expect(feiraTable.getByRole('link', { name: caruaruName })).toHaveCount(0)
+  await expect(feiraTable.getByRole('link', { name: voltaName })).toHaveCount(0)
+  await expect(page.getByText(/n=1/).first()).toBeVisible()
+  await expect(page.getByText(/UF BA/).first()).toBeVisible()
+  await feiraTable.getByRole('link', { name: feiraName }).click()
+  await expect(page.getByRole('heading', { name: feiraName })).toBeVisible()
+  await expect(page.getByText('2910800', { exact: true })).toBeVisible()
+  await assertCoverageAndBan(page)
+
+  await page.goto('/orgaos?uf=PE')
+  const caruaruTable = page.locator('table.data')
+  await expect(caruaruTable.getByRole('link', { name: caruaruName })).toBeVisible()
+  await expect(caruaruTable.getByRole('link', { name: feiraName })).toHaveCount(0)
+  await expect(caruaruTable.getByRole('link', { name: voltaName })).toHaveCount(0)
+  await expect(page.getByText(/n=1/).first()).toBeVisible()
+  await expect(page.getByText(/UF PE/).first()).toBeVisible()
+  await assertCoverageAndBan(page)
+
+  await page.goto('/itens?uf=PE')
+  await expect(page.getByText(/UF PE/).first()).toBeVisible()
+  await expect(page.locator('table.data tbody tr').first()).toBeVisible()
+  if (!againstCompose) {
+    await expect(page.getByRole('link', { name: /Placa sinalizadora/ })).toBeVisible()
     await expect(page.getByText(/n=1/).first()).toBeVisible()
   }
   await assertCoverageAndBan(page)
@@ -316,6 +350,8 @@ test('vazio, 404 e páginas estáticas mantêm cobertura e o banimento', async (
   await expect(page.getByText(/4209102/).first()).toBeVisible()
   await expect(page.getByText(/3170206/).first()).toBeVisible()
   await expect(page.getByText(/4113700/).first()).toBeVisible()
+  await expect(page.getByText(/2910800/).first()).toBeVisible()
+  await expect(page.getByText(/2604106/).first()).toBeVisible()
   await expect(page.getByText(/não é um total nacional/).first()).toBeVisible()
   await expect(page.getByText(/UF mista/).first()).toBeVisible()
   await assertCoverageAndBan(page)

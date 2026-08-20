@@ -622,6 +622,100 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		},
 	};
 
+	private static readonly Coverage s_feiraOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "BA",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_feira = new()
+	{
+		Id = SliceIds.OrgaoFeira,
+		Cnpj = "14043574000151",
+		RazaoSocial = "Municipio de Feira de Santana",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "BA",
+		MunicipioIbge = "2910800",
+		MunicipioNome = "Feira de Santana",
+		Coverage = s_feiraOrgaoCoverage,
+	};
+
+	private static readonly Coverage s_caruaruOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "PE",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_caruaru = new()
+	{
+		Id = SliceIds.OrgaoCaruaru,
+		Cnpj = "10091536000113",
+		RazaoSocial = "Municipio de Caruaru",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "PE",
+		MunicipioIbge = "2604106",
+		MunicipioNome = "Caruaru",
+		Coverage = s_caruaruOrgaoCoverage,
+	};
+
+	private static readonly ItemRecord s_itemFeira = new()
+	{
+		Id = SliceIds.ItemFeira,
+		ContratacaoId = SliceIds.ContratacaoFeira,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Agua mineral natural",
+		Catmat = "445484",
+		Catser = null,
+		Quantidade = 2000m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 33.6m,
+		ValorTotal = 67200m,
+		Uf = "BA",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "BA",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
+	private static readonly ItemRecord s_itemCaruaru = new()
+	{
+		Id = SliceIds.ItemCaruaru,
+		ContratacaoId = SliceIds.ContratacaoCaruaru,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Placa sinalizadora",
+		Catmat = "383339",
+		Catser = null,
+		Quantidade = 375m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 79m,
+		ValorTotal = 29625m,
+		Uf = "PE",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "PE",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
 	[Fact]
 	public async Task FullCycle_BrowseMunicipioAndUf()
 	{
@@ -705,6 +799,32 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(new[] { s_londrina }, londrinaPage.Items);
 		await ValidateOrgao(client, s_londrina);
 
+		var feiraPage = await client.ListOrgaos(municipioIbge: "2910800", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			feiraPage.Coverage);
+		Assert.Equal(new[] { s_feira }, feiraPage.Items);
+		await ValidateOrgao(client, s_feira);
+
+		var caruaruPage = await client.ListOrgaos(uf: "PE", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "PE",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			caruaruPage.Coverage);
+		Assert.Equal(new[] { s_caruaru }, caruaruPage.Items);
+		await ValidateOrgao(client, s_caruaru);
+
 		var mixed = await client.ListOrgaos(quarter: SliceIds.Quarter);
 		Assert.Equal("", mixed.Coverage.Uf);
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3306305", StringComparison.Ordinal));
@@ -714,6 +834,8 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "4209102", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3170206", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "4113700", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "2910800", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "2604106", StringComparison.Ordinal));
 
 		var spItems = await client.ListItems(uf: "SP", quarter: SliceIds.Quarter);
 		Assert.Equal(
@@ -795,6 +917,33 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 			OrgaoRazaoSocial = "Municipio de Uberlandia",
 			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
 			ContratacaoPncpId = "18431312000115-1-000095/2024",
+		});
+		var peItems = await client.ListItems(uf: "PE", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "PE",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			peItems.Coverage);
+		Assert.Equal(new[] { s_itemCaruaru }, peItems.Items);
+		await ValidateItem(client, new()
+		{
+			Item = s_itemCaruaru,
+			OrgaoId = SliceIds.OrgaoCaruaru,
+			OrgaoRazaoSocial = "Municipio de Caruaru",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "10091536000113-1-000124/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemFeira,
+			OrgaoId = SliceIds.OrgaoFeira,
+			OrgaoRazaoSocial = "Municipio de Feira de Santana",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "14043574000151-1-000544/2024",
 		});
 
 		var empty = new Coverage

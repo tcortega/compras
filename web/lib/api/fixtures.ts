@@ -14,6 +14,8 @@ export const ids = {
   orgaoBauru: '7c2e1f40-3506-4050-9a01-000000000006',
   orgaoCaxias: '7c2e1f40-4305-4050-9a01-000000000007',
   orgaoJoinville: '7c2e1f40-4209-4050-9a01-000000000008',
+  orgaoUberlandia: '7c2e1f40-3170-4050-9a01-000000000009',
+  orgaoLondrina: '7c2e1f40-4113-4050-9a01-000000000010',
   fornFarma: '8d3f2a51-3306-4050-9a02-000000000001',
   fornAlim: '8d3f2a51-3306-4050-9a02-000000000002',
   fornComb: '8d3f2a51-3306-4050-9a02-000000000003',
@@ -35,6 +37,8 @@ export const ids = {
   ctBauru: '9e4a3b62-3506-4050-9a03-000000000012',
   ctCaxias: '9e4a3b62-4305-4050-9a03-000000000013',
   ctJoinville: '9e4a3b62-4209-4050-9a03-000000000014',
+  ctUberlandia: '9e4a3b62-3170-4050-9a03-000000000015',
+  ctLondrina: '9e4a3b62-4113-4050-9a03-000000000016',
 } as const
 
 function orgao(
@@ -142,6 +146,26 @@ export const orgaos: Orgao[] = [
     'SC',
     '4209102',
     'Joinville',
+  ),
+  orgao(
+    ids.orgaoUberlandia,
+    '18431312000115',
+    'Município de Uberlândia',
+    'executivo',
+    T0,
+    'MG',
+    '3170206',
+    'Uberlândia',
+  ),
+  orgao(
+    ids.orgaoLondrina,
+    '75771477000170',
+    'Município de Londrina',
+    'executivo',
+    T0,
+    'PR',
+    '4113700',
+    'Londrina',
   ),
 ]
 
@@ -402,6 +426,28 @@ export const contratacoes: Contratacao[] = [
     '2024-08-09T07:01:05.000Z',
     'compras.gov.br',
   ),
+  ct(
+    ids.ctUberlandia,
+    '18431312000115-1-000095/2024',
+    ids.orgaoUberlandia,
+    'pregão eletrônico',
+    'Aquisição de coturnos, calçado de segurança tático que faz parte de material de proteção individual- EPI, contra riscos capazes de ameaçar a segurança e a saúde do trabalhador. Para atender aos servidores Agentes da Autoridade de Trânsito, lotados na Diretoria de Operações de Tráfego, vinculados a Secretaria Municipal de Trânsito e Transportes- Uberlândia- MG.',
+    2024,
+    35_052.0,
+    '2024-03-26T07:10:04.000Z',
+    'compras.gov.br',
+  ),
+  ct(
+    ids.ctLondrina,
+    '75771477000170-1-000026/2024',
+    ids.orgaoLondrina,
+    'pregão eletrônico',
+    'Registro de Preços para eventual fornecimento de medicamentos constantes na REMUME ( Relação Municipal de Medicamentos Essenciais).',
+    2024,
+    10_259_546.3707,
+    '2024-01-12T07:03:45.000Z',
+    'compras.gov.br',
+  ),
 ]
 
 function item(
@@ -473,4 +519,6 @@ export const items: Item[] = [
   item(30, ids.ctBauru, ids.fornPapel, 'Caneta esferográfica azul', '476130', 200, 'unidade', 'un', 0.9, 'SP', '2024-Q2', T1),
   item(31, ids.ctCaxias, ids.fornPapel, 'Suporte para monitor LCD', '601992', 100, 'unidade', 'un', 110.0, 'RS', '2024-Q4', T2),
   item(32, ids.ctJoinville, ids.fornPapel, 'Leitora código de barras a laser', '617529', 35, 'unidade', 'un', 948.0, 'SC', '2024-Q3', T1),
+  item(33, ids.ctUberlandia, ids.fornPapel, 'Coturno', '446381', 127, 'par', 'par', 276.0, 'MG', '2024-Q1', T0),
+  item(34, ids.ctLondrina, ids.fornPapel, 'Clindamicina', '268436', 10000, 'cápsula', 'capsula', 1.0999, 'PR', '2024-Q1', T0),
 ]

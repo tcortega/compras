@@ -289,7 +289,7 @@ test('filtra Santana por IBGE e Rorainópolis por UF RR', async ({ page }) => {
 test('filtra Maringá por IBGE e Taubaté por IBGE', async ({ page }) => {
   await assertOrgaoIbge(page, '4115200', maringaName, taubateName, 'PR')
   await assertOrgaoIbge(page, '3554102', taubateName, maringaName, 'SP')
-}))
+})
 
 test('mantém cobertura no filtro vazio e no vazio com UF', async ({ page }) => {
   await page.goto('/orgaos?q=zzzz-sem-registro')

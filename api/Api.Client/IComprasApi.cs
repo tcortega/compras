@@ -42,6 +42,7 @@ public interface IComprasApi
 	Task<ContratacaoPage> ListContratacoes(
 		[Query] string? q = null,
 		[Query] Guid? orgaoId = null,
+		[Query] Guid? fornecedorId = null,
 		[Query] int? ano = null,
 		[Query] string? modalidade = null,
 		[Query] string? uf = null,

@@ -223,6 +223,10 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(new[] { s_fornecedor }, fornecedores.Items);
 		await ValidateFornecedor(client, s_fornecedor);
 
+		var byFornecedor = await client.ListContratacoes(fornecedorId: SliceIds.Fornecedor);
+		Assert.Equal(new[] { s_contratacao }, byFornecedor.Items);
+		Assert.Equal(1, byFornecedor.Total);
+
 		var hidden = await client.GetOrgao(SliceIds.HiddenOrgao);
 		Assert.Equal(HttpStatusCode.NotFound, hidden.StatusCode);
 

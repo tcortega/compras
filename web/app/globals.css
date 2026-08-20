@@ -60,6 +60,18 @@ a:hover {
   outline-offset: 2px;
 }
 
+.search input[type='search']:focus-visible,
+.field input:focus-visible,
+.field select:focus-visible,
+.btn-ghost:focus-visible,
+.index-card:focus-visible,
+.pager a:focus-visible,
+table.data a:focus-visible,
+.nav a:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
 ::selection {
   background: #cfe0d6;
   color: var(--ink);
@@ -216,6 +228,7 @@ h1 {
   margin: 0 0 12px;
   font-size: clamp(32px, 5vw, 46px);
   line-height: 1.08;
+  overflow-wrap: anywhere;
 }
 
 h2 {
@@ -285,7 +298,8 @@ h3 {
 }
 
 .search button:focus-visible,
-.btn:focus-visible {
+.btn:focus-visible,
+.actions .btn-ghost:focus-visible {
   outline: 2px solid #c5b57a;
   outline-offset: 3px;
 }
@@ -354,6 +368,7 @@ h3 {
   border: 1px solid var(--rule);
   text-decoration: none;
   color: inherit;
+  min-width: 0;
   min-height: 148px;
 }
 
@@ -378,6 +393,9 @@ h3 {
 .index-card .chip {
   margin-top: auto;
   padding-top: 12px;
+  width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .section {
@@ -565,6 +583,7 @@ table.data a:hover {
   color: var(--wheat-ink);
   font-size: 12px;
   line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .chip b {
@@ -583,6 +602,7 @@ table.data a:hover {
   padding: 14px 14px 12px;
   background: var(--surface);
   border: 1px solid var(--rule);
+  min-width: 0;
 }
 
 .stat .kicker {
@@ -600,6 +620,8 @@ table.data a:hover {
 
 .stat .chip {
   margin-top: 10px;
+  width: 100%;
+  min-width: 0;
 }
 
 .fields {
@@ -649,6 +671,7 @@ table.data a:hover {
 .fields dd.mono {
   font-family: var(--mono);
   font-size: 13px;
+  overflow-wrap: anywhere;
 }
 
 .source {

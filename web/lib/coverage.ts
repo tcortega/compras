@@ -13,8 +13,8 @@ export function emptyCoverage(): Coverage {
 
 export function coverageFromItems(items: Item[]): Coverage {
   if (items.length === 0) return emptyCoverage()
-  const ufs = [...new Set(items.map((i) => i.uf))]
-  const quarters = [...new Set(items.map((i) => i.quarter))]
+  const ufs = [...new Set(items.map((i) => i.uf).filter(Boolean))]
+  const quarters = [...new Set(items.map((i) => i.quarter).filter(Boolean))]
   return {
     n: items.length,
     uf: ufs.length === 1 ? (ufs[0] ?? null) : null,
@@ -38,18 +38,50 @@ export function readCoverage(raw: unknown): Coverage {
   }
 }
 
+function readRowSlice(row: unknown): { uf?: string; quarter?: string } {
+  if (!row || typeof row !== 'object') return {}
+  const o = row as Record<string, unknown>
+  const nested =
+    o.coverage && typeof o.coverage === 'object' && !Array.isArray(o.coverage)
+      ? (o.coverage as Record<string, unknown>)
+      : null
+  const uf =
+    (typeof o.uf === 'string' && o.uf) ||
+    (nested && typeof nested.uf === 'string' && nested.uf) ||
+    undefined
+  const quarter =
+    (typeof o.quarter === 'string' && o.quarter) ||
+    (nested && typeof nested.quarter === 'string' && nested.quarter) ||
+    undefined
+  return { uf: uf || undefined, quarter: quarter || undefined }
+}
+
+function unique(values: string[]): string | null {
+  const u = [...new Set(values)]
+  return u.length === 1 ? (u[0] ?? null) : null
+}
+
 export function fillCoverage(coverage: Coverage, rows: readonly unknown[]): Coverage {
-  if (coverage.uf) return coverage
-  const ufs = [
-    ...new Set(
-      rows.flatMap((row) => {
-        if (!row || typeof row !== 'object' || !('uf' in row)) return []
-        const uf = (row as { uf?: unknown }).uf
-        return typeof uf === 'string' && uf ? [uf] : []
-      }),
-    ),
-  ]
-  return { ...coverage, uf: ufs.length === 1 ? (ufs[0] ?? null) : coverage.uf }
+  const complete = rows.length >= coverage.n
+  if (!complete) return coverage
+  const parsed = rows.map(readRowSlice)
+  return {
+    ...coverage,
+    uf: coverage.uf ?? unique(parsed.flatMap((p) => (p.uf ? [p.uf] : []))),
+    quarter: coverage.quarter ?? unique(parsed.flatMap((p) => (p.quarter ? [p.quarter] : []))),
+  }
+}
+
+export function overlaySlice(page: Coverage, slice: Coverage): Coverage {
+  return {
+    n: page.n,
+    uf: page.uf ?? slice.uf,
+    quarter: page.quarter ?? slice.quarter,
+    methodologyVersion:
+      page.methodologyVersion && page.methodologyVersion !== 'desconhecida'
+        ? page.methodologyVersion
+        : slice.methodologyVersion,
+  }
 }
 
 export function coverageParts(c: Coverage): { n: string; geo: string; when: string; method: string } {

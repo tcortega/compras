@@ -48,6 +48,7 @@ It fails if public flag fields leak.
 
 Landing is immutable content-hashed parquet under MinIO bucket `compras-landing`, partitioned `source/date=YYYY-MM-DD`.
 TCE-SP participant proposals land internally and are not read by the explorer.
+TCE-RS LicitaCon participant proposals land internally and are not read by the explorer.
 
 Host pipeline E2E against the same warehouse, after the stack is up:
 

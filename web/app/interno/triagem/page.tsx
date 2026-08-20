@@ -91,6 +91,7 @@ export default async function TriagemPage({ searchParams }: { searchParams: Prom
         rows={page.rows}
         columns={columns}
         coverage={page.coverage}
+        empty={triageCopy.empty}
         footer={<Pager base={routes.triagem} req={req} total={page.total} extra={{ kind, state }} />}
       />
     </Shell>

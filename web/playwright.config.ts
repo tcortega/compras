@@ -15,7 +15,8 @@ export default defineConfig({
   webServer: remote
     ? undefined
     : {
-        command: 'TRIAGE_LABELS_PATH=/tmp/compras-triage-labels.csv npm run dev',
+        command:
+          'TRIAGE_LABELS_PATH=/tmp/compras-triage-labels.csv TRIAGE_FLAGS_PATH=/tmp/compras-triage-flags.json npm run dev',
         url: 'http://127.0.0.1:3000',
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,

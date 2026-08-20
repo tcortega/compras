@@ -24,9 +24,18 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
-export default async function TriagemItemPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function TriagemItemPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
   if (!isStagingTriageEnabled()) notFound()
   const { id } = await params
+  const query = await searchParams
+  const erro = Array.isArray(query.erro) ? query.erro[0] : query.erro
+  const rotulo = Array.isArray(query.rotulo) ? query.rotulo[0] : query.rotulo
   const flag = await safeDetail(() => getFlag(id))
   if (!flag) notFound()
 
@@ -53,6 +62,7 @@ export default async function TriagemItemPage({ params }: { params: Promise<{ id
           { label: 'Estado', value: STATE_LABEL[flag.state] },
           { label: 'Detectado', value: formatDate(flag.detectedAt) },
           { label: 'Notificado', value: formatDate(flag.notifiedAt) },
+          { label: triageCopy.notifyArtifact, value: flag.notifyArtifact || 'n/d' },
           { label: 'Publicável após', value: formatDate(flag.publishAfter) },
           { label: 'Publicado', value: formatDate(flag.publishedAt) },
           {
@@ -69,6 +79,21 @@ export default async function TriagemItemPage({ params }: { params: Promise<{ id
         ]}
       />
       <TriageActions flag={flag} />
+      {erro === 'carencia' ? (
+        <p className="notice triage-flash" role="status">
+          {triageCopy.holdConflict}
+        </p>
+      ) : null}
+      {erro === 'transicao' ? (
+        <p className="notice triage-flash" role="status">
+          {triageCopy.transitionConflict}
+        </p>
+      ) : null}
+      {rotulo === '1' ? (
+        <p className="notice triage-flash" role="status">
+          {triageCopy.labeled}
+        </p>
+      ) : null}
       <section className="section" aria-labelledby="trilha-estados">
         <h2 id="trilha-estados">{audit.length > 0 ? triageCopy.audit : triageCopy.timestamps}</h2>
         {audit.length > 0 ? (

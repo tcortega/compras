@@ -1,6 +1,10 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
 const bannedPublic = /fraude|corrupto|roubo|\bflag\b|ranking|adjacenc|shared_qsa|shared_partner/i
+
+function estado(page: Page) {
+  return page.locator('.fields div', { has: page.getByText('Estado', { exact: true }) })
+}
 
 test('triagem interna caminha detectado, revisão e notificação sem publicar', async ({ page, request }) => {
   await page.goto('/itens')
@@ -42,29 +46,30 @@ test('triagem interna caminha detectado, revisão e notificação sem publicar',
   await expect(page.locator('nav[aria-label="Seções"] a[href="/interno/triagem"]')).toHaveCount(0)
   await expect(page.locator('.stats .kicker', { hasText: 'Homologado' })).toHaveCount(0)
 
-  await page.getByRole('link', { name: itemName }).first().click()
+  await expect(page.locator(`a[href="/interno/triagem/${created.id}"]`)).toBeVisible()
+
+  await page.goto(`/interno/triagem/${created.id}`)
   await expect(page.getByRole('heading', { name: itemName })).toBeVisible()
   await expect(page.getByText('Indício a verificar').first()).toBeVisible()
   await expect(page.getByText('criação para Detectado')).toBeVisible()
+  await expect(estado(page)).toContainText('Detectado')
 
   await page.getByRole('button', { name: 'Revisar' }).click()
-  await expect(page.getByText('Revisão interna').first()).toBeVisible()
+  await expect(estado(page)).toContainText('Revisão interna', { timeout: 15_000 })
   await expect(page.getByText('Detectado para Revisão interna')).toBeVisible()
 
   await page.getByRole('button', { name: 'Notificar órgão' }).click()
-  await expect(page.locator('.fields div', { has: page.getByText('Estado', { exact: true }) })).toContainText(
-    'Notificado',
-  )
+  await expect(estado(page)).toContainText('Notificado', { timeout: 15_000 })
+  await expect(page.getByText('aviso-interno.txt')).toBeVisible()
   await expect(page.getByText('Revisão interna para Notificado')).toBeVisible()
 
   await page.getByRole('button', { name: 'Publicar' }).click()
-  await expect(page.getByText('A carência de 7 dias ainda não passou.')).toBeVisible()
-  await expect(page.locator('.fields div', { has: page.getByText('Estado', { exact: true }) })).toContainText(
-    'Notificado',
-  )
+  await expect(page.getByText('A carência de 7 dias ainda não passou.')).toBeVisible({ timeout: 15_000 })
+  await expect(estado(page)).toContainText('Notificado')
+  await expect(estado(page)).not.toContainText('Publicado')
 
   await page.getByRole('button', { name: 'Erro de unidade' }).click()
-  await expect(page.getByText('Rótulo gravado em triage-labels.csv.')).toBeVisible()
+  await expect(page.getByText('Rótulo gravado em triage-labels.csv.')).toBeVisible({ timeout: 15_000 })
   const labels = await request.get('/api/interno/labels')
   expect(labels.ok()).toBeTruthy()
   const labeled = (await labels.json()) as { items: Array<{ flag_id: string; label: string }> }

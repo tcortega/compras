@@ -64,7 +64,12 @@ def sync_search_index(settings: Settings) -> dict[str, int]:
         if indexed != len(docs):
             raise SystemExit(f"meili docs {indexed} != warehouse {len(docs)}")
     counts = {kind: sum(1 for doc in docs if doc["kind"] == kind) for kind in KINDS}
-    return {"docs": len(docs), **counts}
+    return {
+        "docs": len(docs),
+        "items": counts["item"],
+        "orgaos": counts["orgao"],
+        "fornecedores": counts["fornecedor"],
+    }
 
 
 def list_documents(settings: Settings) -> list[dict[str, str]]:

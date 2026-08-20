@@ -149,6 +149,9 @@ from compras_ingest.csvio import read_csv
 
 ORGAO_CNPJ = "29477000000180"
 PNCP_ID = "29477000000180-1-2024-000001"
+FETCH_ANUAL_2024 = "C-FETCH-2024"
+FETCH_ANUAL_2025 = "C-FETCH-2025"
+FETCH_ANUAL_2026 = "C-FETCH-2026"
 RAW_CPF = "12345678901"
 LANDED_SOURCES = (
     "compras_gov",
@@ -385,6 +388,7 @@ def main() -> int:
     _check_defs()
     _assert_fracionamento_table()
     _assert_cnae_allowlist()
+    _assert_compras_gov_fetch_anual_year_columns(settings)
     with _official_hosts_blocked():
         official = _assert_official_urls(settings)
         _assert_compras_gov_official_urls(settings)
@@ -1600,6 +1604,109 @@ def _assert_compras_gov_years(settings: Settings) -> None:
     missing = {2024, 2025, 2026} - anos
     if missing:
         raise SystemExit(f"warehouse contratacao missing years {sorted(missing)}: {sorted(anos)}")
+
+
+def _assert_compras_gov_fetch_anual_year_columns(settings: Settings) -> None:
+    if settings.compras_gov_fetch:
+        raise SystemExit("fixture e2e must run with COMPRAS_GOV_FETCH=0")
+    root = Path(tempfile.mkdtemp(prefix="compras-gov-anual-fetch-"))
+    planted = _plant_oficial_anual_year_column_files(root / "oficial")
+    local = replace(
+        settings,
+        landing_uri=str(root / "landing"),
+        compras_gov_fetch=True,
+        trailing_window_as_of=date(2026, 8, 20),
+    )
+    transport = httpx.MockTransport(lambda request: _compras_gov_planted_response(request, planted))
+    real_client = httpx.Client
+
+    class PlantedClient(real_client):
+        def __init__(self, *args, **kwargs):
+            kwargs["transport"] = transport
+            super().__init__(*args, **kwargs)
+
+    httpx.Client = PlantedClient
+    try:
+        land_compras_gov(local)
+        _assert_planted_anual_partitions(local)
+    finally:
+        httpx.Client = real_client
+
+
+def _plant_oficial_anual_year_column_files(root: Path) -> Path:
+    # Official 2024 COMPRA uses ano_compra. 2025+ COMPRA uses ano_compra_pncp.
+    # Plant both on 2024 so a split by anocomprapncp would drop year=2024.
+    rows = {
+        2024: (
+            "id_compra,unidade_orgao_codigo_ibge,orgao_entidade_esfera_id,orgao_entidade_poder_id,ano_compra,ano_compra_pncp,data_publicacao_pncp,orgao_entidade_cnpj,orgao_entidade_razao_social,numero_controle_PNCP,objeto_compra,modalidade_nome\n"
+            f"{FETCH_ANUAL_2024},3306305,M,E,2024,2025,2024-03-15,29477000000180,PREFEITURA MUNICIPAL DE VOLTA REDONDA,29477000000180-1-2024-00FETCH,Aquisicao planted 2024,Pregao Eletronico\n",
+            "id_compra,id_compra_item,numero_item_compra,descricao,ano_compra\n"
+            f"{FETCH_ANUAL_2024},{FETCH_ANUAL_2024}-1,1,Papel A4 planted 2024,2024\n",
+        ),
+        2025: (
+            "id_compra,unidade_orgao_codigo_ibge,orgao_entidade_esfera_id,orgao_entidade_poder_id,ano_compra_pncp,data_publicacao_pncp,orgao_entidade_cnpj,orgao_entidade_razao_social,numero_controle_PNCP,objeto_compra,modalidade_nome\n"
+            f"{FETCH_ANUAL_2025},3306305,M,E,2025,2025-04-15,29477000000180,PREFEITURA MUNICIPAL DE VOLTA REDONDA,29477000000180-1-2025-00FETCH,Aquisicao planted 2025,Pregao Eletronico\n",
+            "id_compra,id_compra_item,numero_item_compra,descricao,ano_compra\n"
+            f"{FETCH_ANUAL_2025},{FETCH_ANUAL_2025}-1,1,Papel A4 planted 2025,2025\n",
+        ),
+        2026: (
+            "id_compra,unidade_orgao_codigo_ibge,orgao_entidade_esfera_id,orgao_entidade_poder_id,ano_compra_pncp,data_publicacao_pncp,orgao_entidade_cnpj,orgao_entidade_razao_social,numero_controle_PNCP,objeto_compra,modalidade_nome\n"
+            f"{FETCH_ANUAL_2026},3306305,M,E,2026,2026-02-15,29477000000180,PREFEITURA MUNICIPAL DE VOLTA REDONDA,29477000000180-1-2026-00FETCH,Aquisicao planted 2026,Pregao Eletronico\n",
+            "id_compra,id_compra_item,numero_item_compra,descricao,ano_compra\n"
+            f"{FETCH_ANUAL_2026},{FETCH_ANUAL_2026}-1,1,Papel A4 planted 2026,2026\n",
+        ),
+    }
+    for year, (compra, item) in rows.items():
+        folder = root / "anual" / str(year)
+        folder.mkdir(parents=True, exist_ok=True)
+        (folder / f"comprasGOV-anual-VW_FT_PNCP_COMPRA-{year}.csv").write_text(compra, encoding="utf-8")
+        (folder / f"comprasGOV-anual-VW_FT_PNCP_COMPRA_ITEM-{year}.csv").write_text(item, encoding="utf-8")
+    return root
+
+
+def _compras_gov_planted_response(request: httpx.Request, planted: Path) -> httpx.Response:
+    url = str(request.url)
+    assert_official_host(url, COMPRAS_GOV_HOSTS)
+    path = httpx.URL(url).path or ""
+    if "/diario/" in path or "/mensal/" in path:
+        return httpx.Response(404, text="missing")
+    marker = "/seges/comprasgov/"
+    if marker not in path or "/anual/" not in path:
+        return httpx.Response(404, text="missing")
+    rel = path.split(marker, 1)[1]
+    target = planted / rel
+    if not target.is_file():
+        return httpx.Response(404, text="missing")
+    return httpx.Response(200, content=target.read_bytes(), headers={"content-type": "text/csv"})
+
+
+def _assert_planted_anual_partitions(settings: Settings) -> None:
+    store = LandingStore(settings)
+    year_keys = store.year_partition_keys("compras_gov")
+    if not year_keys:
+        raise SystemExit("FETCH=1 anual landing has no year= partitions")
+    planted_ids = {
+        2024: FETCH_ANUAL_2024,
+        2025: FETCH_ANUAL_2025,
+        2026: FETCH_ANUAL_2026,
+    }
+    for year, want in planted_ids.items():
+        found = [k for k in year_keys if f"year={year}" in Path(k).parts]
+        if not found:
+            raise SystemExit(f"FETCH=1 anual dropped year={year} parquet")
+        if not any("date=" in k for k in found):
+            raise SystemExit(f"FETCH=1 anual year={year} is not also partitioned by date")
+        ids: set[str] = set()
+        for key in found:
+            df = store.read_parquet(key)
+            if "idcompra" not in df.columns:
+                raise SystemExit(f"FETCH=1 anual year={year} parquet missing idcompra: {key}")
+            ids.update(str(v) for v in df["idcompra"].to_list())
+        if want not in ids:
+            raise SystemExit(f"FETCH=1 anual year={year} lost planted {want}: {sorted(ids)}")
+        leaked = [other for other_year, other in planted_ids.items() if other_year != year and other in ids]
+        if leaked:
+            raise SystemExit(f"FETCH=1 anual year={year} absorbed {leaked}")
 
 
 def _assert_tier_a_landing(settings: Settings, ocds_report: dict) -> None:

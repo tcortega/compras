@@ -2981,7 +2981,7 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		MethodologyVersion = SliceIds.Methodology,
 		Coverage = new()
 		{
-			N = 1,
+			N = 4,
 			Uf = "PA",
 			Quarter = SliceIds.Quarter,
 			MethodologyVersion = SliceIds.Methodology,

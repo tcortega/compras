@@ -30,5 +30,6 @@ CPF is masked at ingest as `***.XXX.XXX-**` when TP_DOCUMENTO_LICITANTE is F, an
 CNPJ is stored.
 Proposal values include classified losers and winners.
 
-CI uses `ingest/fixtures/tce_rs_licitacon/`.
+CI and compose seed use `ingest/fixtures/tce_rs_licitacon/` with `TCE_RS_FETCH=0`.
+Fixture mode does not contact dados.tce.rs.gov.br or tcers.tc.br.
 Live CKAN download is `TCE_RS_FETCH=1`.

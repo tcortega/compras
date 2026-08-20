@@ -96,7 +96,6 @@ def land_receita_cnpj(
         estabelecimentos, socios = _load_remote(official, keep)
         part = f"{official.month}-01"
     else:
-        resolve_receita_index()
         estabelecimentos, socios = _load_fixture(settings, keep)
         dates = [parse_date(v) for v in estabelecimentos["data_inicio_atividade"].to_list()] if (
             not estabelecimentos.is_empty() and "data_inicio_atividade" in estabelecimentos.columns

@@ -24,6 +24,7 @@ from compras_ingest.official import (
     PNCP_PUBLICACAO_PATH,
     PncpOfficial,
     assert_official_host,
+    fixture_pncp_official,
     http_client,
     resolve_pncp_consulta,
 )
@@ -209,7 +210,11 @@ def land_pncp_consulta(
     client_holder: httpx.Client | None = None,
 ) -> tuple[LandingRef, pl.DataFrame, dict]:
     store = store or LandingStore(settings)
-    official = official or resolve_pncp_consulta()
+    if official is None:
+        if settings.pncp_consulta_fetch:
+            official = resolve_pncp_consulta()
+        else:
+            official = fixture_pncp_official()
     if official.consulta_base != PNCP_CONSULTA_BASE:
         raise RuntimeError(f"consulta base is not official: {official.consulta_base}")
     if httpx.URL(official.consulta_base).host not in PNCP_HOSTS:

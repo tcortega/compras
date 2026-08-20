@@ -12,6 +12,7 @@ from compras_ingest.official import (
     OCDS_HOSTS,
     OcdsOfficial,
     download_to,
+    fixture_ocds_official,
     http_client,
     resolve_ocds_feed,
 )
@@ -37,7 +38,10 @@ def land_ocds(
     store: LandingStore | None = None,
 ) -> tuple[LandingRef, dict]:
     store = store or LandingStore(settings)
-    official = resolve_ocds_feed(settings.ocds_year)
+    if settings.ocds_fetch:
+        official = resolve_ocds_feed(settings.ocds_year)
+    else:
+        official = fixture_ocds_official(settings.ocds_year)
     rows = load_ocds(settings, compras_ids, official)
     df = pl.DataFrame(rows, schema=OCDS_COLS) if rows else pl.DataFrame(schema=_empty_schema())
     dates = [parse_datetime(r.get("date")) for r in rows]

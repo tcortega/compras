@@ -195,6 +195,15 @@ public sealed record ItemDetail
 	public required string ContratacaoPncpId { get; init; }
 }
 
+public sealed record FlagPage
+{
+	public required IReadOnlyList<FlagRecord> Items { get; init; }
+
+	public required Coverage Coverage { get; init; }
+
+	public int Total { get; init; }
+}
+
 public sealed record FlagRecord
 {
 	public required Guid Id { get; init; }

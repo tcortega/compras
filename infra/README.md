@@ -62,3 +62,5 @@ python -m compras_ingest.e2e
 CI runs the host pipeline E2E and this compose prove.
 
 Detector rows stay in `flag` with `state=detected`.
+`GET /api/internal/flags` lists those facts.
+The explorer does not link that route.

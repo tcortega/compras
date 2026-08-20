@@ -1,27 +1,30 @@
 {
-  "portal": "Portal da Transparência Municipal TCE-SP",
-  "catalog_url": "https://transparencia.tce.sp.gov.br/conjunto-de-dados",
-  "sample_file_url": "https://transparencia.tce.sp.gov.br/sites/default/files/conjunto-dados/licitacoes-contratos/licitacao-2025-01.zip",
-  "sample_file": "licitacao-2025-01_0.csv",
-  "layout_url": "https://transparencia.tce.sp.gov.br/sites/default/files/conjunto-dados/licitacoes-contratos/layout-ajustes-licitacoes.pdf",
-  "cube_schema_url": "https://transparencia.tce.sp.gov.br/sites/default/files/conjunto-dados/licitacoes-contratos/cubo_audesp_fase_iv.pdf",
-  "cube_sql_url": "https://transparencia.tce.sp.gov.br/sites/default/files/conjunto-dados/licitacoes-contratos/cubo_audesp_fase_iv.sql_.gz",
-  "encoding": "utf-8",
-  "delimiter": ";",
-  "decimal": ",",
-  "auth": "none",
+  "source": "TCE-SP",
+  "probed_at_utc": "2026-08-20T00:35:00Z",
   "exposes_participant_proposal_values": true,
-  "proposal_value_key": "Valor da Proposta",
-  "bidder_id_key": "CNPJ do participante candidato",
-  "winner_key": "Resultado da Habilitação",
-  "winner_value": "Classificado - Vencedor",
-  "missing_keys": {
-    "rank": null,
-    "proposal_date": null,
-    "numeric_item_id": null,
-    "cpf_column": null
+  "exposes_them_in": "monthly LICITACOES CSV extracts, not the cubo SQL dump",
+  "auth": "none",
+  "pagination": "none",
+  "rate_limit": "none published",
+  "format": "ZIP of UTF-8 semicolon-separated CSV",
+  "urls": {
+    "listing": "https://transparencia.tce.sp.gov.br/conjunto-de-dados",
+    "layout_pdf": "https://transparencia.tce.sp.gov.br/sites/default/files/conjunto-dados/licitacoes-contratos/layout-ajustes-licitacoes.pdf",
+    "cubo_pdf": "https://transparencia.tce.sp.gov.br/sites/default/files/conjunto-dados/licitacoes-contratos/cubo_audesp_fase_iv.pdf",
+    "cubo_sql_gz": "https://transparencia.tce.sp.gov.br/sites/default/files/conjunto-dados/licitacoes-contratos/cubo_audesp_fase_iv.sql_.gz",
+    "sample_opened": "https://transparencia.tce.sp.gov.br/sites/default/files/conjunto-dados/licitacoes-contratos/licitacao-2025-01.zip",
+    "sample_2018_header_opened": "https://transparencia.tce.sp.gov.br/sites/default/files/conjunto-dados/licitacoes-contratos/licitacao-2018_0.zip",
+    "latest_listed_at_probe": "https://transparencia.tce.sp.gov.br/sites/default/files/conjunto-dados/licitacoes-contratos/licitacao-2025-12.zip"
   },
-  "keys": [
+  "opened_file": {
+    "zip": "licitacao-2025-01.zip",
+    "inner_csv": "licitacao-2025-01_0.csv",
+    "csv_bytes": 1450417300,
+    "data_rows": 4117679,
+    "delimiter": ";",
+    "encoding": "utf-8"
+  },
+  "column_keys_exact": [
     "Município",
     "Entidade",
     "Código da Licitação",
@@ -44,48 +47,146 @@
     "Resultado da Habilitação",
     "Valor da Proposta"
   ],
-  "samples": [
+  "field_checklist": {
+    "bidder_cnpj": {
+      "exists": true,
+      "key": "CNPJ do participante candidato"
+    },
+    "proposed_value": {
+      "exists": true,
+      "key": "Valor da Proposta",
+      "winner_only": false
+    },
+    "rank": {
+      "exists": false,
+      "key": null
+    },
+    "winner_flag": {
+      "exists": true,
+      "key": "Resultado da Habilitação",
+      "winner_value": "Classificado - Vencedor"
+    },
+    "proposal_date": {
+      "exists": false,
+      "nearest_key": "Data do edital"
+    },
+    "item_id": {
+      "exists": false,
+      "nearest_key": "Produto (item)",
+      "note": "free text, often empty"
+    }
+  },
+  "habilitacao_values_first_250000_rows_2025_01": {
+    "Classificado": 104701,
+    "Proposta não analisada": 50761,
+    "Desclassificado": 42930,
+    "Classificado - Vencedor": 24581,
+    "Nao Compareceu": 12319,
+    "Habilitado": 6146,
+    "": 5593,
+    "Inabilitado": 2966,
+    "Desistiu": 3
+  },
+  "proposed_value_fill_first_250000_rows_2025_01": {
+    "nonempty_Valor_da_Proposta": 243522,
+    "nonempty_and_not_Vencedor": 218951,
+    "cnpj_14_digits": 244369,
+    "cpf_11_digits": 0
+  },
+  "sample_rows_2025_01_aguas_de_lindoia_2024000000105": [
+    {
+      "Município": "Águas de Lindóia",
+      "Entidade": "PREFEITURA MUNICIPAL DE ÁGUAS DE LINDÓIA",
+      "Código da Licitação": "2024000000105",
+      "Modalidade de licitação": "Pregao Eletronico",
+      "Produto (item)": "PLAYGROUND INFANTIL UN",
+      "Quantidade do objeto contratado (item)": "3,0",
+      "CNPJ do participante candidato": "11.021.249/0001-08",
+      "Nome do participante candidato": "MULTKAP COMERCIO DE ARTIGOS DE BORRACHA LTDA",
+      "Resultado da Habilitação": "Classificado",
+      "Valor da Proposta": "32250,0",
+      "Data do edital": "09/10/2024"
+    },
+    {
+      "Município": "Águas de Lindóia",
+      "Entidade": "PREFEITURA MUNICIPAL DE ÁGUAS DE LINDÓIA",
+      "Código da Licitação": "2024000000105",
+      "Modalidade de licitação": "Pregao Eletronico",
+      "Produto (item)": "PLAYGROUND INFANTIL UN",
+      "Quantidade do objeto contratado (item)": "3,0",
+      "CNPJ do participante candidato": "13.145.437/0001-65",
+      "Nome do participante candidato": "RAPHAEL NICOLAU MAZZOTTI",
+      "Resultado da Habilitação": "Classificado",
+      "Valor da Proposta": "8300,0",
+      "Data do edital": "09/10/2024"
+    },
+    {
+      "Município": "Águas de Lindóia",
+      "Entidade": "PREFEITURA MUNICIPAL DE ÁGUAS DE LINDÓIA",
+      "Código da Licitação": "2024000000105",
+      "Modalidade de licitação": "Pregao Eletronico",
+      "Produto (item)": "PLAYGROUND INFANTIL UN",
+      "Quantidade do objeto contratado (item)": "3,0",
+      "CNPJ do participante candidato": "34.914.897/0001-80",
+      "Nome do participante candidato": "ROTOCYCLE INDUSTRIA E COMERCIO DE PLASTICO EIRELI",
+      "Resultado da Habilitação": "Classificado - Vencedor",
+      "Valor da Proposta": "7220,0",
+      "Data do edital": "09/10/2024"
+    }
+  ],
+  "sample_rows_2018_adamantina_camara_2018000000001": [
     {
       "Município": "Adamantina",
-      "Entidade": "CENTRO UNIVERSITÁRIO DE ADAMANTINA",
-      "Código da Licitação": "2024000000113",
-      "Modalidade de licitação": "Pregao Eletronico",
-      "Objeto": "(redacted object text)",
-      "Descrição do objeto contratado": "(redacted)",
-      "Produto (item)": "",
-      "Quantidade do objeto contratado (item)": "",
-      "Unidade do objeto contratado": "",
-      "Número do edital": "8",
-      "Data do edital": "22/10/2024",
-      "CNPJ do participante candidato": "22.525.517/0001-37",
-      "Nome do participante candidato": "(redacted)",
+      "Entidade": "CÂMARA MUNICIPAL DE ADAMANTINA",
+      "Código da Licitação": "2018000000001",
+      "Modalidade de licitação": "Convite",
+      "CNPJ do participante candidato": "05.938.780/0001-39",
+      "Nome do participante candidato": "Cooper Card Administradora de Cartões Ltda",
       "Resultado da Habilitação": "Classificado - Vencedor",
-      "Valor da Proposta": "5200,0"
+      "Valor da Proposta": "39600,0",
+      "Data do edital": "18/09/2018"
     },
     {
       "Município": "Adamantina",
-      "Entidade": "CENTRO UNIVERSITÁRIO DE ADAMANTINA",
-      "Código da Licitação": "2024000000113",
-      "Modalidade de licitação": "Pregao Eletronico",
-      "Objeto": "(redacted object text)",
-      "Descrição do objeto contratado": "(redacted)",
-      "Produto (item)": "",
-      "Quantidade do objeto contratado (item)": "",
-      "Unidade do objeto contratado": "",
-      "Número do edital": "8",
-      "Data do edital": "22/10/2024",
-      "CNPJ do participante candidato": "03.526.176/0001-70",
-      "Nome do participante candidato": "DENTMED MATERIAIS MÉDICOS E ODONTOLÓGICOS LTDA EPP",
-      "Resultado da Habilitação": "Classificado",
-      "Valor da Proposta": "5320,0"
+      "Entidade": "CÂMARA MUNICIPAL DE ADAMANTINA",
+      "Código da Licitação": "2018000000001",
+      "Modalidade de licitação": "Convite",
+      "CNPJ do participante candidato": "04.740.876/0001-25",
+      "Nome do participante candidato": "Companhia Brasileira de Soluções e Serviços",
+      "Resultado da Habilitação": "Nao Compareceu",
+      "Valor da Proposta": "0,0",
+      "Data do edital": "18/09/2018"
     }
   ],
-  "notes": [
-    "Same 21 keys in licitacao-2019-01_0.csv and licitacao-2025-01_0.csv.",
-    "Codigo da Licitacao is unique only within Entidade, not statewide.",
-    "Grain is denormalized licitacao x item/lote x participante.",
-    "No CPF rows in the first 5605 parsed 2025-01 rows; column is labeled CNPJ.",
-    "Resultado da Habilitacao values seen: Classificado, Classificado - Vencedor, Desclassificado, Inabilitado, Nao Compareceu, empty.",
-    "Cube SQL (ft_fase4) has dm_contratada (awarded contractor) and no participant/proposal dimension."
-  ]
+  "cubo_audesp_fase_iv": {
+    "has_participant_proposal_values": false,
+    "schema": "audesp_fase_iv",
+    "tables": [
+      "dm_ajuste",
+      "dm_contratada",
+      "dm_data",
+      "dm_entidade",
+      "dm_licitacao",
+      "dm_mod_inst",
+      "dm_municipio",
+      "dm_orgao",
+      "dm_tipos",
+      "dm_tp_objeto",
+      "ft_fase4",
+      "sa_df_ur"
+    ],
+    "ft_fase4_value_keys": [
+      "qtde_notas_empenho",
+      "valor_total_licitacao",
+      "valor_ajuste",
+      "valor_total_licitacao_ponderado"
+    ],
+    "contractor_keys": [
+      "cont_tp_doc",
+      "cont_num_doc",
+      "cont_nome"
+    ],
+    "listed_date": "2020-08-11"
+  },
+  "blockers": []
 }

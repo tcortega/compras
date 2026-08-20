@@ -1,23 +1,30 @@
 {
-  "portal": "Dados Abertos TCE-RS LicitaCon",
-  "catalog_url": "https://dados.tce.rs.gov.br/dataset/licitacoes-consolidado-2025",
-  "catalog_years": [
-    "https://dados.tce.rs.gov.br/dataset/licitacoes-consolidado-2023",
-    "https://dados.tce.rs.gov.br/dataset/licitacoes-consolidado-2024",
-    "https://dados.tce.rs.gov.br/dataset/licitacoes-consolidado-2025",
-    "https://dados.tce.rs.gov.br/dataset/licitacoes-consolidado-2026"
-  ],
-  "legacy_bulk_url_pattern": "http://dados.tce.rs.gov.br/dados/licitacon/licitacao/ano/{year}.csv.zip",
-  "ckan_api": "https://dados.tce.rs.gov.br/api/3/action/package_show?id=licitacoes-consolidado-{year}",
-  "layout_url": "https://tcers.tc.br/repo/cex/licitacon/cpt/eValidador_LicitaCon_Manual_Leiaute_1.4.pdf",
-  "layout_version": "1.4.056",
-  "layout_date": "2026-07-14",
-  "diagram_url": "https://tcers.tc.br/repo/cex/licitacon/diagrama_licitacao.pdf",
-  "cidadao_url": "https://portal.tce.rs.gov.br/aplicprod/f?p=50500:1",
+  "source": "TCE-RS LicitaCon",
+  "probed_at_utc": "2026-08-20T00:35:00Z",
+  "exposes_participant_proposal_values": true,
+  "exposes_them_in": "PROPOSTA / LOTE_PROPOSTA / ITEM_PROPOSTA (open data names) matching PROPOSTA.TXT / LOTE_PROP.TXT / ITEM_PROP.TXT",
+  "live_ckan_zip_opened": false,
+  "sample_opened": "official eValidador example remessa ZIP",
   "auth": "none for open data",
-  "open_data_format": "14 CSV files in one zip, eValidador leiaute plus CD_ORGAO",
-  "remessa_delimiter": "|",
-  "open_data_file_names": [
+  "pagination": "none for annual ZIP",
+  "rate_limit": "none published",
+  "format_evalidador_opened": "pipe-delimited TXT, remessa header line then data rows",
+  "format_open_data_claimed": "ZIP of 14 CSVs plus CD_ORGAO; delimiter not verified",
+  "urls": {
+    "portal": "https://dados.tce.rs.gov.br/",
+    "dataset_2026": "https://dados.tce.rs.gov.br/dataset/licitacoes-consolidado-2026",
+    "dataset_2025": "https://dados.tce.rs.gov.br/dataset/licitacoes-consolidado-2025",
+    "dataset_2024": "https://dados.tce.rs.gov.br/dataset/licitacoes-consolidado-2024",
+    "ckan_api_2025": "https://dados.tce.rs.gov.br/api/3/action/package_show?id=licitacoes-consolidado-2025",
+    "resource_name_2025": "licitacoes-consolidado-2025.csv.zip",
+    "leiaute_pdf": "https://tcers.tc.br/repo/cex/licitacon/cpt/eValidador_LicitaCon_Manual_Leiaute_1.4.pdf",
+    "diagrama_pdf": "https://tcers.tc.br/repo/cex/licitacon/diagrama_licitacao.pdf",
+    "docs": "https://tcers.tc.br/sistemas-de-controle-externo/?section=LICITACON",
+    "example_remessa_zip": "https://tcers.tc.br/repo/cex/licitacon/cpt/eValidador-licitacon-exemplos-1.4.zip",
+    "cidadao": "https://portal.tce.rs.gov.br/aplicprod/f?p=50500:19",
+    "swagger_jurisdicionado": "https://portal.tce.rs.gov.br/api/qonws/swagger-ui/index.html#/licitacon"
+  },
+  "open_data_files_claimed": [
     "PESSOAS",
     "MEMBRO_CONSORCIO",
     "COMISSAO",
@@ -33,176 +40,261 @@
     "ITEM_PROPOSTA",
     "DOCUMENTO_LICITACAO"
   ],
-  "exposes_participant_proposal_values": true,
-  "proposal_value_keys": [
-    "VL_TOTAL_PROPOSTA",
-    "VL_TOTAL_LOTE",
-    "VL_UNITARIO",
-    "VL_TOTAL_ITEM"
+  "evalidador_files_opened": [
+    "LICITANTE.TXT",
+    "PROPOSTA.TXT",
+    "LOTE_PROP.TXT",
+    "ITEM_PROP.TXT",
+    "PESSOAS.TXT",
+    "LICITACAO.TXT",
+    "LOTE.TXT",
+    "ITEM.TXT"
   ],
-  "bidder_id_keys": [
-    "TP_DOCUMENTO_LICITANTE",
-    "NR_DOCUMENTO_LICITANTE"
-  ],
-  "winner_keys": {
-    "LICITACAO": [
-      "TP_DOCUMENTO_VENCEDOR",
-      "NR_DOCUMENTO_VENCEDOR",
-      "TP_RESULTADO_GLOBAL",
-      "VL_HOMOLOGADO"
+  "column_keys_exact": {
+    "LICITANTE": [
+      "NR_LICITACAO",
+      "ANO_LICITACAO",
+      "CD_TIPO_MODALIDADE",
+      "TP_DOCUMENTO_LICITANTE",
+      "NR_DOCUMENTO_LICITANTE",
+      "TP_DOCUMENTO_REPRES",
+      "NR_DOCUMENTO_REPRES",
+      "TP_CONDICAO",
+      "TP_RESULTADO_HABILITACAO",
+      "BL_BENEFICIO_MICRO_EPP"
     ],
-    "LOTE": [
-      "TP_DOCUMENTO_VENCEDOR",
-      "NR_DOCUMENTO_VENCEDOR",
-      "TP_RESULTADO_LOTE",
-      "VL_HOMOLOGADO"
+    "PROPOSTA": [
+      "NR_LICITACAO",
+      "ANO_LICITACAO",
+      "CD_TIPO_MODALIDADE",
+      "TP_DOCUMENTO_LICITANTE",
+      "NR_DOCUMENTO_LICITANTE",
+      "DT_PROPOSTA",
+      "TP_RESULTADO_PROPOSTA",
+      "VL_TOTAL_PROPOSTA",
+      "PC_DESCONTO",
+      "VL_NOTA_TECNICA",
+      "DT_HOMOLOGACAO",
+      "PC_TX"
     ],
-    "ITEM": [
-      "TP_DOCUMENTO_VENCEDOR",
-      "NR_DOCUMENTO_VENCEDOR",
-      "TP_RESULTADO_ITEM",
-      "VL_TOTAL_HOMOLOGADO"
+    "LOTE_PROP": [
+      "NR_LICITACAO",
+      "ANO_LICITACAO",
+      "CD_TIPO_MODALIDADE",
+      "TP_DOCUMENTO_LICITANTE",
+      "NR_DOCUMENTO_LICITANTE",
+      "NR_LOTE",
+      "PC_DESCONTO",
+      "VL_TOTAL_LOTE",
+      "VL_NOTA_TECNICA",
+      "DT_HOMOLOGACAO",
+      "TP_RESULTADO_PROPOSTA",
+      "PC_TX",
+      "TP_RESULTADO_HABILITACAO"
     ],
-    "proposal_result": "TP_RESULTADO_PROPOSTA values C Classificado, D Desclassificado, P Pendente (not a winner flag)"
+    "ITEM_PROP": [
+      "NR_LICITACAO",
+      "ANO_LICITACAO",
+      "CD_TIPO_MODALIDADE",
+      "TP_DOCUMENTO_LICITANTE",
+      "NR_DOCUMENTO_LICITANTE",
+      "NR_LOTE",
+      "NR_ITEM",
+      "PC_BDI",
+      "PC_DESCONTO",
+      "PC_ENCARGOS_SOCIAIS",
+      "VL_UNITARIO",
+      "VL_TOTAL_ITEM",
+      "VL_NOTA_TECNICA",
+      "DT_HOMOLOGACAO",
+      "TP_RESULTADO_PROPOSTA",
+      "PC_TX",
+      "TP_RESULTADO_HABILITACAO"
+    ]
   },
-  "rank_key": null,
-  "proposal_date_key": "DT_PROPOSTA",
-  "item_id_keys": [
-    "NR_LOTE",
-    "NR_ITEM"
+  "open_data_extra_key_claimed_not_in_example": [
+    "CD_ORGAO"
   ],
-  "sample_origin": "Official eValidador leiaute 1.4.056 examples. Live CSV not downloaded from this box.",
-  "blocker": "dados.tce.rs.gov.br HTTPS returns SSL UNEXPECTED_EOF; HTTP HEAD times out. CKAN package_show and dataset HTML return 500 via WebFetch. portal.tce.rs.gov.br LicitaCon Cidadao also 500 via WebFetch. Layout PDF on tcers.tc.br downloaded successfully.",
-  "tables": {
-    "LICITANTE": {
+  "field_checklist": {
+    "bidder_cnpj": {
+      "exists": true,
       "keys": [
-        "CD_ORGAO",
-        "NR_LICITACAO",
-        "ANO_LICITACAO",
-        "CD_TIPO_MODALIDADE",
         "TP_DOCUMENTO_LICITANTE",
-        "NR_DOCUMENTO_LICITANTE",
-        "TP_DOCUMENTO_REPRES",
-        "NR_DOCUMENTO_REPRES",
-        "TP_CONDICAO",
-        "TP_RESULTADO_HABILITACAO",
-        "BL_BENEFICIO_MICRO_EPP"
+        "NR_DOCUMENTO_LICITANTE"
       ],
-      "samples": [
-        {
-          "NR_LICITACAO": "19",
-          "ANO_LICITACAO": "2015",
-          "CD_TIPO_MODALIDADE": "PRE",
-          "TP_DOCUMENTO_LICITANTE": "J",
-          "NR_DOCUMENTO_LICITANTE": "88888888888888",
-          "TP_DOCUMENTO_REPRES": "F",
-          "NR_DOCUMENTO_REPRES": "***.999.999-**",
-          "TP_RESULTADO_HABILITACAO": "H"
-        }
-      ]
+      "cnpj_when": "TP_DOCUMENTO_LICITANTE=J"
     },
-    "PROPOSTA": {
+    "proposed_value": {
+      "exists": true,
       "keys": [
-        "CD_ORGAO",
-        "NR_LICITACAO",
-        "ANO_LICITACAO",
-        "CD_TIPO_MODALIDADE",
-        "TP_DOCUMENTO_LICITANTE",
-        "NR_DOCUMENTO_LICITANTE",
-        "DT_PROPOSTA",
-        "TP_RESULTADO_PROPOSTA",
         "VL_TOTAL_PROPOSTA",
-        "PC_DESCONTO",
-        "VL_NOTA_TECNICA",
-        "DT_HOMOLOGACAO",
-        "PC_TX"
-      ],
-      "samples": [
-        {
-          "NR_LICITACAO": "14",
-          "ANO_LICITACAO": "2015",
-          "CD_TIPO_MODALIDADE": "TMP",
-          "TP_DOCUMENTO_LICITANTE": "J",
-          "NR_DOCUMENTO_LICITANTE": "99999999999999",
-          "DT_PROPOSTA": "14/07/2015",
-          "TP_RESULTADO_PROPOSTA": "D",
-          "VL_TOTAL_PROPOSTA": "55270,00"
-        }
-      ]
-    },
-    "LOTE_PROPOSTA": {
-      "keys": [
-        "CD_ORGAO",
-        "NR_LICITACAO",
-        "ANO_LICITACAO",
-        "CD_TIPO_MODALIDADE",
-        "TP_DOCUMENTO_LICITANTE",
-        "NR_DOCUMENTO_LICITANTE",
-        "NR_LOTE",
-        "PC_DESCONTO",
         "VL_TOTAL_LOTE",
-        "VL_NOTA_TECNICA",
-        "DT_HOMOLOGACAO",
-        "TP_RESULTADO_PROPOSTA",
-        "PC_TX",
-        "TP_RESULTADO_HABILITACAO"
-      ],
-      "samples": [
-        {
-          "NR_LICITACAO": "12",
-          "ANO_LICITACAO": "2015",
-          "CD_TIPO_MODALIDADE": "RDC",
-          "TP_DOCUMENTO_LICITANTE": "J",
-          "NR_DOCUMENTO_LICITANTE": "99999999999999",
-          "NR_LOTE": "2",
-          "VL_TOTAL_LOTE": "8424,00",
-          "VL_NOTA_TECNICA": "12,00"
-        }
-      ]
-    },
-    "ITEM_PROPOSTA": {
-      "keys": [
-        "CD_ORGAO",
-        "NR_LICITACAO",
-        "ANO_LICITACAO",
-        "CD_TIPO_MODALIDADE",
-        "TP_DOCUMENTO_LICITANTE",
-        "NR_DOCUMENTO_LICITANTE",
-        "NR_LOTE",
-        "NR_ITEM",
-        "PC_BDI",
-        "PC_DESCONTO",
-        "PC_ENCARGOS_SOCIAIS",
         "VL_UNITARIO",
-        "VL_TOTAL_ITEM",
-        "VL_NOTA_TECNICA",
-        "DT_HOMOLOGACAO",
-        "TP_RESULTADO_PROPOSTA",
-        "PC_TX",
-        "TP_RESULTADO_HABILITACAO"
+        "VL_TOTAL_ITEM"
       ],
-      "samples": [
-        {
-          "NR_LICITACAO": "21",
-          "ANO_LICITACAO": "2015",
-          "CD_TIPO_MODALIDADE": "TMP",
-          "TP_DOCUMENTO_LICITANTE": "F",
-          "NR_DOCUMENTO_LICITANTE": "***.999.999-**",
-          "NR_LOTE": "3",
-          "NR_ITEM": "1",
-          "PC_DESCONTO": "12,00",
-          "VL_UNITARIO": "213,79",
-          "VL_TOTAL_ITEM": "50026,86"
-        }
+      "winner_only": false,
+      "winner_only_for": "PRE/leilao/concurso/Lei 13.303 by IN 13 art. 8"
+    },
+    "rank": {
+      "exists": false,
+      "key": null
+    },
+    "winner_flag": {
+      "exists": false,
+      "nearest_keys": [
+        "TP_RESULTADO_PROPOSTA",
+        "NR_DOCUMENTO_VENCEDOR",
+        "TP_DOCUMENTO_VENCEDOR"
+      ],
+      "resultado_values": {
+        "C": "Classificado",
+        "D": "Desclassificado",
+        "P": "Pendente"
+      }
+    },
+    "proposal_date": {
+      "exists": true,
+      "key": "DT_PROPOSTA"
+    },
+    "item_id": {
+      "exists": true,
+      "keys": [
+        "NR_ITEM",
+        "NR_LOTE"
       ]
     }
   },
-  "coverage_caveat": "For PRE, PRP, PDE, PCE, PCP, CCE, CCP, ESE, EST, RDC, RDE, CNS, LEI, LEE only winning proposals are mandatory. Non-winner proposed values may be absent. Other modalities require all licitante proposals at encerramento since 07/2019.",
-  "notes": [
-    "Open data adds CD_ORGAO to every file.",
-    "TP_DOCUMENTO values: E estrangeiro, F CPF, J CNPJ, P identificador provisorio.",
-    "No rank field exists in any proposal table.",
-    "Secret estimated values withheld until the bid is closed.",
-    "Current and prior year zips update daily. Older years update weekly."
+  "example_remessa_header": "89550032000174|01/01/2022|31/01/2022|12/01/2022|ORGÃO NÃO AUDITADO|<n>",
+  "sample_rows_masked": {
+    "LICITANTE": [
+      {
+        "NR_LICITACAO": "42",
+        "ANO_LICITACAO": "2014",
+        "CD_TIPO_MODALIDADE": "CNC",
+        "TP_DOCUMENTO_LICITANTE": "J",
+        "NR_DOCUMENTO_LICITANTE": "10610739000179",
+        "TP_DOCUMENTO_REPRES": "F",
+        "NR_DOCUMENTO_REPRES": "***.043.830-**",
+        "TP_CONDICAO": "",
+        "TP_RESULTADO_HABILITACAO": "I",
+        "BL_BENEFICIO_MICRO_EPP": "N"
+      },
+      {
+        "NR_LICITACAO": "42",
+        "ANO_LICITACAO": "2014",
+        "CD_TIPO_MODALIDADE": "CNC",
+        "TP_DOCUMENTO_LICITANTE": "J",
+        "NR_DOCUMENTO_LICITANTE": "03722885000120",
+        "TP_DOCUMENTO_REPRES": "F",
+        "NR_DOCUMENTO_REPRES": "***.892.170-**",
+        "TP_CONDICAO": "",
+        "TP_RESULTADO_HABILITACAO": "H",
+        "BL_BENEFICIO_MICRO_EPP": "S"
+      }
+    ],
+    "PROPOSTA": [
+      {
+        "NR_LICITACAO": "42",
+        "ANO_LICITACAO": "2014",
+        "CD_TIPO_MODALIDADE": "CNC",
+        "TP_DOCUMENTO_LICITANTE": "J",
+        "NR_DOCUMENTO_LICITANTE": "03722885000120",
+        "DT_PROPOSTA": "15/10/2014",
+        "TP_RESULTADO_PROPOSTA": "C",
+        "VL_TOTAL_PROPOSTA": "5493164,86",
+        "PC_DESCONTO": "",
+        "VL_NOTA_TECNICA": "",
+        "DT_HOMOLOGACAO": "",
+        "PC_TX": "0,9"
+      },
+      {
+        "NR_LICITACAO": "42",
+        "ANO_LICITACAO": "2014",
+        "CD_TIPO_MODALIDADE": "CNC",
+        "TP_DOCUMENTO_LICITANTE": "J",
+        "NR_DOCUMENTO_LICITANTE": "91549055000100",
+        "DT_PROPOSTA": "15/10/2014",
+        "TP_RESULTADO_PROPOSTA": "D",
+        "VL_TOTAL_PROPOSTA": "5493164,86",
+        "PC_DESCONTO": "",
+        "VL_NOTA_TECNICA": "",
+        "DT_HOMOLOGACAO": "",
+        "PC_TX": ""
+      }
+    ],
+    "ITEM_PROP": [
+      {
+        "NR_LICITACAO": "43",
+        "ANO_LICITACAO": "2014",
+        "CD_TIPO_MODALIDADE": "CNC",
+        "TP_DOCUMENTO_LICITANTE": "J",
+        "NR_DOCUMENTO_LICITANTE": "10610739000179",
+        "NR_LOTE": "1",
+        "NR_ITEM": "1",
+        "PC_BDI": "",
+        "PC_DESCONTO": "",
+        "PC_ENCARGOS_SOCIAIS": "",
+        "VL_UNITARIO": "0,00",
+        "VL_TOTAL_ITEM": "0,00",
+        "VL_NOTA_TECNICA": "",
+        "DT_HOMOLOGACAO": "",
+        "TP_RESULTADO_PROPOSTA": "",
+        "PC_TX": "",
+        "TP_RESULTADO_HABILITACAO": ""
+      },
+      {
+        "NR_LICITACAO": "43",
+        "ANO_LICITACAO": "2014",
+        "CD_TIPO_MODALIDADE": "CNC",
+        "TP_DOCUMENTO_LICITANTE": "J",
+        "NR_DOCUMENTO_LICITANTE": "91549055000100",
+        "NR_LOTE": "1",
+        "NR_ITEM": "1",
+        "PC_BDI": "25,00",
+        "PC_DESCONTO": "",
+        "PC_ENCARGOS_SOCIAIS": "24,00",
+        "VL_UNITARIO": "1544958,68",
+        "VL_TOTAL_ITEM": "1544958,68",
+        "VL_NOTA_TECNICA": "",
+        "DT_HOMOLOGACAO": "",
+        "TP_RESULTADO_PROPOSTA": "",
+        "PC_TX": "",
+        "TP_RESULTADO_HABILITACAO": ""
+      },
+      {
+        "NR_LICITACAO": "43",
+        "ANO_LICITACAO": "2014",
+        "CD_TIPO_MODALIDADE": "CNC",
+        "TP_DOCUMENTO_LICITANTE": "J",
+        "NR_DOCUMENTO_LICITANTE": "03722885000120",
+        "NR_LOTE": "1",
+        "NR_ITEM": "1",
+        "PC_BDI": "25,00",
+        "PC_DESCONTO": "",
+        "PC_ENCARGOS_SOCIAIS": "24,00",
+        "VL_UNITARIO": "1544958,68",
+        "VL_TOTAL_ITEM": "1544958,68",
+        "VL_NOTA_TECNICA": "",
+        "DT_HOMOLOGACAO": "",
+        "TP_RESULTADO_PROPOSTA": "",
+        "PC_TX": "",
+        "TP_RESULTADO_HABILITACAO": ""
+      }
+    ]
+  },
+  "example_counts": {
+    "LICITANTE_rows": 36,
+    "PROPOSTA_rows": 34,
+    "ITEM_PROP_rows": 186,
+    "ITEM_PROP_nonempty_VL_UNITARIO": 186,
+    "ITEM_PROP_items_with_multiple_bidders": 58,
+    "PROPOSTA_bids_with_multiple_proposals": 12
+  },
+  "coverage_rule": "IN 13/2017 art. 8 and leiaute 2.3.11: PRE/leilao/concurso/Lei 13.303 require only winner proposal; other modalities require all licitantes except inabilitados",
+  "blockers": [
+    "dados.tce.rs.gov.br TLS unexpected EOF from this host, so licitacoes-consolidado-YYYY.csv.zip was not downloaded",
+    "portal.tce.rs.gov.br TLS unexpected EOF from this host",
+    "open-data CSV delimiter and CD_ORGAO column not verified in a live dump",
+    "losing-bid fill rate for Pregao not measured on live data"
   ]
 }

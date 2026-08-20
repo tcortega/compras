@@ -87,7 +87,9 @@ export type RotulosView = {
 export const rotulosCopy = {
   kicker: 'Revisão interna',
   title: 'Conferir item',
-  lede: 'Conferir o item na fonte. Real é um preço que sobrevive à checagem, não um veredito.',
+  lede: 'O computador já marcou este preço como alto frente a itens semelhantes. Abra o link oficial. Depois escolha o porquê.',
+  howto:
+    'Conferir o item na fonte: compare unidade, quantidade e preço unitário, depois pressione 1 a 4.',
   empty: 'Nenhum item para conferir neste recorte.',
   done: 'Todos os itens deste recorte foram conferidos.',
   notes: 'Notas',
@@ -107,6 +109,14 @@ export const rotulosCopy = {
   officialCompra: 'Compra oficial',
   officialItem: 'Item oficial',
   sources: 'Fontes',
+  hints: {
+    real: 'Mesmo produto, mesmo pacote, e o preço oficial bate com a linha. Eles de fato pagaram isso.',
+    'unit error':
+      'O tamanho do pacote não é o da comparação (ex.: isto é Pacote 10, os pares são 1 fita).',
+    'spec difference': 'Não é o mesmo produto do grupo de comparação.',
+    'data error':
+      'Não houve adjudicação de verdade, ou o número oficial não é o da linha (fracassado, deserto, cancelado, CSV errado).',
+  },
 } as const
 
 export function isRubric(raw: string): raw is LabelRubric {

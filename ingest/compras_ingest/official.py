@@ -9,6 +9,9 @@ from urllib.parse import unquote, urljoin
 
 import httpx
 
+# Fixture e2e sets this. resolve_* must not run off official hosts in that mode.
+RESOLVE_DENIED = False
+
 # BUILD_SPEC Tier A source 2. Live page verified 2026-08-20.
 OCDS_OCP_REGISTRY_URL = "https://data.open-contracting.org/en/publication/157"
 
@@ -139,6 +142,16 @@ class CguCeisCnepOfficial:
     day: date
 
 
+def deny_resolve(denied: bool = True) -> None:
+    global RESOLVE_DENIED
+    RESOLVE_DENIED = denied
+
+
+def _check_resolve(name: str) -> None:
+    if RESOLVE_DENIED:
+        raise RuntimeError(f"fixture mode called {name}")
+
+
 def http_client(timeout: float = 45.0) -> httpx.Client:
     return httpx.Client(
         timeout=httpx.Timeout(timeout, connect=15.0),
@@ -156,6 +169,7 @@ def assert_official_host(url: str, allowed: frozenset[str]) -> str:
 
 def resolve_ocds_feed(year: int) -> OcdsOfficial:
     """Read live OCP publication 157. Fail if its jsonl download cannot be resolved."""
+    _check_resolve("resolve_ocds_feed")
     with http_client() as client:
         resp = client.get(OCDS_OCP_REGISTRY_URL)
         resp.raise_for_status()
@@ -172,6 +186,7 @@ def resolve_ocds_feed(year: int) -> OcdsOfficial:
 
 def resolve_pncp_consulta() -> PncpOfficial:
     """Hit live PNCP OpenAPI. Fail if official consulta or items paths cannot be resolved."""
+    _check_resolve("resolve_pncp_consulta")
     with http_client() as client:
         consulta = _require_json(client, PNCP_CONSULTA_OPENAPI, PNCP_HOSTS)
         _require_openapi_path(consulta, PNCP_PUBLICACAO_PATH)
@@ -198,6 +213,7 @@ def resolve_pncp_consulta() -> PncpOfficial:
 
 def resolve_tce_sp_licitacao(year: int, month: int) -> TceSpOfficial:
     """Read live TCE-SP listing. Fail if the year/month licitacao zip is not official."""
+    _check_resolve("resolve_tce_sp_licitacao")
     if month < 1 or month > 12:
         raise RuntimeError(f"TCE-SP month out of range: {month}")
     with http_client() as client:
@@ -219,6 +235,8 @@ def tce_rs_ckan_url(year: int) -> str:
 
 def resolve_tce_rs_licitacon(year: int, fetch: bool = False) -> TceRsOfficial:
     """Resolve official TCE-RS LicitaCon URLs. Live CKAN is fetch-only."""
+    if fetch:
+        _check_resolve("resolve_tce_rs_licitacon")
     official = fixture_tce_rs_official(year)
     if not fetch:
         return official
@@ -257,21 +275,116 @@ def compras_gov_anual_item_url(base: str, year: int) -> str:
     return f"{root}/anual/{year}/comprasGOV-anual-VW_FT_PNCP_COMPRA_ITEM-{year}.csv"
 
 
+def compras_gov_diario_compra_url(base: str, day: date) -> str:
+    # Live index 2026-08-20: diario/YYYY/MM/DD/comprasGOV-diario-VW_FT_PNCP_COMPRA-YYYY-MM-DD.csv
+    root = base.rstrip("/")
+    return (
+        f"{root}/diario/{day.year}/{day.month:02d}/{day.day:02d}/"
+        f"comprasGOV-diario-VW_FT_PNCP_COMPRA-{day.isoformat()}.csv"
+    )
+
+
+def compras_gov_diario_item_url(base: str, day: date) -> str:
+    root = base.rstrip("/")
+    return (
+        f"{root}/diario/{day.year}/{day.month:02d}/{day.day:02d}/"
+        f"comprasGOV-diario-VW_FT_PNCP_COMPRA_ITEM-{day.isoformat()}.csv"
+    )
+
+
+def compras_gov_mensal_compra_url(base: str, year: int, month: int) -> str:
+    # Live index 2026-08-20: mensal/YYYY/MM/comprasGOV-mensal-VW_FT_PNCP_COMPRA-YYYY-MM.csv
+    if month < 1 or month > 12:
+        raise RuntimeError(f"Compras.gov month out of range: {month}")
+    root = base.rstrip("/")
+    return f"{root}/mensal/{year}/{month:02d}/comprasGOV-mensal-VW_FT_PNCP_COMPRA-{year}-{month:02d}.csv"
+
+
+def compras_gov_mensal_item_url(base: str, year: int, month: int) -> str:
+    if month < 1 or month > 12:
+        raise RuntimeError(f"Compras.gov month out of range: {month}")
+    root = base.rstrip("/")
+    return f"{root}/mensal/{year}/{month:02d}/comprasGOV-mensal-VW_FT_PNCP_COMPRA_ITEM-{year}-{month:02d}.csv"
+
+
+def fixture_compras_gov_diario_official(
+    day: date, base: str = COMPRAS_GOV_INDEX.rstrip("/")
+) -> ComprasGovOfficial:
+    """Build official diario COMPRA+ITEM URLs. Does not contact hosts."""
+    compra = compras_gov_diario_compra_url(base, day)
+    item = compras_gov_diario_item_url(base, day)
+    return _compras_gov_official(COMPRAS_GOV_INDEX, day.year, "diario", compra, item, day=day)
+
+
+def fixture_compras_gov_mensal_official(
+    year: int, month: int, base: str = COMPRAS_GOV_INDEX.rstrip("/")
+) -> ComprasGovOfficial:
+    """Build official mensal COMPRA+ITEM URLs. Does not contact hosts."""
+    compra = compras_gov_mensal_compra_url(base, year, month)
+    item = compras_gov_mensal_item_url(base, year, month)
+    return _compras_gov_official(COMPRAS_GOV_INDEX, year, "mensal", compra, item, month=month)
+
+
+def resolve_compras_gov_incremental(
+    day: date, base: str = COMPRAS_GOV_INDEX.rstrip("/")
+) -> ComprasGovOfficial:
+    """HEAD official diario COMPRA+ITEM for that day. Else mensal for that month. Fetch-only."""
+    _check_resolve("resolve_compras_gov_incremental")
+    daily = fixture_compras_gov_diario_official(day, base)
+    if _compras_gov_pair_ok(daily):
+        return daily
+    monthly = fixture_compras_gov_mensal_official(day.year, day.month, base)
+    if _compras_gov_pair_ok(monthly):
+        return monthly
+    raise RuntimeError(
+        f"compras.gov diario {day.isoformat()} and mensal {day.year}-{day.month:02d} COMPRA+ITEM missing"
+    )
+
+
+def _compras_gov_pair_ok(official: ComprasGovOfficial) -> bool:
+    with http_client() as client:
+        try:
+            _require_ok(client, official.compra_url, COMPRAS_GOV_HOSTS)
+            _require_ok(client, official.item_url, COMPRAS_GOV_HOSTS)
+        except Exception:
+            return False
+    return True
+
+
+def _compras_gov_official(
+    index_url: str,
+    year: int,
+    cadence: str,
+    compra: str,
+    item: str,
+    day: date | None = None,
+    month: int | None = None,
+) -> ComprasGovOfficial:
+    assert_official_host(compra, COMPRAS_GOV_HOSTS)
+    assert_official_host(item, COMPRAS_GOV_HOSTS)
+    token = {
+        "anual": f"/anual/{year}/comprasGOV-anual-VW_FT_PNCP_COMPRA-{year}.csv",
+        "diario": f"/diario/{year}/" + (f"{day.month:02d}/{day.day:02d}/comprasGOV-diario-VW_FT_PNCP_COMPRA-{day.isoformat()}.csv" if day else ""),
+        "mensal": f"/mensal/{year}/" + (f"{month:02d}/comprasGOV-mensal-VW_FT_PNCP_COMPRA-{year}-{month:02d}.csv" if month else ""),
+    }
+    need = token.get(cadence, "")
+    if not need or need not in compra:
+        raise RuntimeError(f"COMPRA URL is not the official {cadence} file: {compra}")
+    item_need = need.replace("VW_FT_PNCP_COMPRA-", "VW_FT_PNCP_COMPRA_ITEM-")
+    if item_need not in item:
+        raise RuntimeError(f"ITEM URL is not the official {cadence} file: {item}")
+    if "COMPRA_ITEM" in compra.split("/")[-1]:
+        raise RuntimeError(f"COMPRA URL pointed at ITEM: {compra}")
+    return ComprasGovOfficial(index_url, year, cadence, compra, item)
+
+
 def fixture_compras_gov_official(year: int, base: str = COMPRAS_GOV_INDEX.rstrip("/")) -> ComprasGovOfficial:
     """Build official anual COMPRA+ITEM URLs. Does not contact hosts."""
     if year < 2021:
         raise RuntimeError(f"Compras.gov year out of range: {year}")
     compra = compras_gov_anual_compra_url(base, year)
     item = compras_gov_anual_item_url(base, year)
-    assert_official_host(compra, COMPRAS_GOV_HOSTS)
-    assert_official_host(item, COMPRAS_GOV_HOSTS)
-    if f"/anual/{year}/comprasGOV-anual-VW_FT_PNCP_COMPRA-{year}.csv" not in compra:
-        raise RuntimeError(f"COMPRA URL is not the official anual file: {compra}")
-    if f"/anual/{year}/comprasGOV-anual-VW_FT_PNCP_COMPRA_ITEM-{year}.csv" not in item:
-        raise RuntimeError(f"ITEM URL is not the official anual file: {item}")
-    if "COMPRA_ITEM" in compra.split("/")[-1]:
-        raise RuntimeError(f"COMPRA URL pointed at ITEM: {compra}")
-    return ComprasGovOfficial(COMPRAS_GOV_INDEX, year, "anual", compra, item)
+    return _compras_gov_official(COMPRAS_GOV_INDEX, year, "anual", compra, item)
 
 
 def fixture_ocds_official(year: int) -> OcdsOfficial:
@@ -365,6 +478,7 @@ def fixture_cgu_ceis_cnep_official(day: date | None = None) -> CguCeisCnepOffici
 
 def resolve_cgu_ceis_cnep(day: date | None = None) -> CguCeisCnepOfficial:
     """Read live Portal da Transparencia dated downloads. Fetch-only."""
+    _check_resolve("resolve_cgu_ceis_cnep")
     start = day or datetime.now(timezone.utc).date()
     last: Exception | None = None
     with http_client() as client:
@@ -512,6 +626,7 @@ def licitacao_zip_from_listing(html: str, year: int, month: int, listing_url: st
 
 def resolve_receita_index() -> ReceitaOfficial:
     """Hit live RFB Nextcloud share. Fail if official index cannot be resolved."""
+    _check_resolve("resolve_receita_index")
     with http_client() as client:
         _require_ok(client, RFB_SHARE_URL, RFB_HOSTS)
         months = _webdav_names(client, RFB_WEBDAV_URL, RFB_SHARE_TOKEN)

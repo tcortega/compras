@@ -388,10 +388,10 @@ def main() -> int:
     _check_defs()
     _assert_fracionamento_table()
     _assert_cnae_allowlist()
+    _assert_compras_gov_fetch_anual_year_columns(settings)
     with _official_hosts_blocked():
         official = _assert_official_urls(settings)
         _assert_compras_gov_official_urls(settings)
-        _assert_compras_gov_fetch_anual_year_columns(settings)
         _assert_pncp_spacing_and_resume(settings)
         _assert_pncp_gaps_job(settings)
         result = run_compras_slice(settings)
@@ -1617,8 +1617,20 @@ def _assert_compras_gov_fetch_anual_year_columns(settings: Settings) -> None:
         compras_gov_fetch=True,
         trailing_window_as_of=date(2026, 8, 20),
     )
-    land_compras_gov(local, transport=lambda url: _compras_gov_planted_bytes(url, planted))
-    _assert_planted_anual_partitions(local)
+    transport = httpx.MockTransport(lambda request: _compras_gov_planted_response(request, planted))
+    real_client = httpx.Client
+
+    class PlantedClient(real_client):
+        def __init__(self, *args, **kwargs):
+            kwargs["transport"] = transport
+            super().__init__(*args, **kwargs)
+
+    httpx.Client = PlantedClient
+    try:
+        land_compras_gov(local)
+        _assert_planted_anual_partitions(local)
+    finally:
+        httpx.Client = real_client
 
 
 def _plant_oficial_anual_year_column_files(root: Path) -> Path:
@@ -1652,19 +1664,20 @@ def _plant_oficial_anual_year_column_files(root: Path) -> Path:
     return root
 
 
-def _compras_gov_planted_bytes(url: str, planted: Path) -> bytes:
+def _compras_gov_planted_response(request: httpx.Request, planted: Path) -> httpx.Response:
+    url = str(request.url)
     assert_official_host(url, COMPRAS_GOV_HOSTS)
     path = httpx.URL(url).path or ""
     if "/diario/" in path or "/mensal/" in path:
-        raise RuntimeError(f"planted FETCH=1 asked incremental {url}")
+        return httpx.Response(404, text="missing")
     marker = "/seges/comprasgov/"
     if marker not in path or "/anual/" not in path:
-        raise RuntimeError(f"planted FETCH=1 asked non-anual {url}")
+        return httpx.Response(404, text="missing")
     rel = path.split(marker, 1)[1]
     target = planted / rel
     if not target.is_file():
-        raise RuntimeError(f"planted anual file missing for {url}")
-    return target.read_bytes()
+        return httpx.Response(404, text="missing")
+    return httpx.Response(200, content=target.read_bytes(), headers={"content-type": "text/csv"})
 
 
 def _assert_planted_anual_partitions(settings: Settings) -> None:

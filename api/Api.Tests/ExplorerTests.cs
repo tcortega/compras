@@ -904,6 +904,100 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		},
 	};
 
+	private static readonly Coverage s_imperatrizOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "MA",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_imperatriz = new()
+	{
+		Id = SliceIds.OrgaoImperatriz,
+		Cnpj = "06158455000116",
+		RazaoSocial = "Municipio de Imperatriz",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "MA",
+		MunicipioIbge = "2105302",
+		MunicipioNome = "Imperatriz",
+		Coverage = s_imperatrizOrgaoCoverage,
+	};
+
+	private static readonly Coverage s_arapiracaOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "AL",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_arapiraca = new()
+	{
+		Id = SliceIds.OrgaoArapiraca,
+		Cnpj = "12198693000158",
+		RazaoSocial = "Municipio de Arapiraca",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "AL",
+		MunicipioIbge = "2700300",
+		MunicipioNome = "Arapiraca",
+		Coverage = s_arapiracaOrgaoCoverage,
+	};
+
+	private static readonly ItemRecord s_itemImperatriz = new()
+	{
+		Id = SliceIds.ItemImperatriz,
+		ContratacaoId = SliceIds.ContratacaoImperatriz,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Livro didatico",
+		Catmat = "464257",
+		Catser = null,
+		Quantidade = 100m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 525.3m,
+		ValorTotal = 52530m,
+		Uf = "MA",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "MA",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
+	private static readonly ItemRecord s_itemArapiraca = new()
+	{
+		Id = SliceIds.ItemArapiraca,
+		ContratacaoId = SliceIds.ContratacaoArapiraca,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Lamotrigina",
+		Catmat = "602451",
+		Catser = null,
+		Quantidade = 18m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 16m,
+		ValorTotal = 288m,
+		Uf = "AL",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "AL",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
 	[Fact]
 	public async Task FullCycle_BrowseMunicipioAndUf()
 	{
@@ -1065,6 +1159,32 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(new[] { s_caucaia }, caucaiaPage.Items);
 		await ValidateOrgao(client, s_caucaia);
 
+		var imperatrizPage = await client.ListOrgaos(municipioIbge: "2105302", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			imperatrizPage.Coverage);
+		Assert.Equal(new[] { s_imperatriz }, imperatrizPage.Items);
+		await ValidateOrgao(client, s_imperatriz);
+
+		var arapiracaPage = await client.ListOrgaos(uf: "AL", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "AL",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			arapiracaPage.Coverage);
+		Assert.Equal(new[] { s_arapiraca }, arapiracaPage.Items);
+		await ValidateOrgao(client, s_arapiraca);
+
 		var mixed = await client.ListOrgaos(quarter: SliceIds.Quarter);
 		Assert.Equal("", mixed.Coverage.Uf);
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3306305", StringComparison.Ordinal));
@@ -1080,6 +1200,8 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3205200", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "2504009", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "2303709", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "2105302", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "2700300", StringComparison.Ordinal));
 
 		var spItems = await client.ListItems(uf: "SP", quarter: SliceIds.Quarter);
 		Assert.Equal(
@@ -1242,6 +1364,33 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 			OrgaoRazaoSocial = "Municipio de Campina Grande",
 			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
 			ContratacaoPncpId = "08993917000146-1-000180/2024",
+		});
+		var alItems = await client.ListItems(uf: "AL", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "AL",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			alItems.Coverage);
+		Assert.Equal(new[] { s_itemArapiraca }, alItems.Items);
+		await ValidateItem(client, new()
+		{
+			Item = s_itemArapiraca,
+			OrgaoId = SliceIds.OrgaoArapiraca,
+			OrgaoRazaoSocial = "Municipio de Arapiraca",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "12198693000158-1-000088/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemImperatriz,
+			OrgaoId = SliceIds.OrgaoImperatriz,
+			OrgaoRazaoSocial = "Municipio de Imperatriz",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "06158455000116-1-000002/2024",
 		});
 
 		var empty = new Coverage

@@ -2,9 +2,11 @@ import { Shell } from '@/components/Shell'
 import { loadSliceCoverage } from '@/lib/api'
 import { SLICE_IBGE, SLICE_LABEL, copy } from '@/lib/copy'
 import { coverageText } from '@/lib/coverage'
+import { explorerDynamic, explorerRevalidate } from '@/lib/rendering'
 import type { Metadata } from 'next'
 
-export const revalidate = 3600
+export const dynamic = explorerDynamic
+export const revalidate = explorerRevalidate
 export const metadata: Metadata = { title: 'Cobertura' }
 
 export default async function CoberturaPage() {

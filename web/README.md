@@ -29,7 +29,9 @@ npm run dev
 ```
 
 `API_BASE_URL=stub` (padrão) usa o recorte em processo: Volta Redonda, RJ, 2024.
-Aponte `API_BASE_URL` para a API C# quando ela existir, por exemplo `http://localhost:5080`.
+O compose em `/infra` aponta `API_BASE_URL` para `http://api:5080` e publica o explorador em http://127.0.0.1:3100.
+Fora do compose, aponte `API_BASE_URL` para a API C#, por exemplo `http://127.0.0.1:5080`.
+Se `API_BASE_URL` aponta para a API, o cliente HTTP é obrigatório e o stub não pode responder.
 
 ```bash
 npm run build

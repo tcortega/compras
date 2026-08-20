@@ -4,9 +4,11 @@ import { Shell } from '@/components/Shell'
 import { api } from '@/lib/api'
 import { copy, SLICE_LABEL } from '@/lib/copy'
 import { formatNumber } from '@/lib/format'
+import { explorerDynamic, explorerRevalidate } from '@/lib/rendering'
 import { routes } from '@/lib/routes'
 
-export const revalidate = 3600
+export const dynamic = explorerDynamic
+export const revalidate = explorerRevalidate
 
 export default async function HomePage() {
   const [orgaos, fornecedores, contratacoes, items] = await Promise.all([

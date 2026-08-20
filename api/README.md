@@ -14,6 +14,11 @@ Flags stay internal and are framed as an indicio requiring verification.
 
 Explorer reads Postgres.
 
+Compose (`infra/`) seeds the Volta Redonda 2024 warehouse via Python, then serves this API on http://127.0.0.1:5080.
+
+The warehouse schema is the contract.
+This process does not apply EF migrations against that schema unless `App:ApplyMigrations` is true.
+
 ClickHouse.Client is packaged for later analytical reads.
 
 Time is NodaTime only.

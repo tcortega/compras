@@ -30,7 +30,7 @@ export const api: ExplorerClient = {
 }
 
 export async function loadSliceCoverage(): Promise<Coverage> {
-  const page = await api.listItems({ skip: 0, take: 1 })
+  const page = await api.listItems({ skip: 0, take: 100 })
   return page.coverage
 }
 

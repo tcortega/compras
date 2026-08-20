@@ -40,10 +40,14 @@ def load_compras_gov(settings: Settings, compra_path: Path | None = None, item_p
     return _join(compra, item)
 
 
-def land_compras_gov(settings: Settings, store: LandingStore | None = None) -> tuple[LandingRef, pl.DataFrame]:
+def land_compras_gov(
+    settings: Settings,
+    store: LandingStore | None = None,
+    transport=None,
+) -> tuple[LandingRef, pl.DataFrame]:
     store = store or LandingStore(settings)
     if settings.compras_gov_fetch:
-        parts = _fetch_incremental_or_year_frames(settings, store)
+        parts = _fetch_incremental_or_year_frames(settings, store, transport=transport)
     else:
         parts = _fixture_year_frames(settings)
     missing = [year for year in settings.compras_gov_years if year not in parts]
@@ -77,24 +81,30 @@ def _fixture_year_frames(settings: Settings) -> dict[int, pl.DataFrame]:
     return _split_by_year(raw, settings.compras_gov_years)
 
 
-def _fetch_incremental_or_year_frames(settings: Settings, store: LandingStore) -> dict[int, pl.DataFrame]:
+def _fetch_incremental_or_year_frames(
+    settings: Settings,
+    store: LandingStore,
+    transport=None,
+) -> dict[int, pl.DataFrame]:
     # Incremental: diario COMPRA+ITEM for trailing day if both exist, else mensal.
     # Missing D1 years with no year= parquet still backfill from oficial anual.
     # If today has no diario/mensal pair, skip incremental and land oficial anual.
+    # Planted e2e passes transport and skips resolve so fixture mode never HEADs the host.
     day = settings.trailing_window_as_of or date.today()
     parts: dict[int, pl.DataFrame] = {}
-    try:
-        official = resolve_compras_gov_incremental(day, settings.compras_gov_base.rstrip("/"))
-        parts = _stream_official_pair(settings, official)
-    except RuntimeError as exc:
-        if "COMPRA+ITEM missing" not in str(exc):
-            raise
-        parts = {}
+    if transport is None:
+        try:
+            official = resolve_compras_gov_incremental(day, settings.compras_gov_base.rstrip("/"))
+            parts = _stream_official_pair(settings, official)
+        except RuntimeError as exc:
+            if "COMPRA+ITEM missing" not in str(exc):
+                raise
+            parts = {}
     existing = _landed_years(store)
     missing = [year for year in settings.compras_gov_years if year not in parts and year not in existing]
     for year in missing:
         anual = fixture_compras_gov_official(year, settings.compras_gov_base.rstrip("/"))
-        extra = _stream_official_pair(settings, anual)
+        extra = _stream_official_pair(settings, anual, transport=transport)
         if year in extra:
             parts[year] = extra[year]
         for key, frame in extra.items():
@@ -103,17 +113,18 @@ def _fetch_incremental_or_year_frames(settings: Settings, store: LandingStore) -
     return parts
 
 
-def _stream_official_pair(settings: Settings, official) -> dict[int, pl.DataFrame]:
+def _stream_official_pair(settings: Settings, official, transport=None) -> dict[int, pl.DataFrame]:
     with TemporaryDirectory(prefix="compras-gov-fetch-") as tmp:
         tmp_path = Path(tmp)
         compra_f = tmp_path / f"compra-{official.cadence}-{official.year}.csv"
         item_f = tmp_path / f"item-{official.cadence}-{official.year}.csv"
-        _stream_http_csv_filter(official.compra_url, compra_f, _keep_compra_row)
+        _stream_http_csv_filter(official.compra_url, compra_f, _keep_compra_row, transport=transport)
         keep_ids = _collect_compra_ids(compra_f)
         _stream_http_csv_filter(
             official.item_url,
             item_f,
             lambda header, row, ids=keep_ids: _keep_item_row(header, row, ids),
+            transport=transport,
         )
         compra = mask_frame(read_csv(compra_f))
         item = mask_frame(read_csv(item_f))
@@ -293,8 +304,29 @@ def _sniff_delim(path: Path) -> str:
     return ","
 
 
-def _stream_http_csv_filter(url: str, dest: Path, keep_row) -> None:
+def _filter_csv_bytes(payload: bytes, dest: Path, keep_row) -> None:
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    text = payload.decode("utf-8", errors="replace")
+    sample = text.splitlines()[0] if text else ""
+    delim = ";" if sample.count(";") >= sample.count(",") else ","
+    reader = csv.reader(io.StringIO(text), delimiter=delim)
+    header = next(reader, None)
+    if header is None:
+        dest.write_text("", encoding="utf-8")
+        return
+    with dest.open("w", encoding="utf-8", newline="") as raw_out:
+        writer = csv.writer(raw_out, delimiter=delim)
+        writer.writerow(header)
+        for row in reader:
+            if keep_row(header, row):
+                writer.writerow(row)
+
+
+def _stream_http_csv_filter(url: str, dest: Path, keep_row, transport=None) -> None:
     assert_official_host(url, COMPRAS_GOV_HOSTS)
+    if transport is not None:
+        _filter_csv_bytes(transport(url), dest, keep_row)
+        return
     dest.parent.mkdir(parents=True, exist_ok=True)
     decoder = codecs.getincrementaldecoder("utf-8")("replace")
     buf = ""

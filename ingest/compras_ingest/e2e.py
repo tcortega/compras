@@ -1617,22 +1617,8 @@ def _assert_compras_gov_fetch_anual_year_columns(settings: Settings) -> None:
         compras_gov_fetch=True,
         trailing_window_as_of=date(2026, 8, 20),
     )
-    transport = httpx.MockTransport(lambda request: _compras_gov_planted_response(request, planted))
-    prev_client = httpx.Client
-    deny_resolve(False)
-
-    class PlantedClient(httpx.Client):
-        def __init__(self, *args, **kwargs):
-            kwargs["transport"] = transport
-            super().__init__(*args, **kwargs)
-
-    httpx.Client = PlantedClient
-    try:
-        land_compras_gov(local)
-        _assert_planted_anual_partitions(local)
-    finally:
-        httpx.Client = prev_client
-        deny_resolve(True)
+    land_compras_gov(local, transport=lambda url: _compras_gov_planted_bytes(url, planted))
+    _assert_planted_anual_partitions(local)
 
 
 def _plant_oficial_anual_year_column_files(root: Path) -> Path:
@@ -1666,20 +1652,19 @@ def _plant_oficial_anual_year_column_files(root: Path) -> Path:
     return root
 
 
-def _compras_gov_planted_response(request: httpx.Request, planted: Path) -> httpx.Response:
-    url = str(request.url)
+def _compras_gov_planted_bytes(url: str, planted: Path) -> bytes:
     assert_official_host(url, COMPRAS_GOV_HOSTS)
     path = httpx.URL(url).path or ""
     if "/diario/" in path or "/mensal/" in path:
-        return httpx.Response(404, text="missing")
+        raise RuntimeError(f"planted FETCH=1 asked incremental {url}")
     marker = "/seges/comprasgov/"
     if marker not in path or "/anual/" not in path:
-        return httpx.Response(404, text="missing")
+        raise RuntimeError(f"planted FETCH=1 asked non-anual {url}")
     rel = path.split(marker, 1)[1]
     target = planted / rel
     if not target.is_file():
-        return httpx.Response(404, text="missing")
-    return httpx.Response(200, content=target.read_bytes(), headers={"content-type": "text/csv"})
+        raise RuntimeError(f"planted anual file missing for {url}")
+    return target.read_bytes()
 
 
 def _assert_planted_anual_partitions(settings: Settings) -> None:

@@ -87,7 +87,7 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
           Quantidade × unitário = {formatDecimal(row.quantidade)} × {formatMoney(row.valorUnitario)} = {formatMoney(row.valorTotal)}.
         </span>
         <span>
-          O denominador acima (n, UF, trimestre) conta itens do mesmo UF e trimestre neste recorte, não o país.
+          O denominador acima (n, UF, trimestre, metodologia) conta itens do mesmo UF e trimestre neste recorte, não o país.
         </span>
       </p>
       <SourceLine

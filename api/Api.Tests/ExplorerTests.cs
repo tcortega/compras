@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.Json;
 using Api.Client;
 using Api.Tests.Fixtures;
 
@@ -89,6 +90,40 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		SnapshotId = SliceIds.Snapshot,
 		MethodologyVersion = SliceIds.Methodology,
 		Coverage = s_itemSlice,
+	};
+
+	private static readonly Coverage s_pageOrgaoRecord = new()
+	{
+		N = 0,
+		Uf = "ES",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_pageOrgaoAlfa = new()
+	{
+		Id = SliceIds.PageOrgaoAlfa,
+		Cnpj = "22222222000191",
+		RazaoSocial = "Paginacao Alfa",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "ES",
+		MunicipioIbge = "3205309",
+		MunicipioNome = "Vitoria",
+		Coverage = s_pageOrgaoRecord,
+	};
+
+	private static readonly OrgaoRecord s_pageOrgaoBeta = new()
+	{
+		Id = SliceIds.PageOrgaoBeta,
+		Cnpj = "33333333000191",
+		RazaoSocial = "Paginacao Beta",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "ES",
+		MunicipioIbge = "3205309",
+		MunicipioNome = "Vitoria",
+		Coverage = s_pageOrgaoRecord,
 	};
 
 	private static readonly ContratacaoRecord s_contratacao = new()
@@ -226,6 +261,153 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 	}
 
 	[Fact]
+	public async Task GetUnknownItem_NotFound()
+	{
+		var response = await fixture.GetClient().GetItem(Guid.NewGuid());
+		Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+	}
+
+	[Fact]
+	public async Task GetUnknownContratacao_NotFound()
+	{
+		var response = await fixture.GetClient().GetContratacao(Guid.NewGuid());
+		Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+	}
+
+	[Fact]
+	public async Task GetUnknownFornecedor_NotFound()
+	{
+		var response = await fixture.GetClient().GetFornecedor(Guid.NewGuid());
+		Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+	}
+
+	[Fact]
+	public async Task FullCycle_TakeThenSkipPages()
+	{
+		var client = fixture.GetClient();
+		var itemCoverage = new Coverage
+		{
+			N = 2,
+			Uf = SliceIds.Uf,
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var firstItems = await client.ListItems(
+			contratacaoId: SliceIds.Contratacao,
+			uf: SliceIds.Uf,
+			quarter: SliceIds.Quarter,
+			take: 1);
+		Assert.Equal(new[] { s_item2 }, firstItems.Items);
+		Assert.Equal(itemCoverage, firstItems.Coverage);
+		Assert.Equal(2, firstItems.Total);
+
+		var secondItems = await client.ListItems(
+			contratacaoId: SliceIds.Contratacao,
+			uf: SliceIds.Uf,
+			quarter: SliceIds.Quarter,
+			skip: 1,
+			take: 1);
+		Assert.Equal(new[] { s_item1 }, secondItems.Items);
+		Assert.Equal(itemCoverage, secondItems.Coverage);
+		Assert.Equal(2, secondItems.Total);
+
+		var orgaoCoverage = new Coverage
+		{
+			N = 2,
+			Uf = "ES",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var firstOrgaos = await client.ListOrgaos(
+			uf: "ES",
+			quarter: SliceIds.Quarter,
+			take: 1);
+		Assert.Equal(new[] { s_pageOrgaoAlfa }, firstOrgaos.Items);
+		Assert.Equal(orgaoCoverage, firstOrgaos.Coverage);
+		Assert.Equal(2, firstOrgaos.Total);
+
+		var secondOrgaos = await client.ListOrgaos(
+			uf: "ES",
+			quarter: SliceIds.Quarter,
+			skip: 1,
+			take: 1);
+		Assert.Equal(new[] { s_pageOrgaoBeta }, secondOrgaos.Items);
+		Assert.Equal(orgaoCoverage, secondOrgaos.Coverage);
+		Assert.Equal(2, secondOrgaos.Total);
+	}
+
+	[Fact]
+	public async Task List_EmptyFilter_ZeroCoverageKeepsSlice()
+	{
+		var client = fixture.GetClient();
+		var empty = new Coverage
+		{
+			N = 0,
+			Uf = SliceIds.Uf,
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+
+		var items = await client.ListItems(
+			q: "nenhum-item-xyz",
+			uf: SliceIds.Uf,
+			quarter: SliceIds.Quarter);
+		Assert.Empty(items.Items);
+		Assert.Equal(empty, items.Coverage);
+		Assert.Equal(0, items.Total);
+
+		var orgaos = await client.ListOrgaos(
+			q: "nenhum-orgao-xyz",
+			uf: SliceIds.Uf,
+			quarter: SliceIds.Quarter);
+		Assert.Empty(orgaos.Items);
+		Assert.Equal(empty, orgaos.Coverage);
+		Assert.Equal(0, orgaos.Total);
+	}
+
+	[Fact]
+	public async Task Explorer_HasNoFlagField_AfterInternalFlag()
+	{
+		var client = fixture.GetClient();
+		var created = await client.CreateFlag(new()
+		{
+			ItemId = SliceIds.Item1,
+			Kind = "qty_mismatch",
+			Delta = "Orgao paid R$8.00/unit for CATMAT 123456 on 2024-03-10. Median across 2 comparable purchases in RJ, 2024-Q2: R$5.00. Source: PNCP 3306305-1-000001/2024.",
+			SourceUrl = "https://pncp.gov.br/app/editais/3306305/2024/1",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		});
+		Assert.NotNull(created.Content);
+
+		await ValidateItem(client, new()
+		{
+			Item = s_item1,
+			OrgaoId = SliceIds.Orgao,
+			OrgaoRazaoSocial = "Municipio de Volta Redonda",
+			FornecedorRazaoSocial = "Papelaria Central Ltda",
+			ContratacaoPncpId = "3306305-1-000001/2024",
+		});
+
+		var items = await client.ListItems(
+			contratacaoId: SliceIds.Contratacao,
+			uf: SliceIds.Uf,
+			quarter: SliceIds.Quarter);
+		Assert.Equal(new[] { s_item2, s_item1 }, items.Items);
+		Assert.Equal(s_itemSlice, items.Coverage);
+		Assert.Equal(2, items.Total);
+
+		var http = fixture.CreateHttpClient();
+		await AssertExplorerJsonHasNoFlagField(http, $"/api/items/{SliceIds.Item1}");
+		await AssertExplorerJsonHasNoFlagField(
+			http,
+			$"/api/items?contratacaoId={SliceIds.Contratacao}&uf={SliceIds.Uf}&quarter={SliceIds.Quarter}");
+		await AssertExplorerJsonHasNoFlagField(http, $"/api/orgaos?q=Volta&quarter={SliceIds.Quarter}");
+		await AssertExplorerJsonHasNoFlagField(http, $"/api/fornecedores?q=Papelaria&uf={SliceIds.Uf}&quarter={SliceIds.Quarter}");
+		await AssertExplorerJsonHasNoFlagField(http, $"/api/contratacoes?orgaoId={SliceIds.Orgao}&ano=2024");
+	}
+
+	[Fact]
 	public async Task PersistRawCpf_Rejected()
 	{
 		await Assert.ThrowsAsync<Api.Features.Shared.BadRequestException>(() => fixture.SeedAsync(db =>
@@ -264,5 +446,34 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 	{
 		var loaded = await client.GetItem(expected.Item.Id);
 		Assert.Equal(expected, loaded.Content);
+	}
+
+	private static async Task AssertExplorerJsonHasNoFlagField(HttpClient http, string path)
+	{
+		var json = await http.GetStringAsync(new Uri(http.BaseAddress!, path));
+		using var doc = JsonDocument.Parse(json);
+		AssertNoFlagProperty(doc.RootElement);
+	}
+
+	private static void AssertNoFlagProperty(JsonElement element)
+	{
+		if (element.ValueKind is JsonValueKind.Object)
+		{
+			foreach (var property in element.EnumerateObject())
+			{
+				if (property.Name.Contains("flag", StringComparison.OrdinalIgnoreCase))
+					Assert.Fail($"Explorer JSON must not carry {property.Name}.");
+
+				AssertNoFlagProperty(property.Value);
+			}
+
+			return;
+		}
+
+		if (element.ValueKind is not JsonValueKind.Array)
+			return;
+
+		foreach (var child in element.EnumerateArray())
+			AssertNoFlagProperty(child);
 	}
 }

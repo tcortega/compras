@@ -56,6 +56,8 @@ export const ids = {
   orgaoMacae: '7c2e1f40-3302-4050-9a01-000000000048',
   orgaoSantaLuzia: '7c2e1f40-3157-4050-9a01-000000000049',
   orgaoNovaFriburgo: '7c2e1f40-3303-4050-9a01-000000000050',
+  orgaoMarilia: '7c2e1f40-3529-4050-9a01-000000000051',
+  orgaoBalneario: '7c2e1f40-4202-4050-9a01-000000000052',
   fornFarma: '8d3f2a51-3306-4050-9a02-000000000001',
   fornAlim: '8d3f2a51-3306-4050-9a02-000000000002',
   fornComb: '8d3f2a51-3306-4050-9a02-000000000003',
@@ -119,6 +121,8 @@ export const ids = {
   ctMacae: '9e4a3b62-3302-4050-9a03-000000000054',
   ctSantaLuzia: '9e4a3b62-3157-4050-9a03-000000000055',
   ctNovaFriburgo: '9e4a3b62-3303-4050-9a03-000000000056',
+  ctMarilia: '9e4a3b62-3529-4050-9a03-000000000057',
+  ctBalneario: '9e4a3b62-4202-4050-9a03-000000000058',
 } as const
 
 function orgao(
@@ -646,6 +650,26 @@ export const orgaos: Orgao[] = [
     'RJ',
     '3303401',
     'Nova Friburgo',
+  ),
+  orgao(
+    ids.orgaoMarilia,
+    '44477909000100',
+    'Município de Marília',
+    'executivo',
+    T2,
+    'SP',
+    '3529005',
+    'Marília',
+  ),
+  orgao(
+    ids.orgaoBalneario,
+    '83102285000107',
+    'Município de Balneário Camboriú',
+    'executivo',
+    T2,
+    'SC',
+    '4202008',
+    'Balneário Camboriú',
   ),
 ]
 
@@ -1368,6 +1392,28 @@ export const contratacoes: Contratacao[] = [
     '2024-10-08T11:07:04.000Z',
     'compras.gov.br',
   ),
+  ct(
+    ids.ctMarilia,
+    '44477909000100-1-000487/2024',
+    ids.orgaoMarilia,
+    'pregao eletronico',
+    'Registro de Preços visando à eventual aquisição de cestas de alimentos destinadas aos servidores ativos da Prefeitura Municipal de Marília e AMAE - Agência Municipal de Água e Esgoto de Marília – Prazo de 12 meses, conforme condições, quantidades e exigências estabelecidas neste Edital e seus anexos.',
+    2024,
+    401.3,
+    '2024-10-08T07:11:32.000Z',
+    'compras.gov.br',
+  ),
+  ct(
+    ids.ctBalneario,
+    '83102285000107-1-000442/2024',
+    ids.orgaoBalneario,
+    'pregao eletronico',
+    'Aquisição de aparelho/sistema de ergometria para realização de exames de diagnóstico em cardiologia, para pacientes assistidos pelo Sistema Único de Saúde atendidos no Centro de Diagnose - Fundo Municipal de Saúde.',
+    2024,
+    18_500.0,
+    '2024-09-19T07:09:05.000Z',
+    'compras.gov.br',
+  ),
 ]
 
 function item(
@@ -1483,4 +1529,6 @@ export const items: Item[] = [
   item(72, ids.ctMacae, ids.fornPapel, 'Colete Identificação', '482286', 36, 'Unidade', 'un', 57.99, 'RJ', '2024-Q4', T2),
   item(73, ids.ctSantaLuzia, ids.fornPapel, 'Cadeira escritório', '613647', 1, 'Unidade', 'un', 1647.01, 'MG', '2024-Q3', T1),
   item(74, ids.ctNovaFriburgo, ids.fornPapel, 'Toalha De Papel', '436328', 1000, 'Pacote 1000,00 FL', 'unknown', 8.0, 'RJ', '2024-Q4', T2),
+  item(75, ids.ctMarilia, ids.fornPapel, 'Macarrão', '480420', 1, 'Embalagem 500,00 G', 'unknown', 401.3, 'SP', '2024-Q4', T2),
+  item(76, ids.ctBalneario, ids.fornPapel, 'Cardiologia - Teste Ergométrico (Te) em Bicicleta ou em  Es-teira', '6505', 1, 'UN', 'un', 18500.0, 'SC', '2024-Q3', T2),
 ]

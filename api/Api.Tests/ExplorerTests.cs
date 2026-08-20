@@ -1670,6 +1670,48 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Coverage = s_novaFriburgoOrgaoCoverage,
 	};
 
+	private static readonly Coverage s_mariliaOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "SP",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_marilia = new()
+	{
+		Id = SliceIds.OrgaoMarilia,
+		Cnpj = "44477909000100",
+		RazaoSocial = "Municipio de Marilia",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "SP",
+		MunicipioIbge = "3529005",
+		MunicipioNome = "Marilia",
+		Coverage = s_mariliaOrgaoCoverage,
+	};
+
+	private static readonly Coverage s_balnearioOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "SC",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_balneario = new()
+	{
+		Id = SliceIds.OrgaoBalneario,
+		Cnpj = "83102285000107",
+		RazaoSocial = "Municipio de Balneario Camboriu",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "SC",
+		MunicipioIbge = "4202008",
+		MunicipioNome = "Balneario Camboriu",
+		Coverage = s_balnearioOrgaoCoverage,
+	};
+
 	private static readonly ItemRecord s_itemDourados = new()
 	{
 		Id = SliceIds.ItemDourados,
@@ -2502,6 +2544,58 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		},
 	};
 
+	private static readonly ItemRecord s_itemMarilia = new()
+	{
+		Id = SliceIds.ItemMarilia,
+		ContratacaoId = SliceIds.ContratacaoMarilia,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Macarrao",
+		Catmat = "480420",
+		Catser = null,
+		Quantidade = 1m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 401.3m,
+		ValorTotal = 401.3m,
+		Uf = "SP",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "SP",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
+	private static readonly ItemRecord s_itemBalneario = new()
+	{
+		Id = SliceIds.ItemBalneario,
+		ContratacaoId = SliceIds.ContratacaoBalneario,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Cardiologia - Teste Ergometrico",
+		Catmat = "6505",
+		Catser = null,
+		Quantidade = 1m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 18500m,
+		ValorTotal = 18500m,
+		Uf = "SC",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "SC",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
 	[Fact]
 	public async Task FullCycle_BrowseMunicipioAndUf()
 	{
@@ -2524,13 +2618,13 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(
 			new Coverage
 			{
-				N = 2,
+				N = 3,
 				Uf = "SP",
 				Quarter = SliceIds.Quarter,
 				MethodologyVersion = SliceIds.Methodology,
 			},
 			bauruPage.Coverage);
-		Assert.Equal(new[] { s_bauru, s_taubate }, bauruPage.Items);
+		Assert.Equal(new[] { s_bauru, s_marilia, s_taubate }, bauruPage.Items);
 		await ValidateOrgao(client, s_bauru);
 
 		var caxiasPage = await client.ListOrgaos(municipioIbge: "4305108", quarter: SliceIds.Quarter);
@@ -2550,13 +2644,13 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(
 			new Coverage
 			{
-				N = 2,
+				N = 3,
 				Uf = "SC",
 				Quarter = SliceIds.Quarter,
 				MethodologyVersion = SliceIds.Methodology,
 			},
 			joinvillePage.Coverage);
-		Assert.Equal(new[] { s_joinville, s_lages }, joinvillePage.Items);
+		Assert.Equal(new[] { s_balneario, s_joinville, s_lages }, joinvillePage.Items);
 		await ValidateOrgao(client, s_joinville);
 
 		var uberlandiaPage = await client.ListOrgaos(municipioIbge: "3170206", quarter: SliceIds.Quarter);
@@ -2946,6 +3040,8 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3302403", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3157807", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3303401", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3529005", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "4202008", StringComparison.Ordinal));
 
 		var canoasPage = await client.ListOrgaos(municipioIbge: "4304606", quarter: SliceIds.Quarter);
 		Assert.Equal(
@@ -3155,17 +3251,43 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(new[] { s_novaFriburgo }, novaFriburgoPage.Items);
 		await ValidateOrgao(client, s_novaFriburgo);
 
+		var mariliaPage = await client.ListOrgaos(municipioIbge: "3529005", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			mariliaPage.Coverage);
+		Assert.Equal(new[] { s_marilia }, mariliaPage.Items);
+		await ValidateOrgao(client, s_marilia);
+
+		var balnearioPage = await client.ListOrgaos(municipioIbge: "4202008", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			balnearioPage.Coverage);
+		Assert.Equal(new[] { s_balneario }, balnearioPage.Items);
+		await ValidateOrgao(client, s_balneario);
+
 		var spItems = await client.ListItems(uf: "SP", quarter: SliceIds.Quarter);
 		Assert.Equal(
 			new Coverage
 			{
-				N = 2,
+				N = 3,
 				Uf = "SP",
 				Quarter = SliceIds.Quarter,
 				MethodologyVersion = SliceIds.Methodology,
 			},
 			spItems.Coverage);
-		Assert.Equal(new[] { s_itemTaubate, s_itemBauru }, spItems.Items);
+		Assert.Equal(new[] { s_itemTaubate, s_itemMarilia, s_itemBauru }, spItems.Items);
 		await ValidateItem(client, new()
 		{
 			Item = s_itemBauru,
@@ -3186,13 +3308,13 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(
 			new Coverage
 			{
-				N = 2,
+				N = 3,
 				Uf = "SC",
 				Quarter = SliceIds.Quarter,
 				MethodologyVersion = SliceIds.Methodology,
 			},
 			scItems.Coverage);
-		Assert.Equal(new[] { s_itemJoinville, s_itemLages }, scItems.Items);
+		Assert.Equal(new[] { s_itemBalneario, s_itemJoinville, s_itemLages }, scItems.Items);
 		await ValidateItem(client, new()
 		{
 			Item = s_itemJoinville,
@@ -3675,6 +3797,22 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 			OrgaoRazaoSocial = "Municipio de Nova Friburgo",
 			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
 			ContratacaoPncpId = "28606630000123-1-000093/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemMarilia,
+			OrgaoId = SliceIds.OrgaoMarilia,
+			OrgaoRazaoSocial = "Municipio de Marilia",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "44477909000100-1-000487/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemBalneario,
+			OrgaoId = SliceIds.OrgaoBalneario,
+			OrgaoRazaoSocial = "Municipio de Balneario Camboriu",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "83102285000107-1-000442/2024",
 		});
 
 		var empty = new Coverage

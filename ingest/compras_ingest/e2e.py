@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import json
 import sys
+import tempfile
+from dataclasses import replace
 from pathlib import Path
 
 from compras_detect.tier1 import run_tier1
@@ -8,13 +11,31 @@ from compras_ingest.cpf import assert_no_raw_cpf, mask_cpf
 from compras_ingest.landing import LandingStore
 from compras_ingest.official import (
     OCDS_OCP_REGISTRY_URL,
+    PNCP_API_BASE,
+    PNCP_COMPRA_PATH,
+    PNCP_CONSULTA_BASE,
+    PNCP_CONSULTA_OPENAPI,
+    PNCP_CONSULTA_SWAGGER,
+    PNCP_ITEM_RESULTADOS_PATH,
+    PNCP_ITENS_PATH,
+    PNCP_PUBLICACAO_PATH,
     RFB_SHARE_URL,
+    PncpOfficial,
     resolve_ocds_feed,
+    resolve_pncp_consulta,
     resolve_receita_index,
 )
 from compras_ingest.pipeline import _collect_landing_records, land_second_snapshot, run_compras_slice
 from compras_ingest.settings import Settings
 from compras_ingest.sources.ocds import land_ocds
+from compras_ingest.sources.pncp_consulta import (
+    CURSOR_KEY,
+    MIN_INTERVAL_S,
+    FixtureTransport,
+    InterruptTransport,
+    RateLimiter,
+    land_pncp_consulta,
+)
 from compras_ingest.sources.receita_cnpj import cnpj_basicos_from_frame, land_receita_cnpj
 from compras_ingest.warehouse import fetch_contratacao, fetch_flags, fetch_items_for, fetch_one_orgao, fetch_raw_text_blobs, write_flags
 
@@ -22,13 +43,16 @@ from compras_ingest.warehouse import fetch_contratacao, fetch_flags, fetch_items
 ORGAO_CNPJ = "29477000000180"
 PNCP_ID = "29477000000180-1-2024-000001"
 RAW_CPF = "12345678901"
-LANDED_SOURCES = ("compras_gov", "ocds", "receita_cnpj", "receita_cnpj_socios")
+LANDED_SOURCES = ("compras_gov", "ocds", "receita_cnpj", "receita_cnpj_socios", "pncp_consulta")
+PNCP_COMPRA_1 = "29477000000180-1-000001/2024"
+PNCP_COMPRA_2 = "29477000000180-1-000002/2024"
 
 
 def main() -> int:
     settings = Settings.from_env()
     _check_defs()
     official = _assert_official_urls(settings)
+    _assert_pncp_spacing_and_resume(settings)
     result = run_compras_slice(settings)
     _assert_landing(settings, result.landing.sha256)
     _assert_tier_a_landing(settings, result.ocds_report)
@@ -78,6 +102,7 @@ def main() -> int:
     print(f"ocds={result.ocds_report.get('ocds_n')} matched={result.ocds_report.get('matched_n')}")
     print(f"official_ocds={official['ocds_jsonl']}")
     print(f"official_rfb={official['rfb_index']}")
+    print(f"official_pncp={official['pncp_consulta']}")
     print(f"orgao={orgao['cnpj']} contratacao={contratacao['pncpId']} items={len(items)}")
     print(f"flags={sorted(kinds)}")
     return 0
@@ -112,7 +137,33 @@ def _assert_official_urls(settings: Settings) -> dict:
         raise SystemExit(f"Receita WebDAV host is not official: {rfb.webdav_root}")
     if not rfb.month or not rfb.files:
         raise SystemExit("Receita index resolved without month or files")
-    return {"ocds_jsonl": ocds.jsonl_url, "rfb_index": rfb.index_url, "rfb_month": rfb.month}
+    try:
+        pncp = resolve_pncp_consulta()
+    except Exception as exc:
+        raise SystemExit(f"official URL resolve failed: {exc}") from exc
+    if pncp.consulta_base != PNCP_CONSULTA_BASE:
+        raise SystemExit(f"PNCP consulta base is not official: {pncp.consulta_base}")
+    if pncp.consulta_openapi != PNCP_CONSULTA_OPENAPI:
+        raise SystemExit(f"PNCP consulta OpenAPI is not official: {pncp.consulta_openapi}")
+    if "pncp.gov.br" not in pncp.consulta_base or "pncp.gov.br" not in pncp.api_base:
+        raise SystemExit(f"PNCP host is not official: {pncp.consulta_base} {pncp.api_base}")
+    if pncp.api_base != PNCP_API_BASE:
+        raise SystemExit(f"PNCP items API base is not official: {pncp.api_base}")
+    if pncp.swagger_url != PNCP_CONSULTA_SWAGGER:
+        raise SystemExit(f"PNCP swagger URL is not official: {pncp.swagger_url}")
+    if pncp.publicacao_path != PNCP_PUBLICACAO_PATH or pncp.compra_path != PNCP_COMPRA_PATH:
+        raise SystemExit("PNCP consulta paths are not the live OpenAPI paths")
+    if pncp.itens_path != PNCP_ITENS_PATH or pncp.resultados_path != PNCP_ITEM_RESULTADOS_PATH:
+        raise SystemExit("PNCP items paths are not the live OpenAPI paths")
+    if not pncp.modalidades:
+        raise SystemExit("PNCP modalidades resolved empty")
+    return {
+        "ocds_jsonl": ocds.jsonl_url,
+        "rfb_index": rfb.index_url,
+        "rfb_month": rfb.month,
+        "pncp_consulta": pncp.consulta_base,
+        "pncp_openapi": pncp.consulta_openapi,
+    }
 
 
 def _assert_landing(settings: Settings, sha256: str) -> None:
@@ -131,7 +182,7 @@ def _assert_landing(settings: Settings, sha256: str) -> None:
 
 def _assert_tier_a_landing(settings: Settings, ocds_report: dict) -> None:
     store = LandingStore(settings)
-    for source in ("ocds", "receita_cnpj", "receita_cnpj_socios"):
+    for source in ("ocds", "receita_cnpj", "receita_cnpj_socios", "pncp_consulta"):
         keys = [k for k in store.list_parquet(source) if k.endswith(".parquet")]
         if not keys:
             raise SystemExit(f"no {source} parquet in landing")
@@ -153,6 +204,14 @@ def _assert_tier_a_landing(settings: Settings, ocds_report: dict) -> None:
                     raise SystemExit("receita socios missing masked CPF")
             if source == "ocds" and df.is_empty():
                 raise SystemExit("ocds landed empty from fixture")
+            if source == "pncp_consulta":
+                if df.is_empty():
+                    raise SystemExit("pncp_consulta landed empty from fixture")
+                ids = {str(v) for v in df["numero_controle_pncp"].to_list()} if "numero_controle_pncp" in df.columns else set()
+                if PNCP_COMPRA_1 not in ids or PNCP_COMPRA_2 not in ids:
+                    raise SystemExit(f"pncp_consulta fixture missing compras: {ids}")
+                if mask_cpf(RAW_CPF) not in " ".join(blobs):
+                    raise SystemExit("pncp_consulta missing masked CPF")
     if ocds_report.get("skipped"):
         raise SystemExit("ocds_crosscheck skipped")
     if ocds_report.get("primary") is not False:
@@ -181,6 +240,119 @@ def _assert_write_once(settings: Settings) -> None:
         raise SystemExit("receita reland wrote a second parquet")
     if len(store.list_parquet("receita_cnpj_socios")) != len(socios_first):
         raise SystemExit("receita socios reland wrote a second parquet")
+    pncp_first = store.list_parquet("pncp_consulta")
+    land_pncp_consulta(settings, store)
+    if len(store.list_parquet("pncp_consulta")) != len(pncp_first):
+        raise SystemExit("pncp_consulta reland wrote a second parquet")
+
+
+class _RecordSleep:
+    def __init__(self) -> None:
+        self.delays: list[float] = []
+
+    def __call__(self, seconds: float) -> None:
+        self.delays.append(float(seconds))
+
+
+def _fixture_official() -> PncpOfficial:
+    return PncpOfficial(
+        PNCP_CONSULTA_BASE,
+        PNCP_CONSULTA_OPENAPI,
+        PNCP_CONSULTA_SWAGGER,
+        PNCP_API_BASE,
+        PNCP_PUBLICACAO_PATH,
+        PNCP_COMPRA_PATH,
+        PNCP_ITENS_PATH,
+        PNCP_ITEM_RESULTADOS_PATH,
+        (8,),
+    )
+
+
+def _assert_pncp_spacing_and_resume(settings: Settings) -> None:
+    if MIN_INTERVAL_S < 1.0:
+        raise SystemExit("PNCP spacing constant is below 1s")
+    try:
+        RateLimiter(0.5)
+    except ValueError:
+        pass
+    else:
+        raise SystemExit("RateLimiter accepted spacing below 1s")
+    if settings.pncp_consulta_dir is None:
+        raise SystemExit("PNCP_CONSULTA_DIR fixture is missing")
+    _assert_pncp_spacing(settings)
+    _assert_pncp_resume(settings)
+
+
+def _assert_pncp_spacing(settings: Settings) -> None:
+    tmp = Path(tempfile.mkdtemp(prefix="pncp-space-"))
+    local = replace(settings, landing_uri=str(tmp))
+    store = LandingStore(local)
+    sleeper = _RecordSleep()
+    transport = FixtureTransport(local.pncp_consulta_dir)
+    land_pncp_consulta(
+        local,
+        store,
+        official=_fixture_official(),
+        transport=transport,
+        sleeper=sleeper,
+    )
+    n = len(transport.calls)
+    if n < 2:
+        raise SystemExit("pncp fixture made too few HTTP calls to prove spacing")
+    if len(sleeper.delays) < n - 1:
+        raise SystemExit("PNCP spacing skipped")
+    if any(d < 1.0 for d in sleeper.delays):
+        raise SystemExit("PNCP spacing below 1s")
+
+
+def _assert_pncp_resume(settings: Settings) -> None:
+    tmp = Path(tempfile.mkdtemp(prefix="pncp-resume-"))
+    local = replace(settings, landing_uri=str(tmp))
+    store = LandingStore(local)
+    first = FixtureTransport(local.pncp_consulta_dir)
+    interrupted = InterruptTransport(first, fail_on_publicacao_page=2)
+    try:
+        land_pncp_consulta(
+            local,
+            store,
+            official=_fixture_official(),
+            transport=interrupted,
+            sleeper=_RecordSleep(),
+        )
+    except RuntimeError as exc:
+        if "injected interrupt" not in str(exc):
+            raise
+    else:
+        raise SystemExit("pncp resume test expected an interrupt after page 1")
+    if not store.exists(CURSOR_KEY):
+        raise SystemExit("pncp resume lost the cursor")
+    cursor = json.loads(store.get(CURSOR_KEY).decode())
+    if PNCP_COMPRA_1 not in {str(x) for x in cursor.get("completed_ids") or []}:
+        raise SystemExit("pncp resume cursor lost the last successful id")
+    if int(cursor.get("page") or 0) < 2:
+        raise SystemExit(f"pncp resume cursor lost the next page: {cursor}")
+    second = FixtureTransport(local.pncp_consulta_dir)
+    ref, df, _ = land_pncp_consulta(
+        local,
+        store,
+        official=_fixture_official(),
+        transport=second,
+        sleeper=_RecordSleep(),
+    )
+    if _fetched_sequencial(second.calls, 1):
+        raise SystemExit("pncp resume re-fetched a completed compra")
+    if not _fetched_sequencial(second.calls, 2):
+        raise SystemExit("pncp resume did not continue to the next compra")
+    ids = {str(v) for v in df["numero_controle_pncp"].to_list()} if "numero_controle_pncp" in df.columns else set()
+    if PNCP_COMPRA_1 not in ids or PNCP_COMPRA_2 not in ids:
+        raise SystemExit(f"pncp resume dropped rows: {ids}")
+    if ref.source != "pncp_consulta" or "date=" not in ref.key:
+        raise SystemExit(f"pncp resume landing is not hashed by source/date: {ref.key}")
+
+
+def _fetched_sequencial(calls: list[tuple[str, dict]], sequencial: int) -> bool:
+    token = f"/compras/2024/{sequencial}"
+    return any(token in url and "/itens" in url for url, _ in calls)
 
 
 if __name__ == "__main__":

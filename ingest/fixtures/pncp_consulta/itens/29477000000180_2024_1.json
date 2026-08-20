@@ -1,0 +1,16 @@
+[
+  {
+    "numeroItem": 1,
+    "descricao": "PAPEL SULFITE A4 75G RESMA 500 FOLHAS",
+    "materialOuServico": "M",
+    "materialOuServicoNome": "Material",
+    "valorUnitarioEstimado": 5.0,
+    "valorTotal": 50.0,
+    "quantidade": 10.0,
+    "unidadeMedida": "UN",
+    "catalogoCodigoItem": "123456",
+    "temResultado": true,
+    "situacaoCompraItem": 2,
+    "situacaoCompraItemNome": "Homologado"
+  }
+]

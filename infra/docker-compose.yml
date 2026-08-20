@@ -23,6 +23,7 @@ x-dagster-env: &dagster-env
   RECEITA_CNPJ_PATH: /app/ingest/fixtures/receita_cnpj
   OCDS_PATH: /app/ingest/fixtures/ocds/releases.jsonl
   SANCTIONS_DIR: /app/ingest/fixtures/sanctions
+  PNCP_CONSULTA_DIR: /app/ingest/fixtures/pncp_consulta
 
 services:
   postgres:

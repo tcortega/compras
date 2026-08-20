@@ -411,6 +411,17 @@ def _concat_source(store: LandingStore, source: str) -> pl.DataFrame:
     return pl.concat(frames, how="diagonal_relaxed") if frames else pl.DataFrame()
 
 
+def load_normalized_items(store: LandingStore) -> pl.DataFrame:
+    """Read warehouse-persisted normalized items from landing when Dagster has no warehouse_entities IO."""
+    keys = sorted(store.list_parquet("normalized_items"))
+    if not keys:
+        raise RuntimeError("warehouse_entities did not persist normalized items")
+    frames = [store.read_parquet(key) for key in keys]
+    if len(frames) == 1:
+        return frames[0]
+    return pl.concat(frames, how="diagonal_relaxed")
+
+
 def run_tier1_and_write_flags(
     settings: Settings,
     store: LandingStore,

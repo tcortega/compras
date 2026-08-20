@@ -400,6 +400,7 @@ def main() -> int:
         _assert_write_once(settings)
         _assert_refetch_schedule(settings)
         _assert_incremental_schedules(settings)
+        _assert_nightly_detector_schedule(settings)
         _assert_land_idempotency(settings)
         _assert_data_error_suite(settings, result.items)
         _assert_a2(settings)
@@ -974,6 +975,74 @@ def _assert_incremental_schedules(settings: Settings) -> None:
         after = _landing_digests(settings)
         if after != mid:
             raise SystemExit(f"second {job.name} changed landing content hashes")
+
+
+def _assert_nightly_detector_schedule(settings: Settings) -> None:
+    from dagster import DagsterInstance
+
+    from compras_ingest.assets import _job_asset_keys, defs
+    from compras_ingest.detect_schedule import (
+        ASSET_KEYS,
+        JOB_NAME,
+        SCHEDULE_CRON,
+        SCHEDULE_NAME,
+        SCHEDULE_TZ,
+    )
+
+    if SCHEDULE_TZ != "America/Sao_Paulo":
+        raise SystemExit(f"nightly detector tz is {SCHEDULE_TZ}")
+    if SCHEDULE_CRON != "0 6 * * *":
+        raise SystemExit(f"nightly detector cron {SCHEDULE_CRON} != 0 6 * * *")
+    found = next((s for s in (defs.schedules or []) if s.name == SCHEDULE_NAME), None)
+    if found is None:
+        raise SystemExit(f"defs missing schedule {SCHEDULE_NAME}")
+    if not found.cron_schedule:
+        raise SystemExit("nightly detector schedule missing cron")
+    if found.cron_schedule != SCHEDULE_CRON:
+        raise SystemExit(f"nightly detector cron {found.cron_schedule} != {SCHEDULE_CRON}")
+    if found.execution_timezone != SCHEDULE_TZ:
+        raise SystemExit(f"nightly detector tz is {found.execution_timezone} not {SCHEDULE_TZ}")
+    target = found.job_name or getattr(found.job, "name", "")
+    if target != JOB_NAME:
+        raise SystemExit(f"nightly detector schedule does not target {JOB_NAME}: {target}")
+    job = defs.resolve_job_def(JOB_NAME)
+    selected = _job_asset_keys(job)
+    need = set(ASSET_KEYS)
+    if not selected:
+        raise SystemExit(f"{JOB_NAME} has no asset selection")
+    if not need.issubset(selected):
+        raise SystemExit(f"{JOB_NAME} missing detect assets {need - selected}")
+    if selected - need:
+        raise SystemExit(f"{JOB_NAME} selected extra assets {selected - need}")
+    if "warehouse_entities" in selected:
+        raise SystemExit(f"{JOB_NAME} must not rematerialize warehouse_entities")
+    before = fetch_counts(settings)
+    before_flags = {str(row["id"]) for row in fetch_flags(settings)}
+    if before["flag"] < 1:
+        raise SystemExit("nightly detector e2e expected seed flags before rematerialize")
+    instance = DagsterInstance.ephemeral()
+    result = job.execute_in_process(instance=instance)
+    if not result.success:
+        raise SystemExit(f"{JOB_NAME} failed")
+    mid = fetch_counts(settings)
+    mid_flags = {str(row["id"]) for row in fetch_flags(settings)}
+    _assert_same_detect_counts(before, mid, f"{JOB_NAME}")
+    if mid_flags != before_flags:
+        raise SystemExit(f"{JOB_NAME} changed flag ids")
+    result2 = job.execute_in_process(instance=instance)
+    if not result2.success:
+        raise SystemExit(f"second {JOB_NAME} failed")
+    after = fetch_counts(settings)
+    after_flags = {str(row["id"]) for row in fetch_flags(settings)}
+    _assert_same_detect_counts(mid, after, f"second {JOB_NAME}")
+    if after_flags != mid_flags:
+        raise SystemExit(f"second {JOB_NAME} changed flag ids")
+
+
+def _assert_same_detect_counts(before: dict[str, int], after: dict[str, int], label: str) -> None:
+    for table in ("flag", "fornecedor_adjacency", "co_bid_edge", "co_bid_screen"):
+        if after[table] != before[table]:
+            raise SystemExit(f"{label} changed {table} count {before[table]} -> {after[table]}")
 
 
 def _assert_land_idempotency(settings: Settings) -> None:

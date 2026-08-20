@@ -326,6 +326,14 @@ The explorer does not label them as gaps.
 Live HTTP stays on `pncp.gov.br` with 1s spacing and exponential backoff on 429/5xx.
 Fixture mode never calls `resolve_pncp_consulta`.
 
+A nightly Dagster schedule (`nightly_detector_daily`, cron `0 6 * * *`, America/Sao_Paulo) rematerializes the existing detect assets after the land jobs.
+It writes flags, adjacency, and co-bid rows to the same warehouse tables.
+The job reads warehouse and landing.
+It does not rematerialize `warehouse_entities`.
+Python never calls C#.
+C# never runs a detector.
+The explorer does not read those tables.
+
 CGU CEIS and CNEP bulk CSVs land under `cgu_ceis_cnep/date=`.
 That source is internal.
 Sanction windows stay in landing parquet.

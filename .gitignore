@@ -1,0 +1,26 @@
+# data landing (generated, never commit dumps)
+*.csv
+*.parquet
+*.zip
+*.7z
+!labels/**/*.csv
+
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# csharp
+bin/
+obj/
+*.user
+
+# node
+node_modules/
+.next/
+
+# secrets
+.env
+.env.*
+!.env.example

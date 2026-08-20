@@ -444,6 +444,28 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			MunicipioIbge = "3127701",
 			MunicipioNome = "Governador Valadares",
 		};
+		var canoas = new Orgao
+		{
+			Id = SliceIds.OrgaoCanoas,
+			Cnpj = "88577416000118",
+			RazaoSocial = "Municipio de Canoas",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "RS",
+			MunicipioIbge = "4304606",
+			MunicipioNome = "Canoas",
+		};
+		var lages = new Orgao
+		{
+			Id = SliceIds.OrgaoLages,
+			Cnpj = "82777301000190",
+			RazaoSocial = "Municipio de Lages",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "SC",
+			MunicipioIbge = "4209300",
+			MunicipioNome = "Lages",
+		};
 		var fornecedor = new Fornecedor
 		{
 			Id = SliceIds.Fornecedor,
@@ -924,6 +946,34 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			Ano = 2024,
 			ValorHomologado = 43500m,
 			PublicadoEm = Instant.FromUtc(2024, 10, 30, 8, 39),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoCanoas = new Contratacao
+		{
+			Id = SliceIds.ContratacaoCanoas,
+			PncpId = "88577416000118-1-000156/2024",
+			OrgaoId = SliceIds.OrgaoCanoas,
+			Modalidade = "pregao eletronico",
+			Objeto = "Fornecimento de clorimetro digital portatil e reagentes DPD para cloro livre",
+			Ano = 2024,
+			ValorHomologado = 3305.99m,
+			PublicadoEm = Instant.FromUtc(2024, 10, 16, 7, 1),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoLages = new Contratacao
+		{
+			Id = SliceIds.ContratacaoLages,
+			PncpId = "82777301000190-1-000260/2024",
+			OrgaoId = SliceIds.OrgaoLages,
+			Modalidade = "pregao eletronico",
+			Objeto = "Aquisicao de Bolsas de Trabalho personalizadas para a equipe de fiscalizacao da Vigilancia Sanitaria",
+			Ano = 2024,
+			ValorHomologado = 2910m,
+			PublicadoEm = Instant.FromUtc(2024, 9, 4, 7, 15),
 			Source = "compras.gov.br",
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
@@ -1437,11 +1487,45 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
 		};
+		var itemCanoas = new Item
+		{
+			Id = SliceIds.ItemCanoas,
+			ContratacaoId = SliceIds.ContratacaoCanoas,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Clorimetro",
+			Catmat = "247827",
+			Quantidade = 1m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 1667.07m,
+			ValorTotal = 1667.07m,
+			Uf = "RS",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var itemLages = new Item
+		{
+			Id = SliceIds.ItemLages,
+			ContratacaoId = SliceIds.ContratacaoLages,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Sacola",
+			Catmat = "229690",
+			Quantidade = 30m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 97m,
+			ValorTotal = 2910m,
+			Uf = "SC",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
 
-		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville, uberlandia, londrina, feira, caruaru, anapolis, vilaVelha, campinaGrande, caucaia, imperatriz, arapiraca, dourados, maraba, varzeaGrande, jiParana, parnamirim, cruzeiroDoSul, santana, rorainopolis, maringa, taubate, cascavel, juizDeFora, foz, santaMaria, montesClaros, governadorValadares);
+		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville, uberlandia, londrina, feira, caruaru, anapolis, vilaVelha, campinaGrande, caucaia, imperatriz, arapiraca, dourados, maraba, varzeaGrande, jiParana, parnamirim, cruzeiroDoSul, santana, rorainopolis, maringa, taubate, cascavel, juizDeFora, foz, santaMaria, montesClaros, governadorValadares, canoas, lages);
 		db.Fornecedores.AddRange(fornecedor, fornecedorExtra);
-		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina, contratacaoFeira, contratacaoCaruaru, contratacaoAnapolis, contratacaoVilaVelha, contratacaoCampinaGrande, contratacaoCaucaia, contratacaoImperatriz, contratacaoArapiraca, contratacaoDourados, contratacaoMaraba, contratacaoVarzeaGrande, contratacaoJiParana, contratacaoParnamirim, contratacaoCruzeiroDoSul, contratacaoSantana, contratacaoRorainopolis, contratacaoMaringa, contratacaoTaubate, contratacaoCascavel, contratacaoJuizDeFora, contratacaoFoz, contratacaoSantaMaria, contratacaoMontesClaros, contratacaoGovernadorValadares);
-		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina, itemFeira, itemCaruaru, itemAnapolis, itemVilaVelha, itemCampinaGrande, itemCaucaia, itemImperatriz, itemArapiraca, itemDourados, itemMaraba, itemVarzeaGrande, itemJiParana, itemParnamirim, itemCruzeiroDoSul, itemSantana, itemRorainopolis, itemMaringa, itemTaubate, itemCascavel, itemJuizDeFora, itemFoz, itemSantaMaria, itemMontesClaros, itemGovernadorValadares);
+		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina, contratacaoFeira, contratacaoCaruaru, contratacaoAnapolis, contratacaoVilaVelha, contratacaoCampinaGrande, contratacaoCaucaia, contratacaoImperatriz, contratacaoArapiraca, contratacaoDourados, contratacaoMaraba, contratacaoVarzeaGrande, contratacaoJiParana, contratacaoParnamirim, contratacaoCruzeiroDoSul, contratacaoSantana, contratacaoRorainopolis, contratacaoMaringa, contratacaoTaubate, contratacaoCascavel, contratacaoJuizDeFora, contratacaoFoz, contratacaoSantaMaria, contratacaoMontesClaros, contratacaoGovernadorValadares, contratacaoCanoas, contratacaoLages);
+		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina, itemFeira, itemCaruaru, itemAnapolis, itemVilaVelha, itemCampinaGrande, itemCaucaia, itemImperatriz, itemArapiraca, itemDourados, itemMaraba, itemVarzeaGrande, itemJiParana, itemParnamirim, itemCruzeiroDoSul, itemSantana, itemRorainopolis, itemMaringa, itemTaubate, itemCascavel, itemJuizDeFora, itemFoz, itemSantaMaria, itemMontesClaros, itemGovernadorValadares, itemCanoas, itemLages);
 	}
 
 	private static JsonSerializerOptions CreateJson()

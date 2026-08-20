@@ -268,6 +268,28 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			MunicipioIbge = "2700300",
 			MunicipioNome = "Arapiraca",
 		};
+		var dourados = new Orgao
+		{
+			Id = SliceIds.OrgaoDourados,
+			Cnpj = "20267427000168",
+			RazaoSocial = "Municipio de Dourados",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "MS",
+			MunicipioIbge = "5003702",
+			MunicipioNome = "Dourados",
+		};
+		var maraba = new Orgao
+		{
+			Id = SliceIds.OrgaoMaraba,
+			Cnpj = "05853163000130",
+			RazaoSocial = "Municipio de Maraba",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "PA",
+			MunicipioIbge = "1504208",
+			MunicipioNome = "Maraba",
+		};
 		var fornecedor = new Fornecedor
 		{
 			Id = SliceIds.Fornecedor,
@@ -528,6 +550,34 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
 		};
+		var contratacaoDourados = new Contratacao
+		{
+			Id = SliceIds.ContratacaoDourados,
+			PncpId = "20267427000168-1-000043/2024",
+			OrgaoId = SliceIds.OrgaoDourados,
+			Modalidade = "dispensa",
+			Objeto = "Aquisicao de reagentes para diagnostico clinico",
+			Ano = 2024,
+			ValorHomologado = 4908m,
+			PublicadoEm = Instant.FromUtc(2024, 11, 7, 17, 13),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoMaraba = new Contratacao
+		{
+			Id = SliceIds.ContratacaoMaraba,
+			PncpId = "05853163000130-1-000142/2024",
+			OrgaoId = SliceIds.OrgaoMaraba,
+			Modalidade = "dispensa",
+			Objeto = "Aquisicao de fogao 4 bocas",
+			Ano = 2024,
+			ValorHomologado = 3399.96m,
+			PublicadoEm = Instant.FromUtc(2024, 10, 15, 14, 9),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
 		var itemNiteroi = new Item
 		{
 			Id = SliceIds.ItemNiteroi,
@@ -766,11 +816,45 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
 		};
+		var itemDourados = new Item
+		{
+			Id = SliceIds.ItemDourados,
+			ContratacaoId = SliceIds.ContratacaoDourados,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Reagente para diagnostico clinico",
+			Catmat = "333587",
+			Quantidade = 12m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 126m,
+			ValorTotal = 1512m,
+			Uf = "MS",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var itemMaraba = new Item
+		{
+			Id = SliceIds.ItemMaraba,
+			ContratacaoId = SliceIds.ContratacaoMaraba,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Fogao gas",
+			Catmat = "425200",
+			Quantidade = 4m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 849.99m,
+			ValorTotal = 3399.96m,
+			Uf = "PA",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
 
-		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville, uberlandia, londrina, feira, caruaru, anapolis, vilaVelha, campinaGrande, caucaia, imperatriz, arapiraca);
+		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville, uberlandia, londrina, feira, caruaru, anapolis, vilaVelha, campinaGrande, caucaia, imperatriz, arapiraca, dourados, maraba);
 		db.Fornecedores.AddRange(fornecedor, fornecedorExtra);
-		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina, contratacaoFeira, contratacaoCaruaru, contratacaoAnapolis, contratacaoVilaVelha, contratacaoCampinaGrande, contratacaoCaucaia, contratacaoImperatriz, contratacaoArapiraca);
-		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina, itemFeira, itemCaruaru, itemAnapolis, itemVilaVelha, itemCampinaGrande, itemCaucaia, itemImperatriz, itemArapiraca);
+		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina, contratacaoFeira, contratacaoCaruaru, contratacaoAnapolis, contratacaoVilaVelha, contratacaoCampinaGrande, contratacaoCaucaia, contratacaoImperatriz, contratacaoArapiraca, contratacaoDourados, contratacaoMaraba);
+		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina, itemFeira, itemCaruaru, itemAnapolis, itemVilaVelha, itemCampinaGrande, itemCaucaia, itemImperatriz, itemArapiraca, itemDourados, itemMaraba);
 	}
 
 	private static JsonSerializerOptions CreateJson()

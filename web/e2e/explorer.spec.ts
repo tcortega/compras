@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 
-const banned = /fraude|corrupto|roubo|\bflag\b|ranking|adjacenc|shared_qsa|shared_partner/i
+const banned = /fraude|corrupto|roubo|\bflag\b|ranking|adjacenc|shared_qsa|shared_partner|cover[_-]?bidd|bid_variance|winner_rotation|co[_-]?bid/i
 const stubLeak = /7c2e1f40-3306-4050|Dipirona|Distribuidora de Medicamentos Serra|sha256:dev-slice-vr-2024/
 const againstCompose = Boolean(process.env.PLAYWRIGHT_BASE_URL)
 const niteroiName = /Prefeitura Municipal de Niter[oó]i/i

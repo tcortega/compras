@@ -1,0 +1,11 @@
+version;kind;param;value;note
+0.2;bid_variance;min_bidders;3;internal heuristic not a legal test
+0.2;bid_variance;max_cv;0.03;sample CV = s/mean. No CADE/TCU numeric cutoff published
+0.2;skew;min_cluster;3;others besides the unique low bid
+0.2;skew;cluster_max_cv;0.03;tight pack of the non-min bids
+0.2;skew;max_low_ratio;0.70;low / cluster median. Internal heuristic
+0.2;cover_bidding;min_repeats;2;same pair on 2+ licitacao+item events
+0.2;cover_bidding;min_ratio;1.50;high/low complementary. Internal heuristic
+0.2;winner_rotation;min_set;3;closed winner set size lower bound
+0.2;winner_rotation;max_set;5;closed winner set size upper bound
+0.2;winner_rotation;min_licitacoes;3;related licitacoes in orgao+classe

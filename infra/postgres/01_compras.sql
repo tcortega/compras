@@ -165,6 +165,72 @@ CREATE TABLE IF NOT EXISTS fornecedor_socio (
 CREATE INDEX IF NOT EXISTS fornecedor_socio_cnpj_idx ON fornecedor_socio ("fornecedorCnpj");
 CREATE INDEX IF NOT EXISTS fornecedor_socio_fornecedor_idx ON fornecedor_socio ("fornecedorId");
 
+CREATE TABLE IF NOT EXISTS licitacao_participante (
+  id uuid PRIMARY KEY,
+  "licitacaoId" text NOT NULL,
+  uf text NOT NULL CHECK (uf IN ('SP', 'RS')),
+  orgao text NOT NULL,
+  classe text NOT NULL DEFAULT '',
+  "itemLote" text NOT NULL DEFAULT '',
+  participante text NOT NULL,
+  proposta numeric(18, 6),
+  winner boolean NOT NULL,
+  source text NOT NULL CHECK (source IN ('tce_sp', 'tce_rs')),
+  "snapshotId" text NOT NULL,
+  "methodologyVersion" text NOT NULL,
+  "createdAt" timestamptz NOT NULL,
+  UNIQUE ("licitacaoId", "itemLote", participante, source)
+);
+
+CREATE INDEX IF NOT EXISTS licitacao_participante_lic_idx ON licitacao_participante ("licitacaoId");
+CREATE INDEX IF NOT EXISTS licitacao_participante_uf_idx ON licitacao_participante (uf);
+CREATE INDEX IF NOT EXISTS licitacao_participante_source_idx ON licitacao_participante (source);
+
+CREATE TABLE IF NOT EXISTS co_bid_edge (
+  kind text NOT NULL CHECK (kind IN ('co_bid')),
+  "leftCnpj" text NOT NULL,
+  "rightCnpj" text NOT NULL,
+  "licitacaoId" text NOT NULL,
+  "itemLote" text NOT NULL DEFAULT '',
+  "leftProposta" numeric(18, 6),
+  "rightProposta" numeric(18, 6),
+  winner text NOT NULL DEFAULT '',
+  "snapshotId" text NOT NULL,
+  "methodologyVersion" text NOT NULL,
+  "createdAt" timestamptz NOT NULL,
+  PRIMARY KEY (kind, "leftCnpj", "rightCnpj", "licitacaoId", "itemLote"),
+  CONSTRAINT co_bid_edge_left_lt_right CHECK ("leftCnpj" < "rightCnpj" COLLATE "C")
+);
+
+ALTER TABLE co_bid_edge DROP CONSTRAINT IF EXISTS co_bid_edge_check;
+ALTER TABLE co_bid_edge DROP CONSTRAINT IF EXISTS co_bid_edge_left_lt_right;
+ALTER TABLE co_bid_edge ADD CONSTRAINT co_bid_edge_left_lt_right CHECK ("leftCnpj" < "rightCnpj" COLLATE "C");
+
+CREATE INDEX IF NOT EXISTS co_bid_edge_lic_idx ON co_bid_edge ("licitacaoId");
+CREATE INDEX IF NOT EXISTS co_bid_edge_left_idx ON co_bid_edge ("leftCnpj");
+CREATE INDEX IF NOT EXISTS co_bid_edge_right_idx ON co_bid_edge ("rightCnpj");
+
+CREATE TABLE IF NOT EXISTS co_bid_screen (
+  id uuid PRIMARY KEY,
+  kind text NOT NULL CHECK (kind IN (
+    'bid_variance', 'skew', 'cover_bidding', 'winner_rotation'
+  )),
+  state text NOT NULL CHECK (state IN (
+    'detected', 'internal_review', 'notified', 'published', 'resolved', 'retracted'
+  )),
+  "subjectId" text NOT NULL,
+  "licitacaoId" text NOT NULL,
+  evidence text NOT NULL,
+  "snapshotId" text NOT NULL,
+  "methodologyVersion" text NOT NULL,
+  "createdAt" timestamptz NOT NULL,
+  "updatedAt" timestamptz NOT NULL,
+  UNIQUE (kind, "subjectId", "snapshotId")
+);
+
+CREATE INDEX IF NOT EXISTS co_bid_screen_kind_idx ON co_bid_screen (kind);
+CREATE INDEX IF NOT EXISTS co_bid_screen_subject_idx ON co_bid_screen ("subjectId");
+CREATE INDEX IF NOT EXISTS co_bid_screen_state_idx ON co_bid_screen (state);
 
 ALTER TABLE item ADD COLUMN IF NOT EXISTS "valorPorUnidadeCanonica" numeric(18, 6);
 ALTER TABLE item ADD COLUMN IF NOT EXISTS "specConcentracao" text;

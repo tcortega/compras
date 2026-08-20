@@ -26,6 +26,8 @@ SLICES = (
     ("05853163000130", "1504208", "PA", "Marabá"),
     ("03507548000110", "5108402", "MT", "Várzea Grande"),
     ("04092672000125", "1100122", "RO", "Ji-Paraná"),
+    ("08170862000174", "2403251", "RN", "Parnamirim"),
+    ("04012548000102", "1200203", "AC", "Cruzeiro do Sul"),
 )
 
 
@@ -45,10 +47,10 @@ def main() -> int:
         seen_ibge.add(ibge)
         seen_uf.add(uf)
         print(f"orgao={orgao['cnpj']} ibge={orgao['municipioIbge']} uf={orgao['uf']}")
-    if len(seen_ibge) < 19:
+    if len(seen_ibge) < 21:
         raise SystemExit(f"warehouse missing published IBGE codes: {sorted(seen_ibge)}")
-    if seen_uf != {"RJ", "SP", "RS", "SC", "MG", "PR", "BA", "PE", "GO", "ES", "PB", "CE", "MA", "AL", "MS", "PA", "MT", "RO"}:
-        raise SystemExit(f"warehouse UF set is not RJ+SP+RS+SC+MG+PR+BA+PE+GO+ES+PB+CE+MA+AL+MS+PA+MT+RO: {sorted(seen_uf)}")
+    if seen_uf != {"RJ", "SP", "RS", "SC", "MG", "PR", "BA", "PE", "GO", "ES", "PB", "CE", "MA", "AL", "MS", "PA", "MT", "RO", "RN", "AC"}:
+        raise SystemExit(f"warehouse UF set is not RJ+SP+RS+SC+MG+PR+BA+PE+GO+ES+PB+CE+MA+AL+MS+PA+MT+RO+RN+AC: {sorted(seen_uf)}")
     landed = {(str(o.get("municipioIbge") or ""), str(o.get("uf") or "")) for o in fetch_orgaos(settings)}
     if landed != {
         ("3306305", "RJ"),
@@ -70,13 +72,15 @@ def main() -> int:
         ("1504208", "PA"),
         ("5108402", "MT"),
         ("1100122", "RO"),
+        ("2403251", "RN"),
+        ("1200203", "AC"),
     }:
         raise SystemExit(f"warehouse orgao set is not the published slice: {sorted(landed)}")
     counts = fetch_counts(settings)
     if counts["item"] < 1:
         raise SystemExit("warehouse has no items")
-    if counts["orgao"] < 19:
-        raise SystemExit(f"warehouse orgao count {counts['orgao']} < 19")
+    if counts["orgao"] < 21:
+        raise SystemExit(f"warehouse orgao count {counts['orgao']} < 21")
     print("seed ok")
     print(f"entities={result.entity_counts} facts={result.fact_rows} flags={result.flag_rows}")
     print(f"counts={counts}")

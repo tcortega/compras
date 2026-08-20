@@ -302,7 +302,7 @@ def assert_refetch_schedule() -> None:
     target = found.job_name or getattr(found.job, "name", "")
     if target != JOB_NAME:
         raise RuntimeError(f"schedule does not target {JOB_NAME}: {target}")
-    job = defs.get_job_def(JOB_NAME)
+    job = defs.resolve_job_def(JOB_NAME)
     selected = _job_asset_keys(job)
     need = required_refetch_asset_keys()
     if selected and not need.issubset(selected):

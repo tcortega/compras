@@ -547,6 +547,8 @@ def main() -> int:
 
     home = get_text(f"{WEB}/")
     assert_served_page(home, "web /")
+    if 'href="/interno/triagem"' in home:
+        raise SystemExit("public shell linked staging triage")
     folded = home.casefold()
     if "volta redonda" not in folded:
         raise SystemExit("web / missing Volta Redonda")
@@ -1762,6 +1764,23 @@ def main() -> int:
     qty = get_json(f"{API}/api/internal/flags?kind=qty_unit_price_neq_total&state=detected")
     if not (qty.get("items") or []):
         raise SystemExit("internal flags kind filter missed qty_unit_price_neq_total")
+    first_flag = flag_rows[0]
+    audit = get_json(f"{API}/api/internal/flags/{first_flag['id']}/audit")
+    audit_items = audit.get("items") or []
+    if not audit_items:
+        raise SystemExit("internal flag audit returned no rows")
+    if str((audit_items[0] or {}).get("toState") or "") != "detected":
+        raise SystemExit("internal flag audit missing create into detected")
+    triage = get_text(f"{WEB}/interno/triagem")
+    deny_stub(triage, "web /interno/triagem")
+    if BANNED_COPY.search(triage):
+        raise SystemExit("web /interno/triagem leaked banned copy")
+    if "Indício a verificar" not in triage:
+        raise SystemExit("web /interno/triagem missing framing")
+    if "n=" not in triage:
+        raise SystemExit("web /interno/triagem missing coverage n")
+    if "Triagem de indícios" not in triage:
+        raise SystemExit("web /interno/triagem missing title")
     deny_flags(orgaos, f"{API}/api/orgaos")
     deny_flags(items, f"{API}/api/items")
     deny_flags(item, f"{API}/api/items/{iid}")

@@ -109,6 +109,13 @@ public sealed class PublicationTests(ComprasApiFixture fixture) : IClassFixture<
 			],
 			audit);
 
+		var httpAudit = await client.ListFlagAudit(expected.Id);
+		Assert.NotNull(httpAudit.Content);
+		Assert.Equal(
+			audit.Select(row => (row.FromState, row.ToState)).ToArray(),
+			httpAudit.Content.Items.Select(row => (row.FromState, row.ToState)).ToArray());
+		Assert.All(httpAudit.Content.Items, row => Assert.Equal(expected.Id, row.FlagId));
+
 		var explorer = await client.GetItem(SliceIds.Item1);
 		Assert.Equal(
 			new ItemDetail
@@ -223,6 +230,13 @@ public sealed class PublicationTests(ComprasApiFixture fixture) : IClassFixture<
 				new() { FromState = "published", ToState = "resolved" },
 			],
 			audit);
+
+		var httpAudit = await client.ListFlagAudit(expected.Id);
+		Assert.NotNull(httpAudit.Content);
+		Assert.Equal(
+			audit.Select(row => (row.FromState, row.ToState)).ToArray(),
+			httpAudit.Content.Items.Select(row => (row.FromState, row.ToState)).ToArray());
+		Assert.All(httpAudit.Content.Items, row => Assert.Equal(expected.Id, row.FlagId));
 
 		var http = fixture.CreateHttpClient();
 		await AssertExplorerJsonHasNoFlagField(http, $"/api/items/{SliceIds.Item2}");

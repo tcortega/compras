@@ -74,6 +74,7 @@ CREATE TABLE IF NOT EXISTS flag (
   )),
   "detectedAt" timestamptz NOT NULL,
   "notifiedAt" timestamptz,
+  "notifyArtifact" text,
   "publishAfter" timestamptz,
   "publishedAt" timestamptz,
   delta text NOT NULL,
@@ -151,6 +152,7 @@ ALTER TABLE item ADD COLUMN IF NOT EXISTS "valorPorUnidadeCanonica" numeric(18, 
 ALTER TABLE item ADD COLUMN IF NOT EXISTS "specConcentracao" text;
 ALTER TABLE item ADD COLUMN IF NOT EXISTS "specDosagem" text;
 ALTER TABLE item ADD COLUMN IF NOT EXISTS "specTamanho" text;
+ALTER TABLE flag ADD COLUMN IF NOT EXISTS "notifyArtifact" text;
 
 CREATE TABLE IF NOT EXISTS flag_audit (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

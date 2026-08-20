@@ -19,6 +19,8 @@ public sealed record FlagRecord
 
 	public Instant? NotifiedAt { get; init; }
 
+	public string? NotifyArtifact { get; init; }
+
 	public Instant? PublishAfter { get; init; }
 
 	public Instant? PublishedAt { get; init; }
@@ -48,6 +50,7 @@ public sealed record FlagRecord
 			State = flag.State,
 			DetectedAt = flag.DetectedAt,
 			NotifiedAt = flag.NotifiedAt,
+			NotifyArtifact = flag.NotifyArtifact,
 			PublishAfter = flag.PublishAfter,
 			PublishedAt = flag.PublishedAt,
 			Delta = flag.Delta,
@@ -69,6 +72,7 @@ public sealed record FlagRecord
 			State = flag.State,
 			DetectedAt = flag.DetectedAt,
 			NotifiedAt = flag.NotifiedAt,
+			NotifyArtifact = flag.NotifyArtifact,
 			PublishAfter = flag.PublishAfter,
 			PublishedAt = flag.PublishedAt,
 			Delta = flag.Delta,

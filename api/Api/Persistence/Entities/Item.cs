@@ -32,6 +32,12 @@ public sealed class Item : ITimestamped, ISuspendable
 
 	public decimal? ValorPorUnidadeCanonica { get; set; }
 
+	public string? SpecConcentracao { get; set; }
+
+	public string? SpecDosagem { get; set; }
+
+	public string? SpecTamanho { get; set; }
+
 	public required string Uf { get; set; }
 
 	public required string Quarter { get; set; }
@@ -65,6 +71,9 @@ public sealed class Item : ITimestamped, ISuspendable
 			builder.Property(x => x.ValorUnitario).HasPrecision(18, 4);
 			builder.Property(x => x.ValorTotal).HasPrecision(18, 4);
 			builder.Property(x => x.ValorPorUnidadeCanonica).HasPrecision(18, 6);
+			builder.Property(x => x.SpecConcentracao).HasMaxLength(64);
+			builder.Property(x => x.SpecDosagem).HasMaxLength(64);
+			builder.Property(x => x.SpecTamanho).HasMaxLength(64);
 			builder.Property(x => x.Uf).HasMaxLength(2);
 			builder.Property(x => x.Quarter).HasMaxLength(8);
 			builder.Property(x => x.SnapshotId).HasMaxLength(128);

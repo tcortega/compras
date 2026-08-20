@@ -7,6 +7,7 @@
 !ingest/fixtures/**/*.csv
 !detect/fixtures/**/*.csv
 !normalize/compras_normalize/data/*.csv
+!normalize/fixtures/**/*.csv
 .e2e-landing/
 .e2e-work/
 *.egg-info/

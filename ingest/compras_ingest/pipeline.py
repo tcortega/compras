@@ -11,6 +11,7 @@ from compras_detect.data_error import (
     fixture_items_path,
 )
 from compras_detect.tier1 import run_tier1
+from compras_ingest.csvio import read_csv
 from compras_ingest.landing import LandingRef, LandingStore
 from compras_ingest.settings import Settings
 from compras_ingest.sources.catalogo_cnbs import land_catalogo_cnbs

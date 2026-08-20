@@ -71,6 +71,11 @@ Closed sets are enums stored as text.
 `descricao` text.
 `catmat` text nullable.
 `catser` text nullable.
+`specConcentracao` text nullable.
+`specDosagem` text nullable.
+`specTamanho` text nullable.
+These spec fields store the raw extracted token from the item description.
+Unknown or absent spec tokens stay null.
 `quantidade` numeric.
 `unidadeMedida` text.
 `unidadeCanonica` text nullable.
@@ -83,6 +88,8 @@ When unit price is missing it is `valorTotal / (quantidade * to_base_factor)`.
 `to_base_factor` is how many canonical units sit in one source unit.
 Unknown units stay `unknown` and leave `valorPorUnidadeCanonica` null.
 Do not invent a unit or a comparable price.
+A caixa or pacote with an explicit count uses that count as `to_base_factor` and the inner unit as canonical.
+A caixa or pacote without a count keeps the catalog row (`CX` stays `cx`, factor 1).
 `uf` text.
 `quarter` text.
 `snapshotId` text.
@@ -129,12 +136,19 @@ Closed reason set: qty_unit_price_neq_total, decimal_shift, qty_eq_1_collapse, z
 Python writes this table after normalize.
 C# does not run a detector.
 
+The CATMAT/CATSER classifier is internal normalize.
+It fills only rows with no official catalog code.
+Assigned `knn` codes are not public alerts.
+Phase 0 CATMAT coverage on Volta Redonda 2024 stays 81.75 percent.
+That measured gap is not rewritten as if the classifier already ran on VR.
+
 ## ClickHouse facts
 
 One wide item-fact table for later analytical reads.
 Same grain as `item`.
 `unidade_canonica` matches Postgres `unidadeCanonica`.
 `valor_unitario_base` and `valor_por_unidade_canonica` match Postgres `valorPorUnidadeCanonica`.
+`spec_concentracao`, `spec_dosagem`, and `spec_tamanho` match the nullable Postgres spec columns.
 C# may package ClickHouse.Client.
 Explorer queries Postgres first.
 
@@ -185,6 +199,7 @@ Internal publication routes exist and are tested.
 That list is not linked from the explorer.
 No explorer route may return a flag field.
 No explorer route may return an exclusion reason.
+No explorer route may return spec columns or a knn quality token.
 Phase 0 precision is 9 percent, so public flags stay gated.
 
 Flag copy, if a DTO exists, is "indicio requiring verification" only.

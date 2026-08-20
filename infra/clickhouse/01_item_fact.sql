@@ -17,6 +17,9 @@ CREATE TABLE IF NOT EXISTS compras.item_fact
     valor_total Nullable(Float64),
     valor_unitario_base Nullable(Float64),
     valor_por_unidade_canonica Nullable(Float64),
+    spec_concentracao Nullable(String),
+    spec_dosagem Nullable(String),
+    spec_tamanho Nullable(String),
     uf String,
     quarter String,
     snapshot_id String,
@@ -29,3 +32,6 @@ ENGINE = ReplacingMergeTree
 ORDER BY (uf, quarter, item_id);
 
 ALTER TABLE compras.item_fact ADD COLUMN IF NOT EXISTS valor_por_unidade_canonica Nullable(Float64);
+ALTER TABLE compras.item_fact ADD COLUMN IF NOT EXISTS spec_concentracao Nullable(String);
+ALTER TABLE compras.item_fact ADD COLUMN IF NOT EXISTS spec_dosagem Nullable(String);
+ALTER TABLE compras.item_fact ADD COLUMN IF NOT EXISTS spec_tamanho Nullable(String);

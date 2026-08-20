@@ -11,9 +11,17 @@ from compras_normalize.text import fold, parse_decimal
 
 _DATA = Path(__file__).resolve().parent / "data" / "unidade_medida.csv"
 _TRAIL = re.compile(r"[.:;]+$")
+_PACK_HEAD = (
+    r"cx|cxa|caixa|cxs|pct|pcte|pacote|resma|fardo|cento|centena|duzia|dz|"
+    r"frasco|fr|frc|ampola|amp|am|blister|cartela"
+)
 _PACK = re.compile(
-    r"^(?P<pack>cx|cxa|caixa|cxs|pct|pcte|pacote|resma|fardo|cento|centena|duzia|dz)"
-    r"(?:\s*(?:c/|x|/)\s*|\s+)(?P<n>\d+(?:[.,]\d+)?)$"
+    rf"^(?P<pack>{_PACK_HEAD})"
+    r"(?:\s*(?:c/|com|de|x|/)\s*|\s+|(?=\d))"
+    r"(?P<n>\d+(?:[.,]\d+)?)"
+    r"(?:\s*(?P<inner>un|und|unid|unidade|unidades|folha|folhas|fl|fls|"
+    r"ml|mililitros?|mg|miligramas?|g|gr|grs|gramas?|kg|quilogramas?|"
+    r"l|lt|lts|litros?))?$"
 )
 _QTY_UNIT = re.compile(
     r"^(?:(?P<head>[a-z][a-z0-9]*)\s+)?"
@@ -22,8 +30,29 @@ _QTY_UNIT = re.compile(
     r"l|lt|lts|litros?|m3|m³|m2|m²|cm|mm|m|mts?|metros?)$"
 )
 _PACK_TO_UN = frozenset(
-    {"cx", "cxa", "caixa", "cxs", "pct", "pcte", "pacote", "cento", "centena", "duzia", "dz"}
+    {
+        "cx",
+        "cxa",
+        "caixa",
+        "cxs",
+        "pct",
+        "pcte",
+        "pacote",
+        "cento",
+        "centena",
+        "duzia",
+        "dz",
+        "frasco",
+        "fr",
+        "frc",
+        "ampola",
+        "amp",
+        "am",
+        "blister",
+        "cartela",
+    }
 )
+_PACK_FOLHA = frozenset({"resma", "folha", "folhas", "fl", "fls"})
 _MEASURE = {
     "ml": ("l", Decimal("0.001")),
     "mililitro": ("l", Decimal("0.001")),
@@ -78,6 +107,9 @@ class UnitTable:
         hit = self.by_raw.get(key) or self.by_raw.get(key.replace(" ", ""))
         if hit:
             return hit
+        parsed = _parse_structured(raw or "", key)
+        if parsed:
+            return parsed
         compact = key.replace(" ", "")
         best: UnitMatch | None = None
         best_n = 0
@@ -92,9 +124,6 @@ class UnitTable:
                 best, best_n = match, n
         if best:
             return best
-        parsed = _parse_structured(raw or "", key)
-        if parsed:
-            return parsed
         return UnitMatch(raw or "", "unknown", Decimal("1"), "unknown", "unknown")
 
 
@@ -125,9 +154,13 @@ def _parse_structured(raw: str, key: str) -> UnitMatch | None:
     if pack:
         n = parse_decimal(pack.group("n"))
         token = pack.group("pack")
+        inner = pack.group("inner") or ""
         if n is None or n == 0:
             return None
-        if token == "resma":
+        if inner in _MEASURE:
+            canonical, unit_factor = _MEASURE[inner]
+            return UnitMatch(raw, canonical, n * unit_factor, canonical, "parsed")
+        if token in _PACK_FOLHA or inner in _PACK_FOLHA:
             return UnitMatch(raw, "folha", n, "folha", "parsed")
         if token in _PACK_TO_UN:
             return UnitMatch(raw, "un", n, "un", "parsed")

@@ -295,3 +295,22 @@ COPO 200,00 ML;l;0.2;l
 500 G;kg;0.5;kg
 1 KG;kg;1;kg
 1KG;kg;1;kg
+CAIXA COM 10;un;10;un
+CAIXA DE 10;un;10;un
+CXA C/ 12;un;12;un
+CXA C/12;un;12;un
+CX 50 UN;un;50;un
+PACOTE COM 100;un;100;un
+PACOTE DE 50;un;50;un
+PACOTE C/ 100;un;100;un
+PCTE C/ 20;un;20;un
+PCTE C/20;un;20;un
+RESMA COM 500;folha;500;folha
+RESMA COM 500 FOLHA;folha;500;folha
+RESMA COM 500 FOLHAS;folha;500;folha
+FRASCO COM 10;un;10;un
+AMPOLA COM 5;un;5;un
+BLISTER;blister;1;blister
+BLISTERS;blister;1;blister
+BLISTER COM 10;un;10;un
+CARTELA COM 4;un;4;un

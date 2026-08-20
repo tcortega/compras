@@ -236,10 +236,57 @@ def write_flags(settings: Settings, flags: pl.DataFrame, items: pl.DataFrame) ->
     return len(rows)
 
 
+def write_exclusions(settings: Settings, exclusions: pl.DataFrame, items: pl.DataFrame) -> int:
+    if exclusions.is_empty():
+        return 0
+    item_by_record = {}
+    for row in items.iter_rows(named=True):
+        item_by_record[str(row.get("record_id") or "")] = (
+            item_id(str(row.get("pncp_id") or ""), str(row.get("record_id") or "")),
+            row.get("snapshot_id") or "",
+            row.get("methodology_version") or "",
+        )
+    now = _NOW()
+    rows = []
+    for row in exclusions.iter_rows(named=True):
+        rid = str(row.get("record_id") or "")
+        mapped = item_by_record.get(rid)
+        if not mapped:
+            continue
+        iid, snap, meth = mapped
+        rows.append(
+            {
+                "itemId": iid,
+                "reason": row["reason"],
+                "detail": row.get("detail") or "",
+                "snapshotId": str(row.get("snapshot_id") or snap),
+                "methodologyVersion": str(row.get("methodology_version") or meth),
+            }
+        )
+    if not rows:
+        return 0
+    sql = """
+    INSERT INTO item_exclusion (
+      "itemId", reason, detail, "snapshotId", "methodologyVersion", "createdAt"
+    ) VALUES (
+      %(itemId)s, %(reason)s, %(detail)s, %(snapshotId)s, %(methodologyVersion)s, %(now)s
+    )
+    ON CONFLICT ("itemId", reason) DO UPDATE SET
+      detail = EXCLUDED.detail,
+      "snapshotId" = EXCLUDED."snapshotId",
+      "methodologyVersion" = EXCLUDED."methodologyVersion"
+    """
+    with psycopg.connect(settings.postgres_dsn) as conn:
+        for row in rows:
+            conn.execute(sql, {**row, "now": now})
+        conn.commit()
+    return len(rows)
+
+
 def fetch_counts(settings: Settings) -> dict[str, int]:
     with psycopg.connect(settings.postgres_dsn, row_factory=dict_row) as conn:
         counts = {}
-        for table in ("orgao", "fornecedor", "contratacao", "item", "flag"):
+        for table in ("orgao", "fornecedor", "contratacao", "item", "flag", "item_exclusion"):
             counts[table] = conn.execute(f"SELECT count(*) AS n FROM {table}").fetchone()["n"]
     return counts
 
@@ -332,10 +379,34 @@ def fetch_flags(
         return list(conn.execute(sql, params).fetchall())
 
 
+def fetch_exclusions(
+    settings: Settings,
+    *,
+    reason: str | None = None,
+    snapshot_id: str | None = None,
+    item_id: str | None = None,
+) -> list[dict]:
+    clauses: list[str] = []
+    params: dict = {}
+    if reason:
+        clauses.append("reason = %(reason)s")
+        params["reason"] = reason
+    if snapshot_id:
+        clauses.append('"snapshotId" = %(snapshot_id)s')
+        params["snapshot_id"] = snapshot_id
+    if item_id:
+        clauses.append('"itemId" = %(item_id)s')
+        params["item_id"] = item_id
+    where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+    sql = f'SELECT * FROM item_exclusion {where} ORDER BY reason, "itemId"'
+    with psycopg.connect(settings.postgres_dsn, row_factory=dict_row) as conn:
+        return list(conn.execute(sql, params).fetchall())
+
+
 def fetch_raw_text_blobs(settings: Settings) -> list[str]:
     blobs: list[str] = []
     with psycopg.connect(settings.postgres_dsn, row_factory=dict_row) as conn:
-        for table in ("orgao", "fornecedor", "contratacao", "item", "flag"):
+        for table in ("orgao", "fornecedor", "contratacao", "item", "flag", "item_exclusion"):
             for row in conn.execute(f"SELECT * FROM {table}").fetchall():
                 blobs.extend(str(v) for v in row.values() if v is not None)
     return blobs

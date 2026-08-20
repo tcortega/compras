@@ -88,6 +88,7 @@ export const stubClient: ExplorerClient = {
     const rows = liveOrgaos()
       .filter((o) => matchesQ(req.q, [o.razaoSocial, o.cnpj, o.municipioNome, o.uf]))
       .filter((o) => !req.uf || o.uf === req.uf)
+      .filter((o) => !req.municipioIbge || o.municipioIbge === req.municipioIbge)
       .filter((o) => !req.esfera || o.esfera === req.esfera)
       .slice()
       .sort((a, b) => a.razaoSocial.localeCompare(b.razaoSocial, 'pt-BR'))

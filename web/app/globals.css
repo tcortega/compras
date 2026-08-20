@@ -451,6 +451,10 @@ h3 {
   text-transform: uppercase;
 }
 
+.field-ibge input {
+  width: 8.25rem;
+}
+
 .field-ano input {
   width: 5.5rem;
 }

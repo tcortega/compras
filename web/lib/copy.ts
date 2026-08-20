@@ -1,12 +1,19 @@
 export const SITE_NAME = 'Compras'
 export const SITE_TAG = 'Explorador de compras públicas'
 export const METHOD_VERSION = '0.1'
-export const SLICE_LABEL = 'Volta Redonda, RJ · 2024'
-export const SLICE_UF = 'RJ'
 export const SLICE_YEAR = 2024
+export const SLICE_UF = 'RJ'
 export const SLICE_IBGE = '3306305'
 export const SLICE_MUNICIPIO = 'Volta Redonda'
 export const SNAPSHOT_ID = 'sha256:dev-slice-vr-2024'
+
+export const SLICE_MUNICIPIOS = [
+  { nome: 'Volta Redonda', uf: 'RJ', ibge: '3306305' },
+  { nome: 'Niterói', uf: 'RJ', ibge: '3303302' },
+  { nome: 'Bauru', uf: 'SP', ibge: '3506003' },
+] as const
+
+export const SLICE_LABEL = 'Volta Redonda, Niterói (RJ) e Bauru (SP) · 2024'
 
 export const copy = {
   coverageIncomplete:

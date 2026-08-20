@@ -336,6 +336,181 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(2, secondOrgaos.Total);
 	}
 
+	private static readonly Coverage s_niteroiOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = SliceIds.Uf,
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_niteroi = new()
+	{
+		Id = SliceIds.OrgaoNiteroi,
+		Cnpj = "28521748000159",
+		RazaoSocial = "Municipio de Niteroi",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = SliceIds.Uf,
+		MunicipioIbge = "3303302",
+		MunicipioNome = "Niteroi",
+		Coverage = s_niteroiOrgaoCoverage,
+	};
+
+	private static readonly Coverage s_bauruOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "SP",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_bauru = new()
+	{
+		Id = SliceIds.OrgaoBauru,
+		Cnpj = "46137410000180",
+		RazaoSocial = "Municipio de Bauru",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "SP",
+		MunicipioIbge = "3506003",
+		MunicipioNome = "Bauru",
+		Coverage = s_bauruOrgaoCoverage,
+	};
+
+	private static readonly ItemRecord s_itemNiteroi = new()
+	{
+		Id = SliceIds.ItemNiteroi,
+		ContratacaoId = SliceIds.ContratacaoNiteroi,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Detergente neutro 5L",
+		Catmat = "654321",
+		Catser = null,
+		Quantidade = 8m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 15m,
+		ValorTotal = 120m,
+		Uf = SliceIds.Uf,
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = SliceIds.Uf,
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
+	private static readonly ItemRecord s_itemBauru = new()
+	{
+		Id = SliceIds.ItemBauru,
+		ContratacaoId = SliceIds.ContratacaoBauru,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Resma papel A4 Bauru",
+		Catmat = "654321",
+		Catser = null,
+		Quantidade = 16m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 5m,
+		ValorTotal = 80m,
+		Uf = "SP",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "SP",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
+	[Fact]
+	public async Task FullCycle_BrowseMunicipioAndUf()
+	{
+		var client = fixture.GetClient();
+
+		var niteroiPage = await client.ListOrgaos(municipioIbge: "3303302", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			niteroiPage.Coverage);
+		Assert.Equal(new[] { s_niteroi }, niteroiPage.Items);
+		await ValidateOrgao(client, s_niteroi);
+
+		var bauruPage = await client.ListOrgaos(uf: "SP", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "SP",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			bauruPage.Coverage);
+		Assert.Equal(new[] { s_bauru }, bauruPage.Items);
+		await ValidateOrgao(client, s_bauru);
+
+		var mixed = await client.ListOrgaos(quarter: SliceIds.Quarter);
+		Assert.Equal("", mixed.Coverage.Uf);
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3306305", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3303302", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3506003", StringComparison.Ordinal));
+
+		var spItems = await client.ListItems(uf: "SP", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "SP",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			spItems.Coverage);
+		Assert.Equal(new[] { s_itemBauru }, spItems.Items);
+		await ValidateItem(client, new()
+		{
+			Item = s_itemBauru,
+			OrgaoId = SliceIds.OrgaoBauru,
+			OrgaoRazaoSocial = "Municipio de Bauru",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "3506003-1-000001/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemNiteroi,
+			OrgaoId = SliceIds.OrgaoNiteroi,
+			OrgaoRazaoSocial = "Municipio de Niteroi",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "3303302-1-000001/2024",
+		});
+
+		var empty = new Coverage
+		{
+			N = 0,
+			Uf = "SP",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var none = await client.ListOrgaos(
+			q: "nenhum-municipio-xyz",
+			uf: "SP",
+			quarter: SliceIds.Quarter);
+		Assert.Empty(none.Items);
+		Assert.Equal(empty, none.Coverage);
+		Assert.Equal(0, none.Total);
+	}
+
 	[Fact]
 	public async Task List_EmptyFilter_ZeroCoverageKeepsSlice()
 	{

@@ -1,6 +1,6 @@
 import { Shell } from '@/components/Shell'
 import { loadSliceCoverage } from '@/lib/api'
-import { SLICE_IBGE, SLICE_LABEL, copy } from '@/lib/copy'
+import { SLICE_LABEL, SLICE_MUNICIPIOS, copy } from '@/lib/copy'
 import { coverageText } from '@/lib/coverage'
 import type { Metadata } from 'next'
 
@@ -14,8 +14,13 @@ export default async function CoberturaPage() {
       <p className="kicker">Denominador</p>
       <h1>Cobertura incompleta</h1>
       <div className="prose">
-        <p>Este recorte publicado é {SLICE_LABEL}, IBGE {SLICE_IBGE}.</p>
+        <p>Este recorte publicado é {SLICE_LABEL}.</p>
+        <p>
+          Municípios ingeridos:{' '}
+          {SLICE_MUNICIPIOS.map((m) => `${m.nome} (${m.uf}, IBGE ${m.ibge})`).join('; ')}.
+        </p>
         <p>Denominador atual: {coverageText(coverage)}.</p>
+        <p>Quando o recorte mistura UF, o agregado deixa UF vazia. Isso não é um total nacional.</p>
         <p>{copy.coverageIncomplete}</p>
         <p>{copy.coverageExempt}</p>
         <p>{copy.coverageQuality}</p>

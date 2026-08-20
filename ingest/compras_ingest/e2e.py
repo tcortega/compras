@@ -46,6 +46,10 @@ RAW_CPF = "12345678901"
 LANDED_SOURCES = ("compras_gov", "ocds", "receita_cnpj", "receita_cnpj_socios", "pncp_consulta")
 PNCP_COMPRA_1 = "29477000000180-1-000001/2024"
 PNCP_COMPRA_2 = "29477000000180-1-000002/2024"
+EXTRA_ORGAOS = (
+    ("28521748000159", "3303302", "RJ"),
+    ("46137410000180", "3506003", "SP"),
+)
 
 
 def main() -> int:
@@ -60,6 +64,14 @@ def main() -> int:
     orgao = fetch_one_orgao(settings, ORGAO_CNPJ)
     if orgao is None:
         raise SystemExit(f"missing orgao {ORGAO_CNPJ}")
+    for cnpj, ibge, uf in EXTRA_ORGAOS:
+        extra = fetch_one_orgao(settings, cnpj)
+        if extra is None:
+            raise SystemExit(f"missing extra orgao {cnpj}")
+        if str(extra.get("municipioIbge") or "") != ibge:
+            raise SystemExit(f"{cnpj}: expected IBGE {ibge}, got {extra.get('municipioIbge')}")
+        if str(extra.get("uf") or "") != uf:
+            raise SystemExit(f"{cnpj}: expected UF {uf}, got {extra.get('uf')}")
     contratacao = fetch_contratacao(settings, PNCP_ID)
     if contratacao is None:
         raise SystemExit(f"missing contratacao {PNCP_ID}")

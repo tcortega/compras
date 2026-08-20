@@ -7,6 +7,14 @@ from pathlib import Path
 import polars as pl
 
 from compras_detect.adjacency import build_adjacencies
+from compras_detect.cobid import (
+    build_cobid_edges,
+    detect_cade_screens,
+    extract_tce_rs,
+    extract_tce_sp,
+    load_planted_participants,
+    normalize_participants,
+)
 from compras_detect.data_error import (
     anomaly_pool,
     catalog_reference_prices,
@@ -30,15 +38,19 @@ from compras_ingest.ids import item_id
 from compras_ingest.warehouse import (
     apply_schema,
     fetch_all_items,
+    fetch_participants,
     write_adjacencies,
     write_catalog,
     write_cnaes,
+    write_cobid_edges,
+    write_cobid_screens,
     write_entities,
     write_exclusions,
     write_facts,
     write_flags,
     write_fornecedor_socios,
     write_landing_sources,
+    write_participants,
 )
 from compras_normalize.catalog import load_catalog
 from compras_normalize.items import normalize_frame
@@ -54,6 +66,9 @@ class PipelineResult:
     flag_rows: int
     exclusion_rows: int
     adjacency_rows: int
+    participant_rows: int
+    cobid_edge_rows: int
+    cobid_screen_rows: int
     items: pl.DataFrame = field(repr=False)
     flags: pl.DataFrame = field(repr=False)
 
@@ -82,6 +97,7 @@ def run_compras_slice(settings: Settings, store: LandingStore | None = None) -> 
     )
     flags, flag_rows = run_tier1_and_write_flags(settings, store, items)
     _, adjacency_rows = run_adjacency_and_write(settings, store)
+    _, edge_rows, screen_rows = run_cobid_and_write(settings)
     return PipelineResult(
         landing,
         ocds_report,
@@ -90,6 +106,9 @@ def run_compras_slice(settings: Settings, store: LandingStore | None = None) -> 
         flag_rows,
         warehouse.get("exclusions") or 0,
         adjacency_rows,
+        warehouse.get("participants") or 0,
+        edge_rows,
+        screen_rows,
         items,
         flags,
     )
@@ -103,7 +122,7 @@ def warehouse_from_landing(
     receita: dict | None = None,
     pncp: dict | None = None,
 ) -> tuple[pl.DataFrame, dict]:
-    """Normalize landed parquet, write warehouse rows, persist data-error exclusions. Does not land or run B-track detectors."""
+    """Normalize landed parquet, write warehouse rows, persist TCE-SP/RS participants and data-error exclusions. Does not land or run B-track detectors."""
     apply_schema(settings)
     year_keys = _compras_gov_keys(store, compras)
     catalog_df = store.read_parquet(_require_key(catalog, "catalogo_cnbs"))
@@ -153,6 +172,8 @@ def warehouse_from_landing(
     catalog_prices = catalog_reference_prices(catalog_df)
     exclusions = detect_data_errors(items, catalog_prices=catalog_prices)
     exclusion_rows = write_exclusions(settings, exclusions, items)
+    participants = collect_participants(settings, store)
+    participant_rows = write_participants(settings, participants)
     pool = anomaly_pool(items, exclusions)
     part = str(compras.get("partition_date") or "")
     if not part:
@@ -174,6 +195,7 @@ def warehouse_from_landing(
         "catalog": catalog_rows,
         "landing_sources": landing_sources,
         "exclusions": exclusion_rows,
+        "participants": participant_rows,
         "anomaly_pool_n": pool.height,
         "anomaly_pool_key": pool_ref.key,
         "items_key": items_ref.key,
@@ -300,6 +322,66 @@ def warehouse_data_error_fixture(settings: Settings) -> tuple[pl.DataFrame, pl.D
     exclusions = detect_data_errors(items)
     write_exclusions(settings, exclusions, items)
     return items, exclusions, anomaly_pool(items, exclusions)
+
+
+def collect_participants(settings: Settings, store: LandingStore) -> pl.DataFrame:
+    """TCE-SP/RS landing plus fixture planted rows. OTHER UF dropped. CPF masked."""
+    frames: list[pl.DataFrame] = []
+    for key in store.list_parquet("tce_sp_licitacao"):
+        frames.append(
+            extract_tce_sp(store.read_parquet(key), Path(key).stem, settings.methodology_version)
+        )
+    for key in store.list_parquet("tce_rs_licitacon"):
+        frames.append(
+            extract_tce_rs(store.read_parquet(key), Path(key).stem, settings.methodology_version)
+        )
+    if not settings.tce_sp_fetch and not settings.tce_rs_fetch:
+        frames.append(
+            normalize_participants(
+                load_planted_participants(),
+                "cobid-planted",
+                settings.methodology_version,
+            )
+        )
+    present = [f for f in frames if f is not None and not f.is_empty()]
+    if not present:
+        return pl.DataFrame()
+    return pl.concat(present, how="diagonal_relaxed")
+
+
+def participants_from_warehouse(rows: list[dict]) -> pl.DataFrame:
+    """Map canon Postgres rows back to the detector frame. No side CSV."""
+    mapped = []
+    for row in rows:
+        mapped.append(
+            {
+                "licitacaoId": str(row.get("licitacaoId") or ""),
+                "uf": str(row.get("uf") or ""),
+                "orgao": str(row.get("orgao") or ""),
+                "classe": str(row.get("classe") or ""),
+                "itemLote": str(row.get("itemLote") or ""),
+                "participante": str(row.get("participante") or ""),
+                "proposta": row.get("proposta"),
+                "winner": row.get("winner"),
+                "source": str(row.get("source") or ""),
+                "plantedId": "",
+                "snapshot_id": str(row.get("snapshotId") or ""),
+                "methodology_version": str(row.get("methodologyVersion") or ""),
+            }
+        )
+    return pl.DataFrame(mapped) if mapped else pl.DataFrame()
+
+
+def run_cobid_and_write(settings: Settings) -> tuple[pl.DataFrame, int, int]:
+    """Build co-bid edges and CADE screens from warehouse participants. Does not call C#."""
+    stored = fetch_participants(settings)
+    parts = participants_from_warehouse(stored)
+    snap = ""
+    if stored:
+        snap = str(stored[0].get("snapshotId") or "")
+    edges = build_cobid_edges(parts, snap, settings.methodology_version)
+    screens = detect_cade_screens(parts, snap, settings.methodology_version)
+    return screens, write_cobid_edges(settings, edges), write_cobid_screens(settings, screens)
 
 
 def run_adjacency_and_write(

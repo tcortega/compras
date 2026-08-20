@@ -31,6 +31,14 @@ def socio_id(cnpj: str, nome: str, cpf_masked: str | None, qualificacao: str | N
     return str(uuid.uuid5(NS, f"socio:{cnpj}:{nome}:{cpf_masked or ''}:{qualificacao or ''}"))
 
 
+def participante_id(licitacao_id: str, item_lote: str, participante: str, source: str) -> str:
+    return str(uuid.uuid5(NS, f"participante:{source}:{licitacao_id}:{item_lote}:{participante}"))
+
+
+def cobid_screen_id(kind: str, subject: str, snapshot_id: str) -> str:
+    return str(uuid.uuid5(NS, f"cobid_screen:{kind}:{subject}:{snapshot_id}"))
+
+
 def record_hash(payload: dict) -> str:
     blob = json.dumps(payload, sort_keys=True, ensure_ascii=False, default=str)
     return hashlib.sha256(blob.encode("utf-8")).hexdigest()

@@ -162,7 +162,7 @@ def main() -> int:
     if missing_years:
         raise SystemExit(f"warehouse missing years {sorted(missing_years)}: {sorted(anos)}")
     print("seed ok")
-    print(f"entities={result.entity_counts} facts={result.fact_rows} flags={result.flag_rows} adjacencies={result.adjacency_rows}")
+    print(f"entities={result.entity_counts} facts={result.fact_rows} flags={result.flag_rows} adjacencies={result.adjacency_rows} participants={result.participant_rows} cobid={result.cobid_edge_rows}/{result.cobid_screen_rows}")
     print(f"counts={counts}")
     return 0
 

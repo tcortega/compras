@@ -56,6 +56,16 @@ SLICES = (
     ("28606630000123", "3303401", "RJ", "Nova Friburgo"),
     ("44477909000100", "3529005", "SP", "Marília"),
     ("83102285000107", "4202008", "SC", "Balneário Camboriú"),
+    ("46316600000164", "3523107", "SP", "Itaquaquecetuba"),
+    ("46177531000155", "3541000", "SP", "Praia Grande"),
+    ("76105543000135", "4125506", "PR", "São José dos Pinhais"),
+    ("46523056000121", "3552502", "SP", "Suzano"),
+    ("44959021000104", "3518701", "SP", "Guarujá"),
+    ("46523049000120", "3513009", "SP", "Cotia"),
+    ("22980999000115", "1505536", "PA", "Parauapebas"),
+    ("46694139000183", "3524402", "SP", "Jacareí"),
+    ("28741080000155", "3301900", "RJ", "Itaboraí"),
+    ("29131075000193", "3302700", "RJ", "Maricá"),
 )
 
 
@@ -75,7 +85,7 @@ def main() -> int:
         seen_ibge.add(ibge)
         seen_uf.add(uf)
         print(f"orgao={orgao['cnpj']} ibge={orgao['municipioIbge']} uf={orgao['uf']}")
-    if len(seen_ibge) < 49:
+    if len(seen_ibge) < 59:
         raise SystemExit(f"warehouse missing published IBGE codes: {sorted(seen_ibge)}")
     if seen_uf != {"RJ", "SP", "RS", "SC", "MG", "PR", "BA", "PE", "GO", "ES", "PB", "CE", "MA", "AL", "MS", "PA", "MT", "RO", "RN", "AC", "AP", "RR"}:
         raise SystemExit(f"warehouse UF set is not RJ+SP+RS+SC+MG+PR+BA+PE+GO+ES+PB+CE+MA+AL+MS+PA+MT+RO+RN+AC+AP+RR: {sorted(seen_uf)}")
@@ -130,13 +140,23 @@ def main() -> int:
         ("3303401", "RJ"),
         ("3529005", "SP"),
         ("4202008", "SC"),
+        ("3523107", "SP"),
+        ("3541000", "SP"),
+        ("4125506", "PR"),
+        ("3552502", "SP"),
+        ("3518701", "SP"),
+        ("3513009", "SP"),
+        ("1505536", "PA"),
+        ("3524402", "SP"),
+        ("3301900", "RJ"),
+        ("3302700", "RJ"),
     }:
         raise SystemExit(f"warehouse orgao set is not the published slice: {sorted(landed)}")
     counts = fetch_counts(settings)
     if counts["item"] < 1:
         raise SystemExit("warehouse has no items")
-    if counts["orgao"] < 49:
-        raise SystemExit(f"warehouse orgao count {counts['orgao']} < 49")
+    if counts["orgao"] < 59:
+        raise SystemExit(f"warehouse orgao count {counts['orgao']} < 59")
     print("seed ok")
     print(f"entities={result.entity_counts} facts={result.fact_rows} flags={result.flag_rows}")
     print(f"counts={counts}")

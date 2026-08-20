@@ -75,6 +75,16 @@ PUBLISHED = {
     "3303401": ("municipio de nova friburgo", "RJ"),
     "3529005": ("municipio de marilia", "SP"),
     "4202008": ("municipio de balneario camboriu", "SC"),
+    "3523107": ("municipio de itaquaquecetuba", "SP"),
+    "3541000": ("municipio de praia grande", "SP"),
+    "4125506": ("municipio de sao jose dos pinhais", "PR"),
+    "3552502": ("municipio de suzano", "SP"),
+    "3518701": ("municipio de guaruja", "SP"),
+    "3513009": ("municipio de cotia", "SP"),
+    "1505536": ("municipio de parauapebas", "PA"),
+    "3524402": ("municipio de jacarei", "SP"),
+    "3301900": ("municipio de itaborai", "RJ"),
+    "3302700": ("municipio de marica", "RJ"),
 }
 
 
@@ -83,7 +93,7 @@ def main() -> int:
     deny_flags(orgaos, f"{API}/api/orgaos")
     deny_stub(json.dumps(orgaos, ensure_ascii=False), "api /api/orgaos")
     items_page = orgaos.get("items") or []
-    if len(items_page) < 49:
+    if len(items_page) < 59:
         raise SystemExit(f"api /api/orgaos returned {len(items_page)} rows, need the published slice")
     by_ibge = {str(row.get("municipioIbge") or ""): row for row in items_page}
     for ibge, (nome, uf) in PUBLISHED.items():
@@ -100,7 +110,7 @@ def main() -> int:
     orgao_cov = orgaos.get("coverage") or {}
     if orgao_cov.get("uf") not in (None, ""):
         raise SystemExit(f"mixed orgao list invented a UF: {orgao_cov}")
-    if not isinstance(orgao_cov.get("n"), int) or orgao_cov["n"] < 49:
+    if not isinstance(orgao_cov.get("n"), int) or orgao_cov["n"] < 59:
         raise SystemExit(f"api orgaos coverage.n missing the extra slice: {orgao_cov}")
     if not orgao_cov.get("methodologyVersion"):
         raise SystemExit(f"api orgaos coverage missing methodologyVersion: {orgao_cov}")
@@ -390,6 +400,23 @@ def main() -> int:
     balneario_rows = balneario.get("items") or []
     if len(balneario_rows) != 1 or str(balneario_rows[0].get("municipioIbge") or "") != "4202008":
         raise SystemExit(f"api municipio filter 4202008 failed: {balneario_rows}")
+    for extra_ibge in (
+        "3523107",
+        "3541000",
+        "4125506",
+        "3552502",
+        "3518701",
+        "3513009",
+        "1505536",
+        "3524402",
+        "3301900",
+        "3302700",
+    ):
+        extra = get_json(f"{API}/api/orgaos?municipioIbge={extra_ibge}&skip=0&take=50")
+        deny_flags(extra, f"{API}/api/orgaos?municipioIbge={extra_ibge}")
+        extra_rows = extra.get("items") or []
+        if len(extra_rows) != 1 or str(extra_rows[0].get("municipioIbge") or "") != extra_ibge:
+            raise SystemExit(f"api municipio filter {extra_ibge} failed: {extra_rows}")
 
     orgao = by_ibge["3306305"]
     oid = orgao["id"]
@@ -562,9 +589,29 @@ def main() -> int:
         raise SystemExit("web / missing Marília")
     if "balneario camboriu" not in folded and "balneário camboriú" not in folded:
         raise SystemExit("web / missing Balneário Camboriú")
+    if "itaquaquecetuba" not in folded:
+        raise SystemExit("web / missing Itaquaquecetuba")
+    if "praia grande" not in folded:
+        raise SystemExit("web / missing Praia Grande")
+    if "sao jose dos pinhais" not in folded and "são josé dos pinhais" not in folded:
+        raise SystemExit("web / missing São José dos Pinhais")
+    if "suzano" not in folded:
+        raise SystemExit("web / missing Suzano")
+    if "guaruja" not in folded and "guarujá" not in folded:
+        raise SystemExit("web / missing Guarujá")
+    if "cotia" not in folded:
+        raise SystemExit("web / missing Cotia")
+    if "parauapebas" not in folded:
+        raise SystemExit("web / missing Parauapebas")
+    if "jacarei" not in folded and "jacareí" not in folded:
+        raise SystemExit("web / missing Jacareí")
+    if "itaborai" not in folded and "itaboraí" not in folded:
+        raise SystemExit("web / missing Itaboraí")
+    if "marica" not in folded and "maricá" not in folded:
+        raise SystemExit("web / missing Maricá")
     if "UF mista" not in home:
         raise SystemExit("web / missing honest mixed UF")
-    if "Quarenta e nove municípios" not in home:
+    if "Cinquenta e nove municípios" not in home:
         raise SystemExit("web / missing short brand kicker")
     if "UF Brasil" in home or "total nacional" in folded:
         raise SystemExit("web / invented a national total")
@@ -670,6 +717,26 @@ def main() -> int:
         raise SystemExit("web /orgaos missing Marília")
     if "balneario camboriu" not in orgaos_fold and "balneário camboriú" not in orgaos_fold:
         raise SystemExit("web /orgaos missing Balneário Camboriú")
+    if "itaquaquecetuba" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing Itaquaquecetuba")
+    if "praia grande" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing Praia Grande")
+    if "sao jose dos pinhais" not in orgaos_fold and "são josé dos pinhais" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing São José dos Pinhais")
+    if "suzano" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing Suzano")
+    if "guaruja" not in orgaos_fold and "guarujá" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing Guarujá")
+    if "cotia" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing Cotia")
+    if "parauapebas" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing Parauapebas")
+    if "jacarei" not in orgaos_fold and "jacareí" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing Jacareí")
+    if "itaborai" not in orgaos_fold and "itaboraí" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing Itaboraí")
+    if "marica" not in orgaos_fold and "maricá" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing Maricá")
     if "UF mista" not in orgaos_html:
         raise SystemExit("web /orgaos missing honest mixed UF")
 
@@ -694,8 +761,10 @@ def main() -> int:
         raise SystemExit("web /orgaos?uf=SP missing Bauru")
     if "marilia" not in sp_table.casefold() and "marília" not in sp_table.casefold():
         raise SystemExit("web /orgaos?uf=SP missing Marília")
-    if not re.search(r"n=3", sp_html):
-        raise SystemExit("web UF=SP filter missing n=3")
+    if "itaquaquecetuba" not in sp_table.casefold():
+        raise SystemExit("web /orgaos?uf=SP missing Itaquaquecetuba")
+    if not re.search(r"n=9", sp_html):
+        raise SystemExit("web UF=SP filter missing n=9")
     if "prefeitura municipal de volta redonda" in sp_table.casefold():
         raise SystemExit("web UF=SP filter leaked Volta Redonda")
     if "prefeitura municipal de niter" in sp_table.casefold():
@@ -754,6 +823,8 @@ def main() -> int:
     pr_table = table_html(pr_html)
     if "londrina" not in pr_table.casefold():
         raise SystemExit("web /orgaos?uf=PR missing Londrina")
+    if "sao jose dos pinhais" not in pr_table.casefold() and "são josé dos pinhais" not in pr_table.casefold():
+        raise SystemExit("web /orgaos?uf=PR missing São José dos Pinhais")
     if "municipio de uberlandia" in pr_table.casefold():
         raise SystemExit("web UF=PR filter leaked Uberlândia")
     if "prefeitura municipal de volta redonda" in pr_table.casefold():
@@ -896,6 +967,8 @@ def main() -> int:
         raise SystemExit("web /orgaos?uf=PA missing Santarém")
     if "castanhal" not in pa_table.casefold():
         raise SystemExit("web /orgaos?uf=PA missing Castanhal")
+    if "parauapebas" not in pa_table.casefold():
+        raise SystemExit("web /orgaos?uf=PA missing Parauapebas")
     if "fundacao de servicos de saude de dourados" in pa_table.casefold() or "fundação de serviços de saúde de dourados" in pa_table.casefold() or "municipio de dourados" in pa_table.casefold() or "município de dourados" in pa_table.casefold():
         raise SystemExit("web UF=PA filter leaked Dourados")
     if "prefeitura municipal de volta redonda" in pa_table.casefold():
@@ -1347,6 +1420,32 @@ def main() -> int:
     if "UF SC" not in balneario_html:
         raise SystemExit("web Balneário Camboriú filter missing UF SC")
 
+    for extra_ibge, extra_ascii, extra_accent, extra_uf, extra_label, leak_ascii, leak_accent in (
+        ("3523107", "municipio de itaquaquecetuba", "município de itaquaquecetuba", "SP", "Itaquaquecetuba", "municipio de praia grande", "município de praia grande"),
+        ("3541000", "municipio de praia grande", "município de praia grande", "SP", "Praia Grande", "municipio de itaquaquecetuba", "município de itaquaquecetuba"),
+        ("4125506", "municipio de sao jose dos pinhais", "município de são josé dos pinhais", "PR", "São José dos Pinhais", "municipio de suzano", "município de suzano"),
+        ("3552502", "municipio de suzano", "município de suzano", "SP", "Suzano", "municipio de sao jose dos pinhais", "município de são josé dos pinhais"),
+        ("3518701", "municipio de guaruja", "município de guarujá", "SP", "Guarujá", "municipio de cotia", "município de cotia"),
+        ("3513009", "municipio de cotia", "município de cotia", "SP", "Cotia", "municipio de guaruja", "município de guarujá"),
+        ("1505536", "municipio de parauapebas", "município de parauapebas", "PA", "Parauapebas", "municipio de jacarei", "município de jacareí"),
+        ("3524402", "municipio de jacarei", "município de jacareí", "SP", "Jacareí", "municipio de parauapebas", "município de parauapebas"),
+        ("3301900", "municipio de itaborai", "município de itaboraí", "RJ", "Itaboraí", "municipio de marica", "município de maricá"),
+        ("3302700", "municipio de marica", "município de maricá", "RJ", "Maricá", "municipio de itaborai", "município de itaboraí"),
+    ):
+        extra_html = get_text(f"{WEB}/orgaos?municipioIbge={extra_ibge}")
+        assert_served_page(extra_html, f"web /orgaos?municipioIbge={extra_ibge}")
+        extra_table = table_html(extra_html)
+        if extra_ascii not in extra_table.casefold() and extra_accent not in extra_table.casefold():
+            raise SystemExit(f"web /orgaos?municipioIbge={extra_ibge} missing {extra_label}")
+        if leak_ascii in extra_table.casefold() or leak_accent in extra_table.casefold():
+            raise SystemExit(f"web municipio filter leaked peer of {extra_label}")
+        if "prefeitura municipal de volta redonda" in extra_table.casefold():
+            raise SystemExit("web municipio filter leaked Volta Redonda")
+        if not re.search(r"n=1", extra_html):
+            raise SystemExit(f"web {extra_label} filter missing n=1")
+        if f"UF {extra_uf}" not in extra_html:
+            raise SystemExit(f"web {extra_label} filter missing UF {extra_uf}")
+
     orgao_html = get_text(f"{WEB}/orgaos/{oid}")
     assert_served_page(orgao_html, "web /orgaos/{id}")
     if STAT_HOMOLOGADO.search(orgao_html):
@@ -1520,6 +1619,26 @@ def main() -> int:
         raise SystemExit("web /cobertura missing Marília IBGE")
     if "4202008" not in cobertura:
         raise SystemExit("web /cobertura missing Balneário Camboriú IBGE")
+    if "3523107" not in cobertura:
+        raise SystemExit("web /cobertura missing Itaquaquecetuba IBGE")
+    if "3541000" not in cobertura:
+        raise SystemExit("web /cobertura missing Praia Grande IBGE")
+    if "4125506" not in cobertura:
+        raise SystemExit("web /cobertura missing São José dos Pinhais IBGE")
+    if "3552502" not in cobertura:
+        raise SystemExit("web /cobertura missing Suzano IBGE")
+    if "3518701" not in cobertura:
+        raise SystemExit("web /cobertura missing Guarujá IBGE")
+    if "3513009" not in cobertura:
+        raise SystemExit("web /cobertura missing Cotia IBGE")
+    if "1505536" not in cobertura:
+        raise SystemExit("web /cobertura missing Parauapebas IBGE")
+    if "3524402" not in cobertura:
+        raise SystemExit("web /cobertura missing Jacareí IBGE")
+    if "3301900" not in cobertura:
+        raise SystemExit("web /cobertura missing Itaboraí IBGE")
+    if "3302700" not in cobertura:
+        raise SystemExit("web /cobertura missing Maricá IBGE")
     if "não é um total nacional" not in cobertura:
         raise SystemExit("web /cobertura missing disclaimer")
     if "UF mista" not in cobertura:

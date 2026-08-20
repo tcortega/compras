@@ -116,6 +116,26 @@ public static class SliceIds
 
 	public static readonly Guid OrgaoBalneario = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa50");
 
+	public static readonly Guid OrgaoItaqua = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa51");
+
+	public static readonly Guid OrgaoPraiaGrande = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa52");
+
+	public static readonly Guid OrgaoSaoJoseDosPinhais = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa53");
+
+	public static readonly Guid OrgaoSuzano = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa54");
+
+	public static readonly Guid OrgaoGuaruja = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa55");
+
+	public static readonly Guid OrgaoCotia = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa56");
+
+	public static readonly Guid OrgaoParauapebas = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa57");
+
+	public static readonly Guid OrgaoJacarei = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa58");
+
+	public static readonly Guid OrgaoItaborai = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa59");
+
+	public static readonly Guid OrgaoMarica = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa60");
+
 	public static readonly Guid ContratacaoNiteroi = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1");
 
 	public static readonly Guid ContratacaoBauru = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2");
@@ -212,6 +232,26 @@ public static class SliceIds
 
 	public static readonly Guid ContratacaoBalneario = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb48");
 
+	public static readonly Guid ContratacaoItaqua = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb49");
+
+	public static readonly Guid ContratacaoPraiaGrande = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb50");
+
+	public static readonly Guid ContratacaoSaoJoseDosPinhais = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb51");
+
+	public static readonly Guid ContratacaoSuzano = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb52");
+
+	public static readonly Guid ContratacaoGuaruja = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb53");
+
+	public static readonly Guid ContratacaoCotia = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb54");
+
+	public static readonly Guid ContratacaoParauapebas = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb55");
+
+	public static readonly Guid ContratacaoJacarei = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb56");
+
+	public static readonly Guid ContratacaoItaborai = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb57");
+
+	public static readonly Guid ContratacaoMarica = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb58");
+
 	public static readonly Guid ItemNiteroi = Guid.Parse("cccccccc-cccc-cccc-cccc-ccccccccccc1");
 
 	public static readonly Guid ItemBauru = Guid.Parse("cccccccc-cccc-cccc-cccc-ccccccccccc2");
@@ -307,6 +347,26 @@ public static class SliceIds
 	public static readonly Guid ItemMarilia = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccc47");
 
 	public static readonly Guid ItemBalneario = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccc48");
+
+	public static readonly Guid ItemItaqua = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccc49");
+
+	public static readonly Guid ItemPraiaGrande = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccc50");
+
+	public static readonly Guid ItemSaoJoseDosPinhais = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccc51");
+
+	public static readonly Guid ItemSuzano = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccc52");
+
+	public static readonly Guid ItemGuaruja = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccc53");
+
+	public static readonly Guid ItemCotia = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccc54");
+
+	public static readonly Guid ItemParauapebas = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccc55");
+
+	public static readonly Guid ItemJacarei = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccc56");
+
+	public static readonly Guid ItemItaborai = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccc57");
+
+	public static readonly Guid ItemMarica = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccc58");
 
 	public static readonly Guid FornecedorExtra = Guid.Parse("dddddddd-dddd-dddd-dddd-ddddddddddd1");
 

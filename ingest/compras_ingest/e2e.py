@@ -5,6 +5,7 @@ import os
 import sys
 import tempfile
 from dataclasses import replace
+from datetime import date
 from pathlib import Path
 
 import httpx
@@ -20,6 +21,7 @@ from compras_detect.tier1.fracionamento import (
 )
 from compras_ingest.cpf import assert_no_raw_cpf, mask_cpf
 from compras_ingest.landing import LandingStore
+from compras_ingest.ids import sha256_bytes
 from compras_ingest.official import (
     CGU_CEIS_LISTING_URL,
     CGU_CNEP_LISTING_URL,
@@ -46,7 +48,10 @@ from compras_ingest.official import (
     assert_cgu_zip_url,
     assert_official_host,
     ckan_zip_from_package,
+    deny_resolve,
     fixture_cgu_ceis_cnep_official,
+    fixture_compras_gov_diario_official,
+    fixture_compras_gov_mensal_official,
     fixture_compras_gov_official,
     fixture_ocds_official,
     fixture_pncp_official,
@@ -66,6 +71,7 @@ from compras_ingest.pipeline import (
 from compras_ingest.pncp_ids import complete_compra_keys, live_ibge_targets
 from compras_ingest.slice import SLICE_IBGE_CODES
 from compras_ingest.settings import Settings
+from compras_ingest.sources.catalogo_cnbs import land_catalogo_cnbs
 from compras_ingest.sources.compras_gov import land_compras_gov
 from compras_ingest.sources.ocds import land_ocds
 from compras_ingest.sources.pncp_consulta import (
@@ -105,6 +111,9 @@ from compras_ingest.warehouse import (
     write_entities,
     write_facts,
     write_flags,
+    fetch_counts,
+    fetch_fact_count,
+    fetch_record_hashes,
 )
 from compras_ingest.ids import item_id
 from decimal import Decimal
@@ -353,6 +362,8 @@ def main() -> int:
         _assert_cgu_ceis_cnep_landing(settings)
         _assert_write_once(settings)
         _assert_refetch_schedule(settings)
+        _assert_incremental_schedules(settings)
+        _assert_land_idempotency(settings)
         _assert_data_error_suite(settings, result.items)
         _assert_a2(settings)
         _assert_a3_labels()
@@ -782,6 +793,7 @@ def _assert_units(settings, normalized) -> None:
 class _official_hosts_blocked:
     def __enter__(self):
         self._client = httpx.Client
+        deny_resolve(True)
 
         class Guarded(httpx.Client):
             def request(self, method, url, *args, **kwargs):
@@ -796,8 +808,11 @@ class _official_hosts_blocked:
         return self
 
     def __exit__(self, exc_type, exc, tb):
+        deny_resolve(False)
         httpx.Client = self._client
-        if exc_type is RuntimeError and exc and "fixture mode hit official host" in str(exc):
+        if exc_type is RuntimeError and exc and (
+            "fixture mode hit official host" in str(exc) or "fixture mode called" in str(exc)
+        ):
             raise SystemExit(str(exc)) from exc
         return False
 
@@ -851,6 +866,150 @@ def _assert_refetch_schedule(settings: Settings) -> None:
     extra2 = {src: sorted(after[src] - mid[src]) for src in REFETCH_SOURCES if after[src] - mid[src]}
     if extra2:
         raise SystemExit(f"second refetch wrote new landing hashes: {extra2}")
+
+
+def _assert_incremental_schedules(settings: Settings) -> None:
+    from compras_ingest.assets import defs
+    from compras_ingest.incremental import (
+        DAILY_ASSET_KEYS,
+        DAILY_CRON,
+        DAILY_JOB_NAME,
+        DAILY_SCHEDULE_NAME,
+        MONTHLY_ASSET_KEYS,
+        MONTHLY_CRON,
+        MONTHLY_JOB_NAME,
+        MONTHLY_SCHEDULE_NAME,
+        SCHEDULE_TZ,
+    )
+
+    from dagster import DagsterInstance
+    from compras_ingest.assets import _job_asset_keys
+
+    _assert_fixture_fetch_off(settings)
+    instance = DagsterInstance.ephemeral()
+    jobs = []
+    for name, cron, job_name, tz, need in (
+        (DAILY_SCHEDULE_NAME, DAILY_CRON, DAILY_JOB_NAME, SCHEDULE_TZ, set(DAILY_ASSET_KEYS)),
+        (MONTHLY_SCHEDULE_NAME, MONTHLY_CRON, MONTHLY_JOB_NAME, SCHEDULE_TZ, set(MONTHLY_ASSET_KEYS)),
+    ):
+        found = next((s for s in (defs.schedules or []) if s.name == name), None)
+        if found is None:
+            raise SystemExit(f"defs missing schedule {name}")
+        if not found.cron_schedule:
+            raise SystemExit(f"{name} missing cron")
+        if found.cron_schedule != cron:
+            raise SystemExit(f"{name} cron {found.cron_schedule} != {cron}")
+        if found.execution_timezone != tz:
+            raise SystemExit(f"{name} tz {found.execution_timezone} != {tz}")
+        target = found.job_name or getattr(found.job, "name", "")
+        if target != job_name:
+            raise SystemExit(f"{name} does not target {job_name}: {target}")
+        job = defs.resolve_job_def(job_name)
+        selected = _job_asset_keys(job)
+        if not selected:
+            raise SystemExit(f"{job_name} has no asset selection")
+        if not need.issubset(selected):
+            raise SystemExit(f"{job_name} missing land assets {need - selected}")
+        jobs.append(job)
+    for job in jobs:
+        before = _landing_digests(settings)
+        result = job.execute_in_process(instance=instance)
+        if not result.success:
+            raise SystemExit(f"{job.name} failed")
+        mid = _landing_digests(settings)
+        if mid != before:
+            raise SystemExit(f"{job.name} changed landing content hashes")
+        result2 = job.execute_in_process(instance=instance)
+        if not result2.success:
+            raise SystemExit(f"second {job.name} failed")
+        after = _landing_digests(settings)
+        if after != mid:
+            raise SystemExit(f"second {job.name} changed landing content hashes")
+
+
+def _assert_land_idempotency(settings: Settings) -> None:
+    _assert_fixture_fetch_off(settings)
+    store = LandingStore(settings)
+    before_digests = _landing_digests(settings)
+    before_counts = fetch_counts(settings)
+    before_hashes = fetch_record_hashes(settings)
+    before_facts = fetch_fact_count(settings)
+    _reland_all(settings, store)
+    mid_digests = _landing_digests(settings)
+    _assert_same_landing(before_digests, mid_digests, "first reland")
+    _reland_all(settings, store)
+    after_digests = _landing_digests(settings)
+    _assert_same_landing(mid_digests, after_digests, "second reland")
+    after_counts = fetch_counts(settings)
+    after_hashes = fetch_record_hashes(settings)
+    after_facts = fetch_fact_count(settings)
+    grown = {k: (before_counts[k], after_counts[k]) for k in before_counts if after_counts[k] > before_counts[k]}
+    if grown:
+        raise SystemExit(f"warehouse row counts grew after idempotent land: {grown}")
+    extra_hashes = after_hashes - before_hashes
+    if extra_hashes:
+        raise SystemExit(f"warehouse record hashes grew after idempotent land: {len(extra_hashes)}")
+    if after_facts > before_facts:
+        raise SystemExit(f"item_fact FINAL count grew {before_facts} -> {after_facts}")
+
+
+def _assert_fixture_fetch_off(settings: Settings) -> None:
+    if settings.compras_gov_fetch:
+        raise SystemExit("fixture e2e must run with COMPRAS_GOV_FETCH=0")
+    if settings.tce_rs_fetch:
+        raise SystemExit("fixture e2e must run with TCE_RS_FETCH=0")
+    if settings.sanctions_fetch:
+        raise SystemExit("fixture e2e must run with SANCTIONS_FETCH=0")
+    if settings.ocds_fetch or settings.receita_cnpj_fetch or settings.pncp_consulta_fetch or settings.tce_sp_fetch:
+        raise SystemExit("fixture e2e must keep official fetch flags off")
+
+
+def _reland_all(settings: Settings, store: LandingStore) -> None:
+    land_catalogo_cnbs(settings, store)
+    land_compras_gov(settings, store)
+    basicos: set[str] = set()
+    for key in store.list_parquet("compras_gov"):
+        basicos |= cnpj_basicos_from_frame(store.read_parquet(key))
+    land_receita_cnpj(settings, store, cnpj_basicos=basicos)
+    land_ocds(settings, store=store)
+    land_pncp_consulta(settings, store)
+    land_tce_sp_licitacao(settings, store)
+    land_tce_rs_licitacon(settings, store)
+    land_cgu_ceis_cnep(settings, store)
+
+
+def _landing_digests(settings: Settings) -> dict[str, dict[str, str]]:
+    store = LandingStore(settings)
+    out: dict[str, dict[str, str]] = {}
+    for source in (
+        "compras_gov",
+        "catalogo_cnbs",
+        "ocds",
+        "receita_cnpj",
+        "receita_cnpj_socios",
+        "pncp_consulta",
+        TCE_SP_SOURCE,
+        TCE_RS_SOURCE,
+        CGU_SOURCE,
+    ):
+        out[source] = {}
+        for key in store.list_parquet(source):
+            if not key.endswith(".parquet"):
+                continue
+            out[source][key] = sha256_bytes(store.get(key))
+    return out
+
+
+def _assert_same_landing(before: dict[str, dict[str, str]], after: dict[str, dict[str, str]], label: str) -> None:
+    if after.keys() != before.keys():
+        raise SystemExit(f"{label} landing sources drifted: {sorted(after)} vs {sorted(before)}")
+    for source, first in before.items():
+        second = after[source]
+        if set(second) != set(first):
+            raise SystemExit(f"{label} {source} parquet keys drifted: {sorted(second)} vs {sorted(first)}")
+        for key, digest in first.items():
+            if second[key] != digest:
+                raise SystemExit(f"{label} {source} {key} sha256 changed")
 
 
 def _assert_retroactive_edit_flags(items, flags, stored, hashes_before, store) -> None:
@@ -1163,6 +1322,21 @@ def _assert_compras_gov_official_urls(settings: Settings) -> None:
             raise SystemExit(f"COMPRA URL pointed at ITEM: {official.compra_url}")
         assert_official_host(official.compra_url, COMPRAS_GOV_HOSTS)
         assert_official_host(official.item_url, COMPRAS_GOV_HOSTS)
+    day = date(2026, 7, 15)
+    diario = fixture_compras_gov_diario_official(day, settings.compras_gov_base.rstrip("/"))
+    if diario.cadence != "diario":
+        raise SystemExit(f"Compras.gov diario cadence is not diario: {diario.cadence}")
+    if f"/diario/2026/07/15/comprasGOV-diario-VW_FT_PNCP_COMPRA-{day.isoformat()}.csv" not in diario.compra_url:
+        raise SystemExit(f"COMPRA URL is not the official diario file: {diario.compra_url}")
+    if f"/diario/2026/07/15/comprasGOV-diario-VW_FT_PNCP_COMPRA_ITEM-{day.isoformat()}.csv" not in diario.item_url:
+        raise SystemExit(f"ITEM URL is not the official diario file: {diario.item_url}")
+    mensal = fixture_compras_gov_mensal_official(2026, 7, settings.compras_gov_base.rstrip("/"))
+    if mensal.cadence != "mensal":
+        raise SystemExit(f"Compras.gov mensal cadence is not mensal: {mensal.cadence}")
+    if "/mensal/2026/07/comprasGOV-mensal-VW_FT_PNCP_COMPRA-2026-07.csv" not in mensal.compra_url:
+        raise SystemExit(f"COMPRA URL is not the official mensal file: {mensal.compra_url}")
+    if "/mensal/2026/07/comprasGOV-mensal-VW_FT_PNCP_COMPRA_ITEM-2026-07.csv" not in mensal.item_url:
+        raise SystemExit(f"ITEM URL is not the official mensal file: {mensal.item_url}")
 
 
 def _assert_compras_gov_years(settings: Settings) -> None:

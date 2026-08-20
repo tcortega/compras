@@ -20,4 +20,6 @@ public sealed record PageResult<T>
 	public required IReadOnlyList<T> Items { get; init; }
 
 	public required Coverage Coverage { get; init; }
+
+	public int Total => Coverage.N;
 }

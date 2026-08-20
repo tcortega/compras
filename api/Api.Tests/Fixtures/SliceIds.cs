@@ -16,6 +16,10 @@ public static class SliceIds
 
 	public static readonly Guid SuspendTarget = Guid.Parse("77777777-7777-7777-7777-777777777777");
 
+	public static readonly Guid PageOrgaoAlfa = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1");
+
+	public static readonly Guid PageOrgaoBeta = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2");
+
 	public const string Snapshot = "snap-2024-vr";
 
 	public const string Methodology = "0.1";

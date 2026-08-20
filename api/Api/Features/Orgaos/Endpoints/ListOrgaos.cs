@@ -29,14 +29,7 @@ public static partial class ListOrgaos
 		public string? MethodologyVersion { get; init; }
 	}
 
-	public sealed record Response
-	{
-		public required IReadOnlyList<OrgaoRecord> Items { get; init; }
-
-		public required Coverage Coverage { get; init; }
-	}
-
-	private static async ValueTask<Response> HandleAsync(
+	private static async ValueTask<PageResult<OrgaoRecord>> HandleAsync(
 		Command command,
 		ApplicationDbContext db,
 		IOptions<AppOptions> options,
@@ -62,10 +55,6 @@ public static partial class ListOrgaos
 			.Select(OrgaoRecord.Project(command.Quarter, methodology))
 			.ToListAsync(ct);
 
-		return new()
-		{
-			Items = items,
-			Coverage = Slice.Page(n, command.Uf, command.Quarter, methodology),
-		};
+		return Slice.Result(items, n, command.Uf, command.Quarter, methodology);
 	}
 }

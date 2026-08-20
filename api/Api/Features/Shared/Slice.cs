@@ -15,4 +15,16 @@ internal static class Slice
 			Quarter = quarter ?? "",
 			MethodologyVersion = methodologyVersion,
 		};
+
+	public static PageResult<T> Result<T>(
+		IReadOnlyList<T> items,
+		int n,
+		string? uf,
+		string? quarter,
+		string methodologyVersion) =>
+		new()
+		{
+			Items = items,
+			Coverage = Page(n, uf, quarter, methodologyVersion),
+		};
 }

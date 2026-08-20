@@ -65,6 +65,8 @@ public sealed record OrgaoPage
 	public required IReadOnlyList<OrgaoRecord> Items { get; init; }
 
 	public required Coverage Coverage { get; init; }
+
+	public int Total { get; init; }
 }
 
 public sealed record FornecedorRecord
@@ -87,6 +89,8 @@ public sealed record FornecedorPage
 	public required IReadOnlyList<FornecedorRecord> Items { get; init; }
 
 	public required Coverage Coverage { get; init; }
+
+	public int Total { get; init; }
 }
 
 public sealed record ContratacaoRecord
@@ -123,6 +127,8 @@ public sealed record ContratacaoPage
 	public required IReadOnlyList<ContratacaoRecord> Items { get; init; }
 
 	public required Coverage Coverage { get; init; }
+
+	public int Total { get; init; }
 }
 
 public sealed record ItemRecord
@@ -165,6 +171,8 @@ public sealed record ItemPage
 	public required IReadOnlyList<ItemRecord> Items { get; init; }
 
 	public required Coverage Coverage { get; init; }
+
+	public int Total { get; init; }
 }
 
 public sealed record ContratacaoDetail

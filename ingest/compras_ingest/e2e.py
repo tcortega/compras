@@ -9,6 +9,7 @@ from pathlib import Path
 
 import httpx
 
+from compras_detect.adjacency import load_expected as load_adjacency_expected
 from compras_detect.data_error import anomaly_pool, detect_data_errors
 from compras_detect.tier1 import run_tier1
 from compras_detect.tier1.fracionamento import (
@@ -80,6 +81,7 @@ from compras_ingest.sources.tce_sp_licitacao import land_tce_sp_licitacao
 from compras_ingest.ids import item_id
 from compras_ingest.warehouse import (
     fact_columns,
+    fetch_adjacencies,
     fetch_all_items,
     fetch_catalog_codes,
     fetch_contratacao,
@@ -377,6 +379,7 @@ def main() -> int:
     _assert_cnpj_age_flags(result.items, result.flags, stored)
     _assert_fracionamento_flags(result.items, flags, stored)
     _assert_retroactive_edit_flags(result.items, flags, stored, hashes_before_edit, store)
+    _assert_receita_adjacency(settings)
     if "qty_unit_price_neq_total" not in kinds:
         raise SystemExit("warehouse missing qty_unit_price_neq_total after write_flags")
     if "retroactive_edit" not in kinds:
@@ -421,6 +424,7 @@ def main() -> int:
     print(f"orgao={orgao['cnpj']} contratacao={contratacao['pncpId']} items={len(items)}")
     print(f"flags={sorted(kinds)}")
     print(f"exclusions={result.exclusion_rows}")
+    print(f"adjacencies={result.adjacency_rows}")
     return 0
 
 
@@ -897,6 +901,55 @@ def _assert_retroactive_edit_flags(items, flags, stored, hashes_before, store) -
             raise SystemExit(f"warehouse {rid} delta missing {spec['field']}: {ware[rid]}")
 
 
+def _assert_receita_adjacency(settings: Settings) -> None:
+    expected = load_adjacency_expected()
+    want = {
+        (str(row["kind"]), str(row["leftCnpj"]), str(row["rightCnpj"]))
+        for row in expected["edges"]
+    }
+    stored = fetch_adjacencies(settings)
+    got = {
+        (str(row["kind"]), str(row["leftCnpj"]), str(row["rightCnpj"]))
+        for row in stored
+    }
+    if got != want:
+        raise SystemExit(f"fornecedor_adjacency {sorted(got)} != planted {sorted(want)}")
+    for cnpj in expected["clean"]:
+        hits = [row for row in stored if cnpj in (row["leftCnpj"], row["rightCnpj"])]
+        if hits:
+            raise SystemExit(f"clean CNPJ {cnpj} has edges {hits}")
+    forbidden = [str(v) for v in expected.get("raw_cpf_forbidden") or []]
+    masked = str(expected.get("partner_cpf_masked") or "")
+    partner_cnpj = str(expected.get("partner_cnpj") or "")
+    partner_evidence = [
+        str(row.get("evidence") or "")
+        for row in stored
+        if str(row.get("kind") or "") == "shared_qsa_partner"
+    ]
+    if masked and not any(masked in text for text in partner_evidence):
+        raise SystemExit("shared_qsa_partner evidence missing masked CPF")
+    if partner_cnpj and not any(partner_cnpj in text for text in partner_evidence):
+        raise SystemExit("shared_qsa_partner evidence missing legal-entity socio CNPJ")
+    for row in stored:
+        if str(row.get("leftCnpj") or "") >= str(row.get("rightCnpj") or ""):
+            raise SystemExit("adjacency pair is not stored leftCnpj < rightCnpj")
+        if not row.get("snapshotId"):
+            raise SystemExit("adjacency missing snapshotId")
+        if not row.get("methodologyVersion"):
+            raise SystemExit("adjacency missing methodologyVersion")
+        if not row.get("evidence"):
+            raise SystemExit("adjacency missing evidence")
+        blobs = [
+            str(row.get("evidence") or ""),
+            str(row.get("leftCnpj") or ""),
+            str(row.get("rightCnpj") or ""),
+        ]
+        assert_no_raw_cpf(blobs)
+        for raw in forbidden:
+            if raw and raw in " ".join(blobs):
+                raise SystemExit(f"adjacency stored raw CPF {raw}")
+
+
 def _load_retroactive_edit_expected() -> dict:
     from compras_detect.tier1.retroactive_edit import fixture_dir
 
@@ -1083,6 +1136,19 @@ def _assert_tier_a_landing(settings: Settings, ocds_report: dict) -> None:
             assert_no_raw_cpf(blobs)
             if source == "receita_cnpj" and df.is_empty():
                 raise SystemExit("receita_cnpj landed empty from fixture")
+            if source == "receita_cnpj":
+                expected = load_adjacency_expected()
+                landed = (
+                    {"".join(c for c in str(v) if c.isalnum()).upper() for v in df["cnpj"].to_list()}
+                    if "cnpj" in df.columns
+                    else set()
+                )
+                need = {str(row["leftCnpj"]) for row in expected["edges"]}
+                need |= {str(row["rightCnpj"]) for row in expected["edges"]}
+                need |= {str(cnpj) for cnpj in expected["clean"]}
+                missing = need - landed
+                if missing:
+                    raise SystemExit(f"receita landing missing planted adjacency CNPJs {sorted(missing)}")
             if source == "receita_cnpj_socios":
                 if df.is_empty():
                     raise SystemExit("receita_cnpj_socios landed empty from fixture")

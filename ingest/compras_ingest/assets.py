@@ -1,7 +1,11 @@
 from dagster import AssetExecutionContext, Definitions, ScheduleDefinition, asset, define_asset_job
 
 from compras_ingest.landing import LandingStore
-from compras_ingest.pipeline import run_tier1_and_write_flags, warehouse_from_landing
+from compras_ingest.pipeline import (
+    run_adjacency_and_write,
+    run_tier1_and_write_flags,
+    warehouse_from_landing,
+)
 from compras_ingest.refetch import (
     JOB_NAME,
     REFETCH_SOURCES,
@@ -135,6 +139,20 @@ def warehouse_entities(
 
 @asset(
     group_name="detect",
+    description="Receita shared-partner, address, phone, and email edges. Internal only. Not a finding.",
+)
+def fornecedor_adjacency(context: AssetExecutionContext, warehouse_entities: dict) -> dict:
+    settings = _settings()
+    store = LandingStore(settings)
+    _ = warehouse_entities
+    edges, n = run_adjacency_and_write(settings, store)
+    kinds = sorted({str(v) for v in edges["kind"].to_list()}) if edges.height else []
+    context.log.info(f"fornecedor_adjacency written n={n} kinds={kinds} public=False")
+    return {"edges": n, "kinds": kinds, "public": False, "internal": True}
+
+
+@asset(
+    group_name="detect",
     description="Run Tier 1 detectors and write internal flags. state=detected. Not public.",
 )
 def tier1_flags(context: AssetExecutionContext, warehouse_entities: dict) -> dict:
@@ -212,6 +230,7 @@ defs = Definitions(
         tce_rs_licitacon,
         cgu_ceis_cnep,
         warehouse_entities,
+        fornecedor_adjacency,
         tier1_flags,
         *REFETCH_ASSETS,
     ],
@@ -231,6 +250,7 @@ def required_asset_keys() -> set[str]:
         "tce_rs_licitacon",
         "cgu_ceis_cnep",
         "warehouse_entities",
+        "fornecedor_adjacency",
         "tier1_flags",
         *required_refetch_asset_keys(),
     }
@@ -265,6 +285,10 @@ def required_detect_parents() -> set[str]:
     return {"warehouse_entities"}
 
 
+def required_adjacency_parents() -> set[str]:
+    return {"warehouse_entities"}
+
+
 def assert_asset_graph() -> list[str]:
     graph = defs.get_repository_def().asset_graph
     keys = [k.to_user_string() for k in graph.get_all_asset_keys()]
@@ -281,6 +305,7 @@ def assert_asset_graph() -> list[str]:
         ("receita_cnpj", required_receita_parents()),
         ("ocds_crosscheck", required_ocds_parents()),
         ("tier1_flags", required_detect_parents()),
+        ("fornecedor_adjacency", required_adjacency_parents()),
     )
     for name, need in checks:
         have = parents(name)

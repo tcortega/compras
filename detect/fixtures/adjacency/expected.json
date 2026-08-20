@@ -1,0 +1,41 @@
+{
+  "edges": [
+    {
+      "kind": "shared_qsa_partner",
+      "leftCnpj": "10101011000191",
+      "rightCnpj": "10101022000172"
+    },
+    {
+      "kind": "shared_qsa_partner",
+      "leftCnpj": "11111111000191",
+      "rightCnpj": "11111122000172"
+    },
+    {
+      "kind": "shared_address",
+      "leftCnpj": "20202011000191",
+      "rightCnpj": "20202022000172"
+    },
+    {
+      "kind": "shared_phone",
+      "leftCnpj": "30303011000191",
+      "rightCnpj": "30303022000172"
+    },
+    {
+      "kind": "shared_email",
+      "leftCnpj": "40404011000191",
+      "rightCnpj": "40404022000172"
+    }
+  ],
+  "clean": [
+    "90909090000191",
+    "80808011000191",
+    "80808022000172"
+  ],
+  "partner_cpf_masked": "***.654.321-**",
+  "partner_cnpj": "77777777000191",
+  "raw_cpf_forbidden": [
+    "98765432100",
+    "11122233344",
+    "12345678901"
+  ]
+}

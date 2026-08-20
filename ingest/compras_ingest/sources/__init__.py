@@ -1,4 +1,5 @@
 from compras_ingest.sources.catalogo_cnbs import land_catalogo_cnbs
+from compras_ingest.sources.cgu_ceis_cnep import land_cgu_ceis_cnep, load_landed_sanctions
 from compras_ingest.sources.compras_gov import land_compras_gov, load_compras_gov
 from compras_ingest.sources.ocds import land_ocds
 from compras_ingest.sources.pncp_consulta import land_pncp_consulta
@@ -9,6 +10,7 @@ from compras_ingest.sources.tce_sp_licitacao import land_tce_sp_licitacao
 __all__ = [
     "cnpj_basicos_from_frame",
     "land_catalogo_cnbs",
+    "land_cgu_ceis_cnep",
     "land_compras_gov",
     "land_ocds",
     "land_pncp_consulta",
@@ -16,5 +18,6 @@ __all__ = [
     "land_tce_rs_licitacon",
     "land_tce_sp_licitacao",
     "load_compras_gov",
+    "load_landed_sanctions",
     "load_receita_cnpj",
 ]

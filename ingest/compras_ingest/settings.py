@@ -35,6 +35,7 @@ class Settings:
     receita_cnpj_fetch: bool
     receita_cnpj_basicos: tuple[str, ...]
     sanctions_dir: Path | None
+    sanctions_fetch: bool
     pncp_consulta_dir: Path | None
     pncp_consulta_fetch: bool
     pncp_consulta_ibge: str
@@ -82,6 +83,7 @@ class Settings:
             receita_cnpj_fetch=_bool_env("RECEITA_CNPJ_FETCH"),
             receita_cnpj_basicos=_csv_env("RECEITA_CNPJ_BASICOS"),
             sanctions_dir=_opt_path("SANCTIONS_DIR", fixture / "sanctions"),
+            sanctions_fetch=_bool_env("SANCTIONS_FETCH"),
             pncp_consulta_dir=_opt_path("PNCP_CONSULTA_DIR", fixture / "pncp_consulta"),
             pncp_consulta_fetch=_bool_env("PNCP_CONSULTA_FETCH"),
             pncp_consulta_ibge=os.environ.get("PNCP_CONSULTA_IBGE", "3306305"),

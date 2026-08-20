@@ -14,6 +14,9 @@ E2E a user would run after the warehouse is up:
 pip install -e ingest
 export POSTGRES_DSN=postgresql://compras:compras@127.0.0.1:5432/compras
 export CLICKHOUSE_URL=http://127.0.0.1:8123
+export CLICKHOUSE_USER=compras
+export CLICKHOUSE_PASSWORD=compras
+export CLICKHOUSE_DATABASE=compras
 export LANDING_URI=$PWD/.e2e-landing
 python -m compras_ingest.e2e
 ```

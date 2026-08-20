@@ -23,10 +23,15 @@ jobs:
           --health-retries 20
       clickhouse:
         image: clickhouse/clickhouse-server:24.8
+        env:
+          CLICKHOUSE_DB: compras
+          CLICKHOUSE_USER: compras
+          CLICKHOUSE_PASSWORD: compras
+          CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
         ports:
           - 8123:8123
         options: >-
-          --health-cmd "clickhouse-client --query 'SELECT 1'"
+          --health-cmd "clickhouse-client --user compras --password compras --query 'SELECT 1'"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 20
@@ -45,8 +50,8 @@ jobs:
         env:
           POSTGRES_DSN: postgresql://compras:compras@127.0.0.1:5432/compras
           CLICKHOUSE_URL: http://127.0.0.1:8123
-          CLICKHOUSE_USER: default
-          CLICKHOUSE_PASSWORD: ""
+          CLICKHOUSE_USER: compras
+          CLICKHOUSE_PASSWORD: compras
           CLICKHOUSE_DATABASE: compras
           LANDING_URI: ${{ github.workspace }}/.e2e-landing
         run: python -m compras_ingest.e2e

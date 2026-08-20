@@ -20,6 +20,8 @@ public sealed class Flag : ITimestamped, ISuspendable
 
 	public Instant? NotifiedAt { get; set; }
 
+	public string? NotifyArtifact { get; set; }
+
 	public Instant? PublishAfter { get; set; }
 
 	public Instant? PublishedAt { get; set; }
@@ -49,13 +51,14 @@ public sealed class Flag : ITimestamped, ISuspendable
 		State = FlagState.InternalReview;
 	}
 
-	public void Notify(Instant now)
+	public void Notify(Instant now, string? artifact)
 	{
 		if (State is not FlagState.InternalReview)
 			ConflictException.ThrowConflictException("Flag is not in internal_review.");
 		State = FlagState.Notified;
 		NotifiedAt = now;
 		PublishAfter = now + NotifyHold;
+		NotifyArtifact = artifact is { Length: > 0 } ? artifact : null;
 	}
 
 	public void Publish(Instant now)
@@ -107,6 +110,7 @@ public sealed class Flag : ITimestamped, ISuspendable
 			builder.Property(x => x.SnapshotId).HasMaxLength(128);
 			builder.Property(x => x.MethodologyVersion).HasMaxLength(32);
 			builder.Property(x => x.ReplyText).HasMaxLength(8000);
+			builder.Property(x => x.NotifyArtifact).HasMaxLength(1024);
 		}
 	}
 }

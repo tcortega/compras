@@ -114,6 +114,7 @@ All of these kinds stay `state=detected` and are not public alerts.
 `state` detected | internal_review | notified | published | resolved | retracted.
 `detectedAt` Instant.
 `notifiedAt` Instant nullable.
+`notifyArtifact` text nullable.
 `publishAfter` Instant nullable.
 `publishedAt` Instant nullable.
 `delta` text.
@@ -126,6 +127,11 @@ All of these kinds stay `state=detected` and are not public alerts.
 `createdAt` / `updatedAt` Instant.
 
 Notify hold is 7 days: `publishAfter = notifiedAt + 7 days`.
+Notify accepts an optional artifact (url or filename) and stores it as `notifyArtifact`.
+Notify is a manual record that a notice was sent.
+No email is sent.
+No SMTP.
+No orgao contact registry.
 Replies store unedited.
 Legal state edges are enforced in Postgres.
 detected to internal_review.

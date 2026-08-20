@@ -91,7 +91,7 @@ public interface IComprasApi
 	Task<IApiResponse<FlagRecord>> ReviewFlag(Guid id);
 
 	[Post("/api/internal/flags/{id}/notify")]
-	Task<IApiResponse<FlagRecord>> NotifyFlag(Guid id);
+	Task<IApiResponse<FlagRecord>> NotifyFlag(Guid id, [Body] NotifyFlagRequest? body = null);
 
 	[Post("/api/internal/flags/{id}/publish")]
 	Task<IApiResponse<FlagRecord>> PublishFlag(Guid id);

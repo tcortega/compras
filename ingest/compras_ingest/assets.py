@@ -37,6 +37,7 @@ from compras_ingest.refetch import (
     trailing_window,
     trailing_window_days,
 )
+from compras_ingest.search import sync_search_index
 from compras_ingest.settings import Settings
 from compras_ingest.sources.catalogo_cnbs import land_catalogo_cnbs
 from compras_ingest.sources.compras_gov import land_compras_gov
@@ -183,6 +184,17 @@ def warehouse_entities(
 
 
 @asset(
+    group_name="search",
+    description="Upsert item.descricao, fornecedor.razaoSocial, and orgao.razaoSocial into Meilisearch. Factual text only.",
+)
+def search_index(context: AssetExecutionContext, warehouse_entities: dict) -> dict:
+    _ = warehouse_entities
+    summary = sync_search_index(_settings())
+    context.log.info(f"search_index docs={summary['docs']} kinds=item,orgao,fornecedor public=True flags=False")
+    return {**summary, "index": "compras", "public": True, "flags": False}
+
+
+@asset(
     group_name="detect",
     description="Receita shared-partner, address, phone, and email edges. Internal only. Not a finding.",
 )
@@ -322,6 +334,7 @@ defs = Definitions(
         tce_rs_licitacon,
         cgu_ceis_cnep,
         warehouse_entities,
+        search_index,
         fornecedor_adjacency,
         tier1_flags,
         *REFETCH_ASSETS,
@@ -353,6 +366,7 @@ def required_asset_keys() -> set[str]:
         "tce_rs_licitacon",
         "cgu_ceis_cnep",
         "warehouse_entities",
+        "search_index",
         "fornecedor_adjacency",
         "tier1_flags",
         *required_refetch_asset_keys(),
@@ -388,6 +402,10 @@ def required_gaps_parents() -> set[str]:
     return set()
 
 
+def required_search_parents() -> set[str]:
+    return {"warehouse_entities"}
+
+
 def required_detect_parents() -> set[str]:
     return {"warehouse_entities"}
 
@@ -411,6 +429,7 @@ def assert_asset_graph() -> list[str]:
         ("warehouse_entities", required_warehouse_parents()),
         ("receita_cnpj", required_receita_parents()),
         ("ocds_crosscheck", required_ocds_parents()),
+        ("search_index", required_search_parents()),
         ("tier1_flags", required_detect_parents()),
         ("fornecedor_adjacency", required_adjacency_parents()),
         (GAPS_ASSET_NAME, required_gaps_parents()),

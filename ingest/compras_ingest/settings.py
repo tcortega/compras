@@ -57,6 +57,8 @@ class Settings:
     fixture_root: Path
     trailing_window_days: int
     trailing_window_as_of: date | None
+    meili_url: str
+    meili_master_key: str
 
     @classmethod
     def from_env(cls) -> Settings:
@@ -109,6 +111,8 @@ class Settings:
             fixture_root=fixture,
             trailing_window_days=int(os.environ.get("TRAILING_WINDOW_DAYS", str(TRAILING_WINDOW_DAYS))),
             trailing_window_as_of=_opt_date("TRAILING_WINDOW_AS_OF"),
+            meili_url=os.environ.get("MEILI_URL", "").strip(),
+            meili_master_key=os.environ.get("MEILI_MASTER_KEY", "").strip(),
         )
 
 

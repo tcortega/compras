@@ -45,12 +45,14 @@ export const SLICE_MUNICIPIOS = [
   { nome: 'Rio Verde', uf: 'GO', ibge: '5218805' },
   { nome: 'Paulo Afonso', uf: 'BA', ibge: '2924009' },
   { nome: 'São Lourenço da Mata', uf: 'PE', ibge: '2613701' },
+  { nome: 'Crato', uf: 'CE', ibge: '2304202' },
+  { nome: 'Ariquemes', uf: 'RO', ibge: '1100023' },
 ] as const
 
-export const SLICE_BRAND = 'Trinta e sete municípios · 2024'
+export const SLICE_BRAND = 'Trinta e nove municípios · 2024'
 
 export const SLICE_LABEL =
-  'Volta Redonda e Niterói (RJ), Bauru (SP), Caxias do Sul (RS), Joinville (SC), Uberlândia (MG), Londrina (PR), Feira de Santana (BA), Caruaru (PE), Anápolis (GO), Vila Velha (ES), Campina Grande (PB), Caucaia (CE), Imperatriz (MA), Arapiraca (AL), Dourados (MS), Marabá (PA), Várzea Grande (MT), Ji-Paraná (RO), Parnamirim (RN), Cruzeiro do Sul (AC), Santana (AP), Rorainópolis (RR), Maringá (PR), Taubaté (SP), Cascavel (PR), Juiz de Fora (MG), Foz do Iguaçu (PR), Santa Maria (RS), Montes Claros (MG), Governador Valadares (MG), Canoas (RS), Lages (SC), Santarém (PA), Rio Verde (GO), Paulo Afonso (BA) e São Lourenço da Mata (PE) · 2024'
+  'Volta Redonda e Niterói (RJ), Bauru (SP), Caxias do Sul (RS), Joinville (SC), Uberlândia (MG), Londrina (PR), Feira de Santana (BA), Caruaru (PE), Anápolis (GO), Vila Velha (ES), Campina Grande (PB), Caucaia (CE), Imperatriz (MA), Arapiraca (AL), Dourados (MS), Marabá (PA), Várzea Grande (MT), Ji-Paraná (RO), Parnamirim (RN), Cruzeiro do Sul (AC), Santana (AP), Rorainópolis (RR), Maringá (PR), Taubaté (SP), Cascavel (PR), Juiz de Fora (MG), Foz do Iguaçu (PR), Santa Maria (RS), Montes Claros (MG), Governador Valadares (MG), Canoas (RS), Lages (SC), Santarém (PA), Rio Verde (GO), Paulo Afonso (BA), São Lourenço da Mata (PE), Crato (CE) e Ariquemes (RO) · 2024'
 
 export const copy = {
   coverageIncomplete:

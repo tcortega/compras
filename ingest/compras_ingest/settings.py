@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -9,6 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 METHODOLOGY_VERSION = "phase1-0.1.0"
+TRAILING_WINDOW_DAYS = 90
 
 
 @dataclass(frozen=True)
@@ -51,6 +53,8 @@ class Settings:
     tce_rs_year: int
     tce_rs_orgao: str
     fixture_root: Path
+    trailing_window_days: int
+    trailing_window_as_of: date | None
 
     @classmethod
     def from_env(cls) -> Settings:
@@ -99,6 +103,8 @@ class Settings:
             tce_rs_year=int(os.environ.get("TCE_RS_YEAR", "2025")),
             tce_rs_orgao=os.environ.get("TCE_RS_ORGAO", "4305108"),
             fixture_root=fixture,
+            trailing_window_days=int(os.environ.get("TRAILING_WINDOW_DAYS", str(TRAILING_WINDOW_DAYS))),
+            trailing_window_as_of=_opt_date("TRAILING_WINDOW_AS_OF"),
         )
 
 
@@ -114,6 +120,13 @@ def _bool_env(key: str) -> bool:
 
 def _csv_env(key: str) -> tuple[str, ...]:
     return tuple(p.strip() for p in os.environ.get(key, "").split(",") if p.strip())
+
+
+def _opt_date(key: str) -> date | None:
+    raw = os.environ.get(key, "").strip()
+    if not raw:
+        return None
+    return date.fromisoformat(raw)
 
 
 def _repo_root() -> Path:

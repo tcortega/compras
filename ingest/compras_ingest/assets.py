@@ -1,7 +1,17 @@
-from dagster import AssetExecutionContext, Definitions, asset
+from dagster import AssetExecutionContext, Definitions, ScheduleDefinition, asset, define_asset_job
 
 from compras_ingest.landing import LandingStore
 from compras_ingest.pipeline import run_tier1_and_write_flags, warehouse_from_landing
+from compras_ingest.refetch import (
+    JOB_NAME,
+    REFETCH_SOURCES,
+    SCHEDULE_CRON,
+    SCHEDULE_NAME,
+    SCHEDULE_TZ,
+    refetch_source,
+    trailing_window,
+    trailing_window_days,
+)
 from compras_ingest.settings import Settings
 from compras_ingest.sources.catalogo_cnbs import land_catalogo_cnbs
 from compras_ingest.sources.compras_gov import land_compras_gov
@@ -140,6 +150,57 @@ def tier1_flags(context: AssetExecutionContext, warehouse_entities: dict) -> dic
     return {"flags": n, "kinds": kinds, "state": "detected", "public": False}
 
 
+def _refetch_asset(source: str):
+    @asset(
+        name=f"refetch_{source}",
+        group_name="refetch",
+        description=f"Trailing-window re-fetch of {source}. Write-once content hash. Fixture mode stays local.",
+    )
+    def _asset(context: AssetExecutionContext) -> dict:
+        settings = _settings()
+        window = trailing_window(settings)
+        ref = refetch_source(settings, source, window=window)
+        context.log.info(
+            f"refetch {source} days={trailing_window_days(settings)} "
+            f"window={window[0].isoformat()}/{window[1].isoformat()} sha={ref.sha256}"
+        )
+        return {
+            **ref.as_dict(),
+            "trailing_window_days": trailing_window_days(settings),
+            "window_start": window[0].isoformat(),
+            "window_end": window[1].isoformat(),
+        }
+
+    return _asset
+
+
+refetch_compras_gov = _refetch_asset("compras_gov")
+refetch_pncp_consulta = _refetch_asset("pncp_consulta")
+refetch_tce_sp_licitacao = _refetch_asset("tce_sp_licitacao")
+refetch_tce_rs_licitacon = _refetch_asset("tce_rs_licitacon")
+refetch_cgu_ceis_cnep = _refetch_asset("cgu_ceis_cnep")
+
+REFETCH_ASSETS = [
+    refetch_compras_gov,
+    refetch_pncp_consulta,
+    refetch_tce_sp_licitacao,
+    refetch_tce_rs_licitacon,
+    refetch_cgu_ceis_cnep,
+]
+
+trailing_window_refetch_job = define_asset_job(
+    name=JOB_NAME,
+    selection=[f"refetch_{source}" for source in REFETCH_SOURCES],
+    description="Daily trailing-window re-fetch of landed sources.",
+)
+
+trailing_window_refetch_schedule = ScheduleDefinition(
+    name=SCHEDULE_NAME,
+    job=trailing_window_refetch_job,
+    cron_schedule=SCHEDULE_CRON,
+    execution_timezone=SCHEDULE_TZ,
+)
+
 defs = Definitions(
     assets=[
         catalogo_cnbs,
@@ -152,7 +213,10 @@ defs = Definitions(
         cgu_ceis_cnep,
         warehouse_entities,
         tier1_flags,
-    ]
+        *REFETCH_ASSETS,
+    ],
+    jobs=[trailing_window_refetch_job],
+    schedules=[trailing_window_refetch_schedule],
 )
 
 
@@ -168,7 +232,12 @@ def required_asset_keys() -> set[str]:
         "cgu_ceis_cnep",
         "warehouse_entities",
         "tier1_flags",
+        *required_refetch_asset_keys(),
     }
+
+
+def required_refetch_asset_keys() -> set[str]:
+    return {f"refetch_{source}" for source in REFETCH_SOURCES}
 
 
 def required_warehouse_parents() -> set[str]:
@@ -217,7 +286,35 @@ def assert_asset_graph() -> list[str]:
         have = parents(name)
         if not need.issubset(have):
             raise RuntimeError(f"{name} missing parents {need - have}")
+    assert_refetch_schedule()
     return keys
+
+
+def assert_refetch_schedule() -> None:
+    schedules = list(defs.schedules or [])
+    found = next((s for s in schedules if s.name == SCHEDULE_NAME), None)
+    if found is None:
+        raise RuntimeError(f"dagster defs missing schedule {SCHEDULE_NAME}")
+    if not found.cron_schedule:
+        raise RuntimeError("trailing-window refetch schedule missing cron")
+    if found.execution_timezone != SCHEDULE_TZ:
+        raise RuntimeError(f"refetch schedule tz is {found.execution_timezone} not {SCHEDULE_TZ}")
+    target = found.job_name or getattr(found.job, "name", "")
+    if target != JOB_NAME:
+        raise RuntimeError(f"schedule does not target {JOB_NAME}: {target}")
+    job = defs.get_job_def(JOB_NAME)
+    selected = _job_asset_keys(job)
+    need = required_refetch_asset_keys()
+    if selected and not need.issubset(selected):
+        raise RuntimeError(f"{JOB_NAME} missing refetch assets {need - selected}")
+
+
+def _job_asset_keys(job) -> set[str]:
+    layer = getattr(job, "asset_layer", None)
+    keys = getattr(layer, "asset_keys", None) if layer is not None else None
+    if keys:
+        return {k.to_user_string() for k in keys}
+    return set()
 
 
 def _basicos_from_ref(store: LandingStore, compras: dict) -> set[str]:

@@ -380,6 +380,7 @@ Internal publication routes exist and are tested.
 That list is not linked from the explorer.
 Staging triage UI lives at `/interno/triagem` and is not in the public shell nav.
 Staging coverage counts live at `/interno/cobertura` and are not in the public shell nav.
+Staging review UI lives at `/interno/rotulos` and is not in the public shell nav.
 That page reads `GET /api/internal/flags` and shows n per detector kind.
 The warehouse has no daily grain table, so the page shows last-run day from `detectedAt`.
 If distinct detection days exist, it shows n per kind per day.

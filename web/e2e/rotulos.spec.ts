@@ -1,0 +1,107 @@
+import { expect, test, type Page } from '@playwright/test'
+import { readFile } from 'node:fs/promises'
+import { againstCompose } from './busca-helpers'
+import { ROTULOS_LEAK, SYNTHETIC_ITEMS, agreementFile, plantRotulosFixtures } from './rotulos-helpers'
+
+const bannedPublic =
+  /fraude|corrupto|roubo|\bflag\b|ranking|adjacenc|shared_qsa|shared_partner|cover[_-]?bidd|bid_variance|winner_rotation|co[_-]?bid|cnae_mismatch|hidden_label/i
+
+async function assertNoRotulosLink(page: Page) {
+  await expect(page.locator('a[href="/interno/rotulos"]')).toHaveCount(0)
+  await expect(page.locator('nav[aria-label="Seções"] a[href="/interno/rotulos"]')).toHaveCount(0)
+  await expect(page.locator('nav[aria-label="Rodapé"] a[href="/interno/rotulos"]')).toHaveCount(0)
+}
+
+function parseAgreement(text: string): Array<Record<string, string>> {
+  const lines = text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+  const header = lines[0]?.split(',') ?? []
+  return lines.slice(1).map((line) => {
+    const cols = line.split(',')
+    const row: Record<string, string> = {}
+    header.forEach((key, i) => {
+      row[key] = cols[i] ?? ''
+    })
+    return row
+  })
+}
+
+test('rotulos interno some do shell público, da cobertura e do explorador', async ({ page }) => {
+  for (const path of ['/', '/cobertura', '/itens', '/interno/cobertura', '/interno/triagem']) {
+    await page.goto(path)
+    await assertNoRotulosLink(page)
+  }
+})
+
+test('rotulos: worker confere três itens sintéticos e retoma no quarto', async ({ page }) => {
+  if (againstCompose) {
+    await page.goto('/interno/rotulos')
+    await expect(page.getByText('Revisão interna')).toBeVisible()
+    await expect(page.getByText('Conferir o item na fonte')).toBeVisible()
+    await assertNoRotulosLink(page)
+    await expect(page.locator('body')).not.toHaveText(bannedPublic)
+    return
+  }
+
+  await plantRotulosFixtures()
+  await page.goto('/interno/rotulos')
+  await expect(page.getByText('1 de 4')).toBeVisible()
+  await expect(page.getByRole('heading', { name: SYNTHETIC_ITEMS[0].descricao })).toBeVisible()
+  await expect(page.getByText('vr-30 · Cidade Alfa · 2024')).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Documento de origem' })).toHaveAttribute('target', '_blank')
+  await expect(page.getByRole('link', { name: 'API do item' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Compra oficial' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Item oficial' })).toBeVisible()
+  await expect(page.locator('body')).not.toHaveText(ROTULOS_LEAK)
+  await expect(page.locator('body')).not.toHaveText(bannedPublic)
+  await expect(page.locator('body')).not.toHaveText(/hidden_label|cnae_mismatch|0\.99/)
+  await assertNoRotulosLink(page)
+
+  await expect(page.getByRole('button', { name: 'Real' })).toBeEnabled()
+  await page.keyboard.press('1')
+  await expect(page.getByText('2 de 4')).toBeVisible()
+  await expect(page.getByRole('heading', { name: SYNTHETIC_ITEMS[1].descricao })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Voltar' }).click()
+  await expect(page.getByText('1 de 4')).toBeVisible()
+  await expect(page.getByRole('heading', { name: SYNTHETIC_ITEMS[0].descricao })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Real' })).toHaveAttribute('aria-pressed', 'true')
+
+  await page.keyboard.press('1')
+  await expect(page.getByText('2 de 4')).toBeVisible()
+  await page.getByLabel('Notas').fill('unidade conferida')
+  await page.getByRole('button', { name: 'Erro de unidade' }).click()
+  await expect(page.getByText('3 de 4')).toBeVisible()
+  await expect(page.getByRole('heading', { name: SYNTHETIC_ITEMS[2].descricao })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Diferença de especificação' }).click()
+  await expect(page.getByText('4 de 4')).toBeVisible()
+  await expect(page.getByRole('heading', { name: SYNTHETIC_ITEMS[3].descricao })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Item oficial' })).toHaveCount(0)
+
+  const saved = parseAgreement(await readFile(agreementFile(), 'utf8'))
+  expect(saved).toHaveLength(3)
+  expect(saved[0]).toMatchObject({
+    packet_row_id: 'syn-row-001',
+    packet: 'vr-30',
+    city: 'Cidade Alfa',
+    human_label: 'real',
+  })
+  expect(saved[1]).toMatchObject({
+    packet_row_id: 'syn-row-002',
+    human_label: 'unit error',
+    notes: 'unidade conferida',
+  })
+  expect(saved[2]).toMatchObject({
+    packet_row_id: 'syn-row-003',
+    human_label: 'spec difference',
+  })
+  expect(saved.every((row) => /Z$/.test(row.labeled_at ?? ''))).toBeTruthy()
+
+  await page.reload()
+  await expect(page.getByText('4 de 4')).toBeVisible()
+  await expect(page.getByRole('heading', { name: SYNTHETIC_ITEMS[3].descricao })).toBeVisible()
+  await expect(page.locator('body')).not.toHaveText(ROTULOS_LEAK)
+})

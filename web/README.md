@@ -47,4 +47,5 @@ npm run e2e
 O spec não assume campos só do stub. CI do compose também roda esse Playwright.
 A fila interna de triagem fica em `/interno/triagem` e não entra no menu público.
 As contagens internas por detector ficam em `/interno/cobertura` e também ficam fora do menu público.
+A revisão interna de rótulos fica em `/interno/rotulos`, usa o mesmo gate de staging e também fica fora do menu público.
 Não há suíte de unit tests.

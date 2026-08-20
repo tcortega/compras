@@ -1,5 +1,12 @@
 from dagster import AssetExecutionContext, Definitions, ScheduleDefinition, asset, define_asset_job
 
+from compras_ingest.detect_schedule import (
+    ASSET_KEYS as DETECT_ASSET_KEYS,
+    JOB_NAME as DETECT_JOB_NAME,
+    SCHEDULE_CRON as DETECT_SCHEDULE_CRON,
+    SCHEDULE_NAME as DETECT_SCHEDULE_NAME,
+    SCHEDULE_TZ as DETECT_SCHEDULE_TZ,
+)
 from compras_ingest.incremental import (
     DAILY_ASSET_KEYS,
     DAILY_CGU_REASON,
@@ -21,6 +28,7 @@ from compras_ingest.incremental import (
 )
 from compras_ingest.landing import LandingStore
 from compras_ingest.pipeline import (
+    load_normalized_items,
     run_adjacency_and_write,
     run_cobid_and_write,
     run_pncp_consulta_gaps,
@@ -195,11 +203,11 @@ def search_index(context: AssetExecutionContext, warehouse_entities: dict) -> di
 
 @asset(
     group_name="detect",
+    deps=["warehouse_entities"],
     description="TCE-SP/RS co-bid edges and internal CADE screens. Not public. Not a finding.",
 )
-def cobid_graph(context: AssetExecutionContext, warehouse_entities: dict) -> dict:
+def cobid_graph(context: AssetExecutionContext) -> dict:
     settings = _settings()
-    _ = warehouse_entities
     screens, edges_n, screens_n = run_cobid_and_write(settings)
     kinds = sorted({str(v) for v in screens["kind"].to_list()}) if screens.height else []
     context.log.info(
@@ -210,12 +218,12 @@ def cobid_graph(context: AssetExecutionContext, warehouse_entities: dict) -> dic
 
 @asset(
     group_name="detect",
+    deps=["warehouse_entities"],
     description="Receita shared-partner, address, phone, and email edges. Internal only. Not a finding.",
 )
-def fornecedor_adjacency(context: AssetExecutionContext, warehouse_entities: dict) -> dict:
+def fornecedor_adjacency(context: AssetExecutionContext) -> dict:
     settings = _settings()
     store = LandingStore(settings)
-    _ = warehouse_entities
     edges, n = run_adjacency_and_write(settings, store)
     kinds = sorted({str(v) for v in edges["kind"].to_list()}) if edges.height else []
     context.log.info(f"fornecedor_adjacency written n={n} kinds={kinds} public=False")
@@ -224,15 +232,13 @@ def fornecedor_adjacency(context: AssetExecutionContext, warehouse_entities: dic
 
 @asset(
     group_name="detect",
+    deps=["warehouse_entities"],
     description="Run Tier 1 detectors and write internal flags. state=detected. Not public.",
 )
-def tier1_flags(context: AssetExecutionContext, warehouse_entities: dict) -> dict:
+def tier1_flags(context: AssetExecutionContext) -> dict:
     settings = _settings()
     store = LandingStore(settings)
-    items_key = warehouse_entities.get("items_key")
-    if not items_key:
-        raise RuntimeError("warehouse_entities did not persist normalized items")
-    items = store.read_parquet(str(items_key))
+    items = load_normalized_items(store)
     flags, n = run_tier1_and_write_flags(settings, store, items)
     kinds = sorted({str(v) for v in flags["kind"].to_list()}) if flags.height else []
     context.log.info(f"tier1 flags written n={n} kinds={kinds}")
@@ -336,6 +342,22 @@ incremental_land_monthly_schedule = ScheduleDefinition(
     execution_timezone=INCREMENTAL_TZ,
 )
 
+nightly_detector_job = define_asset_job(
+    name=DETECT_JOB_NAME,
+    selection=list(DETECT_ASSET_KEYS),
+    description=(
+        "Nightly rematerialize of existing detect and flag assets after land jobs. "
+        "Reads warehouse and landing. Does not invent a detector."
+    ),
+)
+
+nightly_detector_schedule = ScheduleDefinition(
+    name=DETECT_SCHEDULE_NAME,
+    job=nightly_detector_job,
+    cron_schedule=DETECT_SCHEDULE_CRON,
+    execution_timezone=DETECT_SCHEDULE_TZ,
+)
+
 defs = Definitions(
     assets=[
         catalogo_cnbs,
@@ -359,12 +381,14 @@ defs = Definitions(
         pncp_consulta_gaps_job,
         incremental_land_daily_job,
         incremental_land_monthly_job,
+        nightly_detector_job,
     ],
     schedules=[
         trailing_window_refetch_schedule,
         pncp_consulta_gaps_schedule,
         incremental_land_daily_schedule,
         incremental_land_monthly_schedule,
+        nightly_detector_schedule,
     ],
 )
 
@@ -464,6 +488,7 @@ def assert_asset_graph() -> list[str]:
     assert_refetch_schedule()
     assert_gaps_schedule()
     assert_incremental_schedules()
+    assert_nightly_detector_schedule()
     return keys
 
 
@@ -523,6 +548,27 @@ def assert_incremental_schedules() -> None:
         INCREMENTAL_TZ,
         set(MONTHLY_ASSET_KEYS),
     )
+
+
+def assert_nightly_detector_schedule() -> None:
+    if DETECT_SCHEDULE_TZ != "America/Sao_Paulo":
+        raise RuntimeError(f"nightly detector tz is {DETECT_SCHEDULE_TZ}")
+    if DETECT_SCHEDULE_CRON != "0 6 * * *":
+        raise RuntimeError(f"nightly detector cron is {DETECT_SCHEDULE_CRON} not 0 6 * * *")
+    _assert_one_incremental_schedule(
+        DETECT_SCHEDULE_NAME,
+        DETECT_JOB_NAME,
+        DETECT_SCHEDULE_CRON,
+        DETECT_SCHEDULE_TZ,
+        set(DETECT_ASSET_KEYS),
+    )
+    job = defs.resolve_job_def(DETECT_JOB_NAME)
+    selected = _job_asset_keys(job)
+    extra = selected - set(DETECT_ASSET_KEYS)
+    if extra:
+        raise RuntimeError(f"{DETECT_JOB_NAME} selected extra assets {extra}")
+    if "warehouse_entities" in selected:
+        raise RuntimeError(f"{DETECT_JOB_NAME} must not rematerialize warehouse_entities")
 
 
 def _assert_one_incremental_schedule(

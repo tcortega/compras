@@ -29,7 +29,7 @@ _IBGE_NAMES = ("unidadeorgaocodigoibge", "codibgeunidadecompradora", "municipioi
 _ESFERA_NAMES = ("orgaoentidadeesferaid", "esferacompradora", "esfera")
 _PODER_NAMES = ("orgaoentidadepoderid", "podercomprador", "poder")
 _ID_NAMES = ("idcompra",)
-_ANO_NAMES = ("anocomprapncp", "ano")
+_ANO_NAMES = ("anocomprapncp", "anocompra", "ano")
 _READ_CHUNK = 256 * 1024
 
 
@@ -80,16 +80,26 @@ def _fixture_year_frames(settings: Settings) -> dict[int, pl.DataFrame]:
 def _fetch_incremental_or_year_frames(settings: Settings, store: LandingStore) -> dict[int, pl.DataFrame]:
     # Incremental: diario COMPRA+ITEM for trailing day if both exist, else mensal.
     # Missing D1 years with no year= parquet still backfill from oficial anual.
+    # If today has no diario/mensal pair, skip incremental and land oficial anual.
     day = settings.trailing_window_as_of or date.today()
-    official = resolve_compras_gov_incremental(day, settings.compras_gov_base.rstrip("/"))
-    parts = _stream_official_pair(settings, official)
+    parts: dict[int, pl.DataFrame] = {}
+    try:
+        official = resolve_compras_gov_incremental(day, settings.compras_gov_base.rstrip("/"))
+        parts = _stream_official_pair(settings, official)
+    except RuntimeError as exc:
+        if "COMPRA+ITEM missing" not in str(exc):
+            raise
+        parts = {}
     existing = _landed_years(store)
     missing = [year for year in settings.compras_gov_years if year not in parts and year not in existing]
     for year in missing:
         anual = fixture_compras_gov_official(year, settings.compras_gov_base.rstrip("/"))
         extra = _stream_official_pair(settings, anual)
+        if year in extra:
+            parts[year] = extra[year]
         for key, frame in extra.items():
-            parts[key] = frame
+            if key not in parts:
+                parts[key] = frame
     return parts
 
 
@@ -112,6 +122,10 @@ def _stream_official_pair(settings: Settings, official) -> dict[int, pl.DataFram
         item_f.unlink(missing_ok=True)
     if not joined.height:
         return {}
+    # Anual official files are the year extract. Do not rebucket by anocomprapncp
+    # or 2024 municipal rows land under 2025/2026 when those files use ano_compra.
+    if official.cadence == "anual":
+        return {official.year: joined}
     return _split_by_year(joined, settings.compras_gov_years)
 
 

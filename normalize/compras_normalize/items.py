@@ -93,7 +93,7 @@ def _normalize_row(
         "modalidade": _first(row, "modalidadenome", "modalidade") or "",
         "modalidade_codigo": _first(row, "codigomodalidade", "modalidade_codigo") or "",
         "objeto": _first(row, "objetocompra", "objeto") or "",
-        "ano": _first(row, "anocomprapncp", "ano") or (str(publicado.year) if publicado else ""),
+        "ano": _first(row, "anocomprapncp", "anocompra", "ano") or (str(publicado.year) if publicado else ""),
         "valor_homologado": _dec_str(parse_decimal(_first(row, "valortotalhomologado"))),
         "publicado_em": publicado.isoformat() if publicado else "",
         "data_resultado": resultado.isoformat() if resultado else "",

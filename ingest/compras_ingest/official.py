@@ -203,6 +203,16 @@ def resolve_tce_rs_licitacon(year: int, fetch: bool = False) -> TceRsOfficial:
         return official
 
 
+def fixture_receita_official() -> ReceitaOfficial:
+    return ReceitaOfficial(
+        RFB_SHARE_URL,
+        RFB_WEBDAV_URL,
+        RFB_SHARE_TOKEN,
+        "2024-12",
+        ("Empresas0.zip", "Estabelecimentos0.zip", "Socios0.zip"),
+    )
+
+
 def fixture_ocds_official(year: int) -> OcdsOfficial:
     return OcdsOfficial(
         OCDS_OCP_REGISTRY_URL,

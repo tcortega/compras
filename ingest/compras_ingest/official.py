@@ -2,39 +2,33 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from urllib.parse import urljoin
 
 import httpx
 
-# Live official hosts. Verified 2026-08-20. Do not invent replacements.
-OCDS_OPENAPI_URL = "https://dadosabertos.compras.gov.br/v3/api-docs"
-OCDS_RELEASES_PATH = "/modulo-ocds/1_releases"
-OCDS_PUBLISHER_URL = "https://dadosabertos.compras.gov.br/modulo-ocds/1_releases"
+# BUILD_SPEC Tier A source 2. Live page verified 2026-08-20.
 OCDS_OCP_REGISTRY_URL = "https://data.open-contracting.org/en/publication/157"
-OCDS_OCP_JSONL_URL = "https://data.open-contracting.org/en/publication/157/download?name={year}.jsonl.gz"
 
+# BUILD_SPEC Tier A source 4. Live RFB Nextcloud index verified 2026-08-20.
 RFB_SHARE_URL = "https://arquivos.receitafederal.gov.br/index.php/s/YggdBLfdninEJX9"
 RFB_WEBDAV_URL = "https://arquivos.receitafederal.gov.br/public.php/webdav/"
 RFB_SHARE_TOKEN = "YggdBLfdninEJX9"
 
-OCDS_HOSTS = frozenset(
-    {
-        "dadosabertos.compras.gov.br",
-        "data.open-contracting.org",
-        "fastly.data.open-contracting.org",
-    }
-)
-RFB_HOSTS = frozenset({"arquivos.receitafederal.gov.br", "dados.gov.br"})
+OCDS_HOSTS = frozenset({"data.open-contracting.org", "fastly.data.open-contracting.org"})
+RFB_HOSTS = frozenset({"arquivos.receitafederal.gov.br"})
 USER_AGENT = "compras-ingest/0.1"
 _MONTH = re.compile(r"^\d{4}-\d{2}$")
 _PROP_NAME = re.compile(r"<d:displayname>([^<]+)</d:displayname>")
+_JSONL = re.compile(
+    r"""(?:href|contentUrl)\s*[=\:]\s*["']([^"']+?\.jsonl\.gz)["']""",
+    re.IGNORECASE,
+)
 
 
 @dataclass(frozen=True)
 class OcdsOfficial:
-    publisher_url: str
-    openapi_url: str
-    ocp_registry_url: str
-    ocp_jsonl_url: str
+    registry_url: str
+    jsonl_url: str
     year: int
 
 
@@ -63,22 +57,19 @@ def assert_official_host(url: str, allowed: frozenset[str]) -> str:
 
 
 def resolve_ocds_feed(year: int) -> OcdsOfficial:
-    """Hit live OpenAPI + OCP registry. Fail if official URL cannot be resolved."""
-    jsonl = OCDS_OCP_JSONL_URL.format(year=year)
+    """Read live OCP publication 157. Fail if its jsonl download cannot be resolved."""
     with http_client() as client:
-        spec = _get_json(client, OCDS_OPENAPI_URL, OCDS_HOSTS)
-        paths = spec.get("paths") or {}
-        if OCDS_RELEASES_PATH not in paths:
-            raise RuntimeError(f"OpenAPI missing {OCDS_RELEASES_PATH}")
-        _require_ok(client, OCDS_OCP_REGISTRY_URL, OCDS_HOSTS)
-        _require_ok(client, jsonl, OCDS_HOSTS)
-    return OcdsOfficial(
-        publisher_url=OCDS_PUBLISHER_URL,
-        openapi_url=OCDS_OPENAPI_URL,
-        ocp_registry_url=OCDS_OCP_REGISTRY_URL,
-        ocp_jsonl_url=jsonl,
-        year=year,
-    )
+        resp = client.get(OCDS_OCP_REGISTRY_URL)
+        resp.raise_for_status()
+        assert_official_host(str(resp.url), OCDS_HOSTS)
+        download = _ocp_jsonl_from_page(resp.text, year)
+        if not download:
+            raise RuntimeError("OCP publication 157 page has no jsonl download")
+        assert_official_host(download, OCDS_HOSTS)
+        if "/publication/157/" not in download:
+            raise RuntimeError(f"OCDS download is not publication 157: {download}")
+        _require_ok(client, download, OCDS_HOSTS)
+    return OcdsOfficial(OCDS_OCP_REGISTRY_URL, download, year)
 
 
 def resolve_receita_index() -> ReceitaOfficial:
@@ -116,15 +107,27 @@ def download_to(
         dest.flush()
 
 
-def _get_json(client: httpx.Client, url: str, allowed: frozenset[str]) -> dict:
-    assert_official_host(url, allowed)
-    resp = client.get(url)
-    resp.raise_for_status()
-    assert_official_host(str(resp.url), allowed)
-    data = resp.json()
-    if not isinstance(data, dict):
-        raise RuntimeError(f"expected JSON object from {url}")
-    return data
+def _ocp_jsonl_from_page(html: str, year: int) -> str:
+    found: list[str] = []
+    for raw in _JSONL.findall(html):
+        abs_url = urljoin(OCDS_OCP_REGISTRY_URL, raw)
+        if "data.open-contracting.org" not in abs_url:
+            continue
+        if "/publication/157/" not in abs_url:
+            continue
+        if not abs_url.endswith(".jsonl.gz"):
+            continue
+        found.append(abs_url)
+    if not found:
+        return ""
+    year_name = f"name={year}.jsonl.gz"
+    for url in found:
+        if year_name in url:
+            return url
+    for url in found:
+        if "name=full.jsonl.gz" in url:
+            return url
+    return found[0]
 
 
 def _require_ok(client: httpx.Client, url: str, allowed: frozenset[str]) -> None:

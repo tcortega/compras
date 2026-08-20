@@ -39,7 +39,7 @@ def receita_cnpj(context: AssetExecutionContext, compras_gov: dict) -> dict:
 
 @asset(
     group_name="tier_a",
-    description="Official PNCP/OCP OCDS feed. Schema cross-check. Not primary.",
+    description="OCP OCDS republished feed (publication 157). Schema cross-check. Not primary.",
 )
 def ocds_crosscheck(context: AssetExecutionContext, compras_gov: dict) -> dict:
     settings = _settings()

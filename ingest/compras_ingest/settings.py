@@ -29,9 +29,7 @@ class Settings:
     compras_gov_year: int
     ocds_path: Path | None
     ocds_fetch: bool
-    ocds_source: str
     ocds_year: int
-    ocds_buyer_ids: tuple[str, ...]
     catalogo_cnbs_dir: Path | None
     receita_cnpj_path: Path | None
     receita_cnpj_fetch: bool
@@ -64,9 +62,7 @@ class Settings:
             compras_gov_year=int(os.environ.get("COMPRAS_GOV_YEAR", "2024")),
             ocds_path=_opt_path("OCDS_PATH", fixture / "ocds" / "releases.jsonl"),
             ocds_fetch=_bool_env("OCDS_FETCH"),
-            ocds_source=os.environ.get("OCDS_SOURCE", "ocp").strip().lower() or "ocp",
             ocds_year=int(os.environ.get("OCDS_YEAR", os.environ.get("COMPRAS_GOV_YEAR", "2024"))),
-            ocds_buyer_ids=_csv_env("OCDS_BUYER_ID"),
             catalogo_cnbs_dir=_opt_path("CATALOGO_CNBS_DIR", fixture / "catalogo_cnbs"),
             receita_cnpj_path=_opt_path("RECEITA_CNPJ_PATH", fixture / "receita_cnpj"),
             receita_cnpj_fetch=_bool_env("RECEITA_CNPJ_FETCH"),

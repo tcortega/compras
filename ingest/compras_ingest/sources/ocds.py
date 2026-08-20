@@ -3,11 +3,8 @@ from __future__ import annotations
 import gzip
 import json
 import tempfile
-from calendar import monthrange
-from datetime import date
 from pathlib import Path
 
-import httpx
 import polars as pl
 
 from compras_ingest.landing import LandingRef, LandingStore, partition_date_of
@@ -46,9 +43,8 @@ def land_ocds(
     dates = [parse_datetime(r.get("date")) for r in rows]
     ref = store.write_parquet("ocds", partition_date_of(dates), df)
     report = _crosscheck(rows, compras_ids or set())
-    report["publisher_url"] = official.publisher_url
-    report["ocp_jsonl_url"] = official.ocp_jsonl_url
-    report["ocp_registry_url"] = official.ocp_registry_url
+    report["ocp_registry_url"] = official.registry_url
+    report["ocp_jsonl_url"] = official.jsonl_url
     report["mode"] = "fetch" if settings.ocds_fetch else "fixture"
     store.put(
         f"ocds/date={ref.partition_date}/{ref.sha256}.crosscheck.json",
@@ -64,19 +60,17 @@ def load_ocds(
 ) -> list[dict]:
     if settings.ocds_fetch:
         official = official or resolve_ocds_feed(settings.ocds_year)
-        if settings.ocds_source == "pncp":
-            return _fetch_publisher(settings, official, compras_ids or set())
         return _fetch_ocp_jsonl(official, compras_ids)
     path = settings.ocds_path
     if path is None:
         raise FileNotFoundError("OCDS_PATH missing and OCDS_FETCH is off")
-    return _load_jsonl(path, None)
+    return _load_jsonl(path)
 
 
 def _fetch_ocp_jsonl(official: OcdsOfficial, compras_ids: set[str] | None) -> list[dict]:
     rows: list[dict] = []
     with http_client(timeout=180.0) as client, tempfile.NamedTemporaryFile(suffix=".jsonl.gz") as tmp:
-        download_to(client, official.ocp_jsonl_url, tmp, OCDS_HOSTS)
+        download_to(client, official.jsonl_url, tmp, OCDS_HOSTS)
         with gzip.open(tmp.name, "rt", encoding="utf-8") as fh:
             for line in fh:
                 if not line.strip():
@@ -88,70 +82,12 @@ def _fetch_ocp_jsonl(official: OcdsOfficial, compras_ids: set[str] | None) -> li
     return rows
 
 
-def _fetch_publisher(settings: Settings, official: OcdsOfficial, compras_ids: set[str]) -> list[dict]:
-    buyers = [b for b in settings.ocds_buyer_ids if b]
-    if not buyers:
-        buyers = sorted({_buyer_from_pncp(c) for c in compras_ids if _buyer_from_pncp(c)})
-    if not buyers:
-        raise ValueError("PNCP OCDS fetch needs OCDS_BUYER_ID or compras PNCP ids")
-    year = official.year
-    rows: list[dict] = []
-    with http_client(timeout=90.0) as client:
-        for buyer in buyers:
-            for month in range(1, 13):
-                last = monthrange(year, month)[1]
-                start = date(year, month, 1).isoformat()
-                end = date(year, month, last).isoformat()
-                page = 1
-                while True:
-                    payload = _publisher_page(client, official.publisher_url, buyer, start, end, page)
-                    releases = payload.get("releases") or []
-                    if not releases:
-                        break
-                    for obj in releases:
-                        row = _row_from_obj(obj)
-                        if compras_ids and not _matches_compras(row, compras_ids):
-                            continue
-                        rows.append(row)
-                    page += 1
-                    if len(releases) < 10:
-                        break
-    return rows
-
-
-def _publisher_page(
-    client: httpx.Client,
-    url: str,
-    buyer: str,
-    start: str,
-    end: str,
-    page: int,
-) -> dict:
-    resp = client.get(
-        url,
-        params={
-            "buyerID": buyer,
-            "releaseStartDate": start,
-            "releaseEndDate": end,
-            "page": page,
-        },
-    )
-    resp.raise_for_status()
-    data = resp.json()
-    if not isinstance(data, dict):
-        raise RuntimeError("PNCP OCDS page is not an object")
-    return data
-
-
-def _load_jsonl(path: Path, compras_ids: set[str] | None) -> list[dict]:
+def _load_jsonl(path: Path) -> list[dict]:
     rows: list[dict] = []
     for line in path.read_text(encoding="utf-8").splitlines():
         if not line.strip():
             continue
-        row = _row_from_obj(json.loads(line))
-        if compras_ids and not _matches_compras(row, compras_ids):
-            continue
-        rows.append(row)
+        rows.append(_row_from_obj(json.loads(line)))
     return rows
 
 
@@ -181,11 +117,6 @@ def _matches_compras(row: dict, compras_ids: set[str]) -> bool:
     if ocid.startswith("ocds-914jxj-") and ocid.removeprefix("ocds-914jxj-") in compras_ids:
         return True
     return any(ocid.endswith(c) or f"ocds-914jxj-{c}" == ocid for c in compras_ids)
-
-
-def _buyer_from_pncp(pncp_id: str) -> str:
-    digits = "".join(c for c in pncp_id if c.isdigit())
-    return digits[:14] if len(digits) >= 14 else ""
 
 
 def _crosscheck(rows: list[dict], compras_ids: set[str]) -> dict:

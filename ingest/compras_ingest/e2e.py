@@ -8,7 +8,6 @@ from compras_ingest.cpf import assert_no_raw_cpf, mask_cpf
 from compras_ingest.landing import LandingStore
 from compras_ingest.official import (
     OCDS_OCP_REGISTRY_URL,
-    OCDS_PUBLISHER_URL,
     RFB_SHARE_URL,
     resolve_ocds_feed,
     resolve_receita_index,
@@ -88,19 +87,21 @@ def _assert_official_urls(settings: Settings) -> dict:
         rfb = resolve_receita_index()
     except Exception as exc:
         raise SystemExit(f"official URL resolve failed: {exc}") from exc
-    if ocds.publisher_url != OCDS_PUBLISHER_URL:
-        raise SystemExit(f"OCDS publisher URL is not official: {ocds.publisher_url}")
-    if ocds.ocp_registry_url != OCDS_OCP_REGISTRY_URL:
-        raise SystemExit(f"OCDS OCP registry URL is not official: {ocds.ocp_registry_url}")
-    if "data.open-contracting.org" not in ocds.ocp_jsonl_url:
-        raise SystemExit(f"OCDS OCP jsonl URL is not official: {ocds.ocp_jsonl_url}")
+    if ocds.registry_url != OCDS_OCP_REGISTRY_URL:
+        raise SystemExit(f"OCDS registry URL is not OCP publication 157: {ocds.registry_url}")
+    if "data.open-contracting.org" not in ocds.jsonl_url:
+        raise SystemExit(f"OCDS download host is not data.open-contracting.org: {ocds.jsonl_url}")
+    if "/publication/157/" not in ocds.jsonl_url or not ocds.jsonl_url.endswith(".jsonl.gz"):
+        raise SystemExit(f"OCDS download is not the publication 157 jsonl: {ocds.jsonl_url}")
+    if f"name={settings.ocds_year}.jsonl.gz" not in ocds.jsonl_url and "name=full.jsonl.gz" not in ocds.jsonl_url:
+        raise SystemExit(f"OCDS download is not a year or full jsonl from the OCP page: {ocds.jsonl_url}")
     if rfb.index_url != RFB_SHARE_URL:
         raise SystemExit(f"Receita index URL is not official: {rfb.index_url}")
     if "arquivos.receitafederal.gov.br" not in rfb.webdav_root:
         raise SystemExit(f"Receita WebDAV host is not official: {rfb.webdav_root}")
     if not rfb.month or not rfb.files:
         raise SystemExit("Receita index resolved without month or files")
-    return {"ocds_jsonl": ocds.ocp_jsonl_url, "rfb_index": rfb.index_url, "rfb_month": rfb.month}
+    return {"ocds_jsonl": ocds.jsonl_url, "rfb_index": rfb.index_url, "rfb_month": rfb.month}
 
 
 def _assert_landing(settings: Settings, sha256: str) -> None:

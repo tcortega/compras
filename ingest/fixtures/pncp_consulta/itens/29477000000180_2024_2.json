@@ -1,0 +1,16 @@
+[
+  {
+    "numeroItem": 1,
+    "descricao": "CANETA ESFEROGRAFICA AZUL",
+    "materialOuServico": "M",
+    "materialOuServicoNome": "Material",
+    "valorUnitarioEstimado": 50.0,
+    "valorTotal": 25000.0,
+    "quantidade": 500.0,
+    "unidadeMedida": "CX",
+    "catalogoCodigoItem": "654321",
+    "temResultado": true,
+    "situacaoCompraItem": 2,
+    "situacaoCompraItemNome": "Homologado"
+  }
+]

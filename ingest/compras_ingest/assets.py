@@ -6,6 +6,7 @@ from compras_ingest.settings import Settings
 from compras_ingest.sources.catalogo_cnbs import land_catalogo_cnbs
 from compras_ingest.sources.compras_gov import land_compras_gov
 from compras_ingest.sources.ocds import land_ocds
+from compras_ingest.sources.pncp_consulta import land_pncp_consulta
 from compras_ingest.sources.receita_cnpj import cnpj_basicos_from_frame, land_receita_cnpj
 
 
@@ -51,6 +52,16 @@ def ocds_crosscheck(context: AssetExecutionContext, compras_gov: dict) -> dict:
 
 
 @asset(
+    group_name="tier_b",
+    description="PNCP consulta API. Contratacoes and items. 1s spacing. Resumable. Not the Compras.gov.br bulk.",
+)
+def pncp_consulta(context: AssetExecutionContext) -> dict:
+    ref, df, report = land_pncp_consulta(_settings())
+    context.log.info(f"pncp_consulta rows={df.height} sha={ref.sha256} report={report}")
+    return {**ref.as_dict(), **report}
+
+
+@asset(
     group_name="warehouse",
     description="Read landed parquet, normalize items, write Postgres entities and ClickHouse facts. Python never calls C#.",
 )
@@ -60,8 +71,10 @@ def warehouse_entities(
     catalogo_cnbs: dict,
     receita_cnpj: dict,
     ocds_crosscheck: dict,
+    pncp_consulta: dict,
 ) -> dict:
     _ = ocds_crosscheck
+    _ = pncp_consulta
     settings = _settings()
     store = LandingStore(settings)
     items, summary = warehouse_from_landing(settings, store, compras_gov, catalogo_cnbs, receita_cnpj)
@@ -89,7 +102,15 @@ def tier1_flags(context: AssetExecutionContext, warehouse_entities: dict) -> dic
 
 
 defs = Definitions(
-    assets=[catalogo_cnbs, receita_cnpj, compras_gov, ocds_crosscheck, warehouse_entities, tier1_flags]
+    assets=[
+        catalogo_cnbs,
+        receita_cnpj,
+        compras_gov,
+        ocds_crosscheck,
+        pncp_consulta,
+        warehouse_entities,
+        tier1_flags,
+    ]
 )
 
 
@@ -99,13 +120,14 @@ def required_asset_keys() -> set[str]:
         "receita_cnpj",
         "compras_gov",
         "ocds_crosscheck",
+        "pncp_consulta",
         "warehouse_entities",
         "tier1_flags",
     }
 
 
 def required_warehouse_parents() -> set[str]:
-    return {"compras_gov", "catalogo_cnbs", "receita_cnpj", "ocds_crosscheck"}
+    return {"compras_gov", "catalogo_cnbs", "receita_cnpj", "ocds_crosscheck", "pncp_consulta"}
 
 
 def required_receita_parents() -> set[str]:

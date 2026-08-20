@@ -1,0 +1,38 @@
+{
+  "data": [
+    {
+      "valorTotalHomologado": 25000.0,
+      "srp": false,
+      "orgaoEntidade": {
+        "cnpj": "29477000000180",
+        "razaoSocial": "PREFEITURA MUNICIPAL DE VOLTA REDONDA",
+        "poderId": "E",
+        "esferaId": "M"
+      },
+      "anoCompra": 2024,
+      "sequencialCompra": 2,
+      "dataPublicacaoPncp": "2024-03-16T00:00:00",
+      "numeroCompra": "2",
+      "unidadeOrgao": {
+        "ufNome": "Rio de Janeiro",
+        "codigoUnidade": "1",
+        "nomeUnidade": "PREFEITURA MUNICIPAL DE VOLTA REDONDA",
+        "ufSigla": "RJ",
+        "municipioNome": "Volta Redonda",
+        "codigoIbge": "3306305"
+      },
+      "objetoCompra": "Aquisicao de caneta esferografica azul",
+      "numeroControlePNCP": "29477000000180-1-000002/2024",
+      "modalidadeId": 8,
+      "modalidadeNome": "Dispensa",
+      "situacaoCompraId": 1,
+      "situacaoCompraNome": "Divulgada no PNCP",
+      "valorTotalEstimado": 25000.0
+    }
+  ],
+  "totalRegistros": 2,
+  "totalPaginas": 2,
+  "numeroPagina": 2,
+  "paginasRestantes": 0,
+  "empty": false
+}

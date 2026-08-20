@@ -63,6 +63,16 @@ class LandingStore:
             return (self._root / key).resolve().as_uri()
         return f"s3://{self._root}/{key}"
 
+    def put_replace(self, key: str, data: bytes) -> str:
+        if self._kind == "file":
+            path = self._root / key
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(data)
+            return path.resolve().as_uri()
+        assert self._s3 is not None
+        self._s3.put_object(Bucket=self._root, Key=key, Body=data)
+        return f"s3://{self._root}/{key}"
+
     def put(self, key: str, data: bytes) -> str:
         if self._kind == "file":
             path = self._root / key

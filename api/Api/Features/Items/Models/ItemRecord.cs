@@ -27,6 +27,8 @@ public sealed record ItemRecord
 
 	public decimal? ValorTotal { get; init; }
 
+	public decimal? ValorPorUnidadeCanonica { get; init; }
+
 	public required string Uf { get; init; }
 
 	public required string Quarter { get; init; }
@@ -51,6 +53,7 @@ public sealed record ItemRecord
 			UnidadeCanonica = item.UnidadeCanonica,
 			ValorUnitario = item.ValorUnitario,
 			ValorTotal = item.ValorTotal,
+			ValorPorUnidadeCanonica = item.ValorPorUnidadeCanonica,
 			Uf = item.Uf,
 			Quarter = item.Quarter,
 			SnapshotId = item.SnapshotId,

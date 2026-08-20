@@ -44,8 +44,21 @@ from compras_ingest.sources.pncp_consulta import (
 from compras_ingest.sources.receita_cnpj import cnpj_basicos_from_frame, land_receita_cnpj
 from compras_ingest.sources.tce_sp_licitacao import SOURCE as TCE_SP_SOURCE
 from compras_ingest.sources.tce_sp_licitacao import land_tce_sp_licitacao
-from compras_ingest.warehouse import fetch_contratacao, fetch_flags, fetch_items_for, fetch_one_orgao, fetch_raw_text_blobs, write_flags
-from compras_normalize.text import fold
+from compras_ingest.warehouse import (
+    fact_columns,
+    fetch_all_items,
+    fetch_contratacao,
+    fetch_flags,
+    fetch_item_facts,
+    fetch_items_for,
+    fetch_one_orgao,
+    fetch_raw_text_blobs,
+    item_columns,
+    write_flags,
+)
+from decimal import Decimal
+
+from compras_normalize.text import fold, parse_decimal
 
 
 ORGAO_CNPJ = "29477000000180"
@@ -92,6 +105,7 @@ def main() -> int:
     items = fetch_items_for(settings, str(contratacao["id"]))
     if not items:
         raise SystemExit("missing item rows for contratacao")
+    _assert_units(settings, result.items)
     store = LandingStore(settings)
     mutate = str(result.items["record_id"][0])
     land_second_snapshot(settings, mutate, store)
@@ -133,6 +147,111 @@ def main() -> int:
     print(f"orgao={orgao['cnpj']} contratacao={contratacao['pncpId']} items={len(items)}")
     print(f"flags={sorted(kinds)}")
     return 0
+
+
+def _assert_units(settings, normalized) -> None:
+    if "unidade_canonica" not in normalized.columns:
+        raise SystemExit("normalize missing unidade_canonica")
+    price_col = (
+        "valor_por_unidade_canonica"
+        if "valor_por_unidade_canonica" in normalized.columns
+        else "valor_unitario_base"
+    )
+    if price_col not in normalized.columns:
+        raise SystemExit("normalize missing valor_por_unidade_canonica")
+    if all(v in (None, "") for v in normalized["unidade_canonica"].to_list()):
+        raise SystemExit("normalize unidade_canonica always null")
+    if all(v in (None, "") for v in normalized[price_col].to_list()):
+        raise SystemExit("normalize valor_por_unidade_canonica always null")
+
+    cols = item_columns(settings)
+    if "unidadeCanonica" not in cols:
+        raise SystemExit("postgres item missing unidadeCanonica")
+    if "valorPorUnidadeCanonica" not in cols:
+        raise SystemExit("postgres item missing valorPorUnidadeCanonica")
+    stored = fetch_all_items(settings)
+    if not stored:
+        raise SystemExit("postgres item is empty")
+    if all(row.get("unidadeCanonica") in (None, "") for row in stored):
+        raise SystemExit("postgres unidadeCanonica always null")
+    if all(row.get("valorPorUnidadeCanonica") is None for row in stored):
+        raise SystemExit("postgres valorPorUnidadeCanonica always null")
+
+    by_unit = {}
+    for row in stored:
+        by_unit.setdefault(fold(row.get("unidadeMedida")), []).append(row)
+
+    cx = by_unit.get("cx") or []
+    if not cx:
+        raise SystemExit("fixture missing CX item")
+    if str(cx[0].get("unidadeCanonica") or "") != "cx":
+        raise SystemExit(f"CX canonical is not cx: {cx[0].get('unidadeCanonica')}")
+    cx_price = parse_decimal(cx[0].get("valorPorUnidadeCanonica"))
+    cx_unit = parse_decimal(cx[0].get("valorUnitario"))
+    if cx_price is None or cx_unit is None or abs(cx_price - cx_unit) > Decimal("0.000001"):
+        raise SystemExit(f"CX base price is not real: {cx_price}")
+
+    kg = by_unit.get("kg") or []
+    if not kg:
+        raise SystemExit("fixture missing KG item")
+    if str(kg[0].get("unidadeCanonica") or "") != "kg":
+        raise SystemExit(f"KG canonical is not kg: {kg[0].get('unidadeCanonica')}")
+    kg_price = parse_decimal(kg[0].get("valorPorUnidadeCanonica"))
+    kg_unit = parse_decimal(kg[0].get("valorUnitario"))
+    if kg_price is None or kg_unit is None or abs(kg_price - kg_unit) > Decimal("0.000001"):
+        raise SystemExit(f"KG base price is not real: {kg_price}")
+
+    grams = by_unit.get("g") or []
+    if not grams:
+        raise SystemExit("fixture missing G item")
+    if str(grams[0].get("unidadeCanonica") or "") != "kg":
+        raise SystemExit(f"G canonical is not kg: {grams[0].get('unidadeCanonica')}")
+    g_price = parse_decimal(grams[0].get("valorPorUnidadeCanonica"))
+    g_unit = parse_decimal(grams[0].get("valorUnitario"))
+    if g_unit is None or g_price is None:
+        raise SystemExit("G item missing prices")
+    expected = (g_unit / Decimal("0.001")).quantize(Decimal("0.000001"))
+    if abs(g_price - expected) > Decimal("0.000001"):
+        raise SystemExit(f"G base price {g_price} != {expected}")
+    if g_price == g_unit:
+        raise SystemExit("G base price equals source price; factor was not applied")
+
+    unknown = by_unit.get("foobar") or []
+    if not unknown:
+        raise SystemExit("fixture missing unknown unit item")
+    if str(unknown[0].get("unidadeCanonica") or "") != "unknown":
+        raise SystemExit(f"unknown unit was invented as {unknown[0].get('unidadeCanonica')}")
+    if unknown[0].get("valorPorUnidadeCanonica") is not None:
+        raise SystemExit("unknown unit invented a base-unit price")
+
+    ch_cols = fact_columns(settings)
+    if "unidade_canonica" not in ch_cols:
+        raise SystemExit("clickhouse item_fact missing unidade_canonica")
+    if "valor_unitario_base" not in ch_cols and "valor_por_unidade_canonica" not in ch_cols:
+        raise SystemExit("clickhouse item_fact missing valor_por_unidade_canonica")
+    facts = fetch_item_facts(settings)
+    if not facts:
+        raise SystemExit("clickhouse item_fact is empty")
+    if all(row.get("unidade_canonica") in (None, "") for row in facts):
+        raise SystemExit("clickhouse unidade_canonica always null")
+    ch_prices = [
+        row.get("valor_por_unidade_canonica")
+        if row.get("valor_por_unidade_canonica") is not None
+        else row.get("valor_unitario_base")
+        for row in facts
+    ]
+    if all(v is None for v in ch_prices):
+        raise SystemExit("clickhouse valor_por_unidade_canonica always null")
+    fact_by_unit = {}
+    for row in facts:
+        fact_by_unit.setdefault(fold(row.get("unidade_medida")), []).append(row)
+    if str((fact_by_unit.get("cx") or [{}])[0].get("unidade_canonica") or "") != "cx":
+        raise SystemExit("clickhouse CX fact missing canonical cx")
+    if str((fact_by_unit.get("foobar") or [{}])[0].get("unidade_canonica") or "") != "unknown":
+        raise SystemExit("clickhouse invented a unit for FOOBAR")
+    foobar_price = (fact_by_unit.get("foobar") or [{}])[0]
+    if foobar_price.get("valor_por_unidade_canonica") is not None or foobar_price.get("valor_unitario_base") is not None:
+        raise SystemExit("clickhouse invented a base price for unknown unit")
 
 
 def _check_defs() -> None:

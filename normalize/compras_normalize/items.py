@@ -6,7 +6,7 @@ import polars as pl
 
 from compras_normalize.catalog import Catalog
 from compras_normalize.text import fold, parse_date, parse_decimal, parse_datetime, quarter_of
-from compras_normalize.units import UnitTable
+from compras_normalize.units import UnitMatch, UnitTable
 
 _ESFERA = {
     "f": "federal",
@@ -57,10 +57,7 @@ def _normalize_row(
         _first(row, "valorunitarioresultado", "valorunitariohomologado", "valorunitario", "valorunitarioestimado")
     )
     total = parse_decimal(_first(row, "valortotalresultado", "valortotal"))
-    if unit_price is not None and unit.to_base_factor != 0:
-        price_base = (unit_price / unit.to_base_factor).quantize(Decimal("0.000001"))
-    else:
-        price_base = None
+    price_base = _price_per_canonical(unit, unit_price, qty, total)
     publicado = parse_datetime(_first(row, "datapublicacaopncp", "datainclusaopncp"))
     fornecedor_cnpj = _digits(_first(row, "codfornecedor", "nifornecedor", "fornecedor_cnpj"))
     opened_on = None
@@ -101,6 +98,7 @@ def _normalize_row(
         "unit_parse_confidence": unit.confidence,
         "valor_unitario": _dec_str(unit_price),
         "valor_total": _dec_str(total),
+        "valor_por_unidade_canonica": _dec_str(price_base),
         "valor_unitario_base": _dec_str(price_base),
         "base_unit": unit.base_unit,
         "uf_item": (_first(row, "unidadeorgaoufsigla", "uf") or "").upper(),
@@ -151,6 +149,22 @@ def _digits(value: str | None) -> str:
     if not value:
         return ""
     return "".join(c for c in value if c.isdigit())
+
+
+def _price_per_canonical(
+    unit: UnitMatch, unit_price: Decimal | None, qty: Decimal, total: Decimal | None
+) -> Decimal | None:
+    if unit.canonical == "unknown" or unit.confidence == "unknown":
+        return None
+    factor = unit.to_base_factor
+    if factor == 0:
+        return None
+    price = unit_price
+    if price is None and total is not None and qty != 0:
+        price = total / qty
+    if price is None:
+        return None
+    return (price / factor).quantize(Decimal("0.000001"))
 
 
 def _dec_str(value: Decimal | None) -> str:

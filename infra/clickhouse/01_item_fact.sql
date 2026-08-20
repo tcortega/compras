@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS compras.item_fact
     valor_unitario Nullable(Float64),
     valor_total Nullable(Float64),
     valor_unitario_base Nullable(Float64),
+    valor_por_unidade_canonica Nullable(Float64),
     uf String,
     quarter String,
     snapshot_id String,
@@ -26,3 +27,5 @@ CREATE TABLE IF NOT EXISTS compras.item_fact
 )
 ENGINE = ReplacingMergeTree
 ORDER BY (uf, quarter, item_id);
+
+ALTER TABLE compras.item_fact ADD COLUMN IF NOT EXISTS valor_por_unidade_canonica Nullable(Float64);

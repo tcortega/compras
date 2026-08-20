@@ -32,3 +32,9 @@ Não há ranking de partido nem de político.
 O warehouse é o contrato.
 O Python nunca chama o C#.
 O C# nunca executa um detector.
+
+`unidadeMedida` é texto livre.
+Cada item recebe `unidadeCanonica` a partir da tabela em `normalize/compras_normalize/data/unidade_medida.csv`.
+Unidade sem correspondência permanece `unknown`.
+`valorPorUnidadeCanonica` é o preço por unidade canônica (`valorUnitario / to_base_factor`).
+Unidade desconhecida não inventa preço comparável.

@@ -19,12 +19,14 @@ export const SLICE_MUNICIPIOS = [
   { nome: 'Caruaru', uf: 'PE', ibge: '2604106' },
   { nome: 'Anápolis', uf: 'GO', ibge: '5201108' },
   { nome: 'Vila Velha', uf: 'ES', ibge: '3205200' },
+  { nome: 'Campina Grande', uf: 'PB', ibge: '2504009' },
+  { nome: 'Caucaia', uf: 'CE', ibge: '2303709' },
 ] as const
 
-export const SLICE_BRAND = 'Onze municípios · 2024'
+export const SLICE_BRAND = 'Treze municípios · 2024'
 
 export const SLICE_LABEL =
-  'Volta Redonda e Niterói (RJ), Bauru (SP), Caxias do Sul (RS), Joinville (SC), Uberlândia (MG), Londrina (PR), Feira de Santana (BA), Caruaru (PE), Anápolis (GO) e Vila Velha (ES) · 2024'
+  'Volta Redonda e Niterói (RJ), Bauru (SP), Caxias do Sul (RS), Joinville (SC), Uberlândia (MG), Londrina (PR), Feira de Santana (BA), Caruaru (PE), Anápolis (GO), Vila Velha (ES), Campina Grande (PB) e Caucaia (CE) · 2024'
 
 export const copy = {
   coverageIncomplete:

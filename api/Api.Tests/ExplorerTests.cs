@@ -810,6 +810,100 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		},
 	};
 
+	private static readonly Coverage s_campinaGrandeOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "PB",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_campinaGrande = new()
+	{
+		Id = SliceIds.OrgaoCampinaGrande,
+		Cnpj = "08993917000146",
+		RazaoSocial = "Municipio de Campina Grande",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "PB",
+		MunicipioIbge = "2504009",
+		MunicipioNome = "Campina Grande",
+		Coverage = s_campinaGrandeOrgaoCoverage,
+	};
+
+	private static readonly Coverage s_caucaiaOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "CE",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_caucaia = new()
+	{
+		Id = SliceIds.OrgaoCaucaia,
+		Cnpj = "07616162000106",
+		RazaoSocial = "Municipio de Caucaia",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "CE",
+		MunicipioIbge = "2303709",
+		MunicipioNome = "Caucaia",
+		Coverage = s_caucaiaOrgaoCoverage,
+	};
+
+	private static readonly ItemRecord s_itemCampinaGrande = new()
+	{
+		Id = SliceIds.ItemCampinaGrande,
+		ContratacaoId = SliceIds.ContratacaoCampinaGrande,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Memoria Ram",
+		Catmat = "618288",
+		Catser = null,
+		Quantidade = 4m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 209.99m,
+		ValorTotal = 839.96m,
+		Uf = "PB",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "PB",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
+	private static readonly ItemRecord s_itemCaucaia = new()
+	{
+		Id = SliceIds.ItemCaucaia,
+		ContratacaoId = SliceIds.ContratacaoCaucaia,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Bloco receituario medico",
+		Catmat = "485443",
+		Catser = null,
+		Quantidade = 1000m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 8.55m,
+		ValorTotal = 8550m,
+		Uf = "CE",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "CE",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
 	[Fact]
 	public async Task FullCycle_BrowseMunicipioAndUf()
 	{
@@ -945,6 +1039,32 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(new[] { s_vilaVelha }, vilaVelhaPage.Items);
 		await ValidateOrgao(client, s_vilaVelha);
 
+		var campinaGrandePage = await client.ListOrgaos(municipioIbge: "2504009", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			campinaGrandePage.Coverage);
+		Assert.Equal(new[] { s_campinaGrande }, campinaGrandePage.Items);
+		await ValidateOrgao(client, s_campinaGrande);
+
+		var caucaiaPage = await client.ListOrgaos(uf: "CE", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "CE",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			caucaiaPage.Coverage);
+		Assert.Equal(new[] { s_caucaia }, caucaiaPage.Items);
+		await ValidateOrgao(client, s_caucaia);
+
 		var mixed = await client.ListOrgaos(quarter: SliceIds.Quarter);
 		Assert.Equal("", mixed.Coverage.Uf);
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3306305", StringComparison.Ordinal));
@@ -958,6 +1078,8 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "2604106", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "5201108", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3205200", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "2504009", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "2303709", StringComparison.Ordinal));
 
 		var spItems = await client.ListItems(uf: "SP", quarter: SliceIds.Quarter);
 		Assert.Equal(
@@ -1093,6 +1215,33 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 			OrgaoRazaoSocial = "Municipio de Anapolis",
 			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
 			ContratacaoPncpId = "01067479000146-1-000086/2024",
+		});
+		var ceItems = await client.ListItems(uf: "CE", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "CE",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			ceItems.Coverage);
+		Assert.Equal(new[] { s_itemCaucaia }, ceItems.Items);
+		await ValidateItem(client, new()
+		{
+			Item = s_itemCaucaia,
+			OrgaoId = SliceIds.OrgaoCaucaia,
+			OrgaoRazaoSocial = "Municipio de Caucaia",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "07616162000106-1-000076/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemCampinaGrande,
+			OrgaoId = SliceIds.OrgaoCampinaGrande,
+			OrgaoRazaoSocial = "Municipio de Campina Grande",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "08993917000146-1-000180/2024",
 		});
 
 		var empty = new Coverage

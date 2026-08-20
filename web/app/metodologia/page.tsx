@@ -1,12 +1,10 @@
 import { Shell } from '@/components/Shell'
 import { loadSliceCoverage } from '@/lib/api'
 import { METHOD_VERSION } from '@/lib/copy'
-import { explorerDynamic, explorerRevalidate } from '@/lib/rendering'
 import { routes } from '@/lib/routes'
 import type { Metadata } from 'next'
 
-export const dynamic = explorerDynamic
-export const revalidate = explorerRevalidate
+export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Metodologia' }
 
 export default async function MetodologiaPage() {

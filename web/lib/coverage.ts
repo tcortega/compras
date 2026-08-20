@@ -38,9 +38,17 @@ export function readCoverage(raw: unknown): Coverage {
   }
 }
 
-export function fillCoverage(coverage: Coverage, rows: Array<{ uf?: string | null }>): Coverage {
+export function fillCoverage(coverage: Coverage, rows: readonly unknown[]): Coverage {
   if (coverage.uf) return coverage
-  const ufs = [...new Set(rows.map((row) => row.uf).filter((uf): uf is string => !!uf))]
+  const ufs = [
+    ...new Set(
+      rows.flatMap((row) => {
+        if (!row || typeof row !== 'object' || !('uf' in row)) return []
+        const uf = (row as { uf?: unknown }).uf
+        return typeof uf === 'string' && uf ? [uf] : []
+      }),
+    ),
+  ]
   return { ...coverage, uf: ufs.length === 1 ? (ufs[0] ?? null) : coverage.uf }
 }
 

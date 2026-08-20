@@ -1,17 +1,16 @@
 import { CoverageBar } from '@/components/CoverageBar'
 import { copy, SITE_NAME, SITE_TAG, SLICE_LABEL } from '@/lib/copy'
-import { stubSliceCoverage } from '@/lib/api'
 import { navPrimary, routes } from '@/lib/routes'
 import type { Coverage } from '@/lib/types'
 import type { ReactNode } from 'react'
 
 export function Shell({
   children,
-  coverage = stubSliceCoverage,
+  coverage,
   current,
 }: {
   children: ReactNode
-  coverage?: Coverage
+  coverage: Coverage
   current?: string
 }) {
   return (

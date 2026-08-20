@@ -1,10 +1,12 @@
 import { Shell } from '@/components/Shell'
+import { loadSliceCoverage } from '@/lib/api'
 import { copy } from '@/lib/copy'
 import { routes } from '@/lib/routes'
 
-export default function NotFound() {
+export default async function NotFound() {
+  const coverage = await loadSliceCoverage()
   return (
-    <Shell>
+    <Shell coverage={coverage}>
       <p className="kicker">404</p>
       <h1>{copy.notFound}</h1>
       <p className="lede">O identificador não existe neste recorte publicado.</p>

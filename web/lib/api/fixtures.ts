@@ -52,6 +52,8 @@ export const ids = {
   orgaoCastanhal: '7c2e1f40-1502-4050-9a01-000000000044',
   orgaoDivinopolis: '7c2e1f40-3122-4050-9a01-000000000045',
   orgaoPetropolis: '7c2e1f40-3303-4050-9a01-000000000046',
+  orgaoIpatinga: '7c2e1f40-3131-4050-9a01-000000000047',
+  orgaoMacae: '7c2e1f40-3302-4050-9a01-000000000048',
   fornFarma: '8d3f2a51-3306-4050-9a02-000000000001',
   fornAlim: '8d3f2a51-3306-4050-9a02-000000000002',
   fornComb: '8d3f2a51-3306-4050-9a02-000000000003',
@@ -111,6 +113,8 @@ export const ids = {
   ctCastanhal: '9e4a3b62-1502-4050-9a03-000000000050',
   ctDivinopolis: '9e4a3b62-3122-4050-9a03-000000000051',
   ctPetropolis: '9e4a3b62-3303-4050-9a03-000000000052',
+  ctIpatinga: '9e4a3b62-3131-4050-9a03-000000000053',
+  ctMacae: '9e4a3b62-3302-4050-9a03-000000000054',
 } as const
 
 function orgao(
@@ -598,6 +602,26 @@ export const orgaos: Orgao[] = [
     'RJ',
     '3303906',
     'Petrópolis',
+  ),
+  orgao(
+    ids.orgaoIpatinga,
+    '19876424000142',
+    'Município de Ipatinga',
+    'executivo',
+    T2,
+    'MG',
+    '3131307',
+    'Ipatinga',
+  ),
+  orgao(
+    ids.orgaoMacae,
+    '29115474000160',
+    'Município de Macaé',
+    'executivo',
+    T2,
+    'RJ',
+    '3302403',
+    'Macaé',
   ),
 ]
 
@@ -1276,6 +1300,28 @@ export const contratacoes: Contratacao[] = [
     '2024-06-12T18:42:08.000Z',
     'compras.gov.br',
   ),
+  ct(
+    ids.ctIpatinga,
+    '19876424000142-1-000142/2024',
+    ids.orgaoIpatinga,
+    'pregao eletronico',
+    'Aquisição de 1 (uma) betoneira para atender as necessidades da Secretaria Municipal de Obras Públicas, conforme termo de referências.',
+    2024,
+    3_890.0,
+    '2024-12-03T07:03:38.000Z',
+    'compras.gov.br',
+  ),
+  ct(
+    ids.ctMacae,
+    '29115474000160-1-000119/2024',
+    ids.orgaoMacae,
+    'dispensa',
+    'Aquisição de coletes em brim, para identificação dos servidores da Secretaria Municipal de Políticas para as Mulheres.',
+    2024,
+    2_087.64,
+    '2024-10-31T11:46:36.000Z',
+    'compras.gov.br',
+  ),
 ]
 
 function item(
@@ -1387,4 +1433,6 @@ export const items: Item[] = [
   item(68, ids.ctCastanhal, ids.fornPapel, 'Água Mineral Natural', '613476', 89000, 'Copo 200,00 ML', 'l', 0.37, 'PA', '2024-Q3', T1),
   item(69, ids.ctDivinopolis, ids.fornPapel, 'Cadeira digitador', '246097', 1, 'Unidade', 'un', 1819.55, 'MG', '2024-Q3', T1),
   item(70, ids.ctPetropolis, ids.fornPapel, 'Bobina Papel Impressora aplicação: impressora plotter, comprimento: 50, gramatura: 75, largura: 914, tipo papel: sulfite Papel para Plotter (Bobina) 75 GR 610x50', '275143', 12, 'Unidade', 'un', 133.33, 'RJ', '2024-Q2', T1),
+  item(71, ids.ctIpatinga, ids.fornPapel, 'Betoneira', '487731', 1, 'Unidade', 'un', 3890.0, 'MG', '2024-Q4', T2),
+  item(72, ids.ctMacae, ids.fornPapel, 'Colete Identificação', '482286', 36, 'Unidade', 'un', 57.99, 'RJ', '2024-Q4', T2),
 ]

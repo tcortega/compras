@@ -26,6 +26,9 @@ O explorador não lê essas fontes.
 A precisão do método ingênuo de desvio de preço da Fase 0, neste recorte, é 9/100.
 Esse número é o portão do Tier 3 público.
 É uma medição, não um veredito sobre qualquer órgão.
+Exclusões de qualidade de dado (`item_exclusion`) retiram o item do pool de anomalia de preço.
+Elas não são alertas públicos.
+O item permanece no explorador.
 
 O CPF é mascarado.
 Não há ranking de partido nem de político.

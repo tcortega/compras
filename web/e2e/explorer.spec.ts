@@ -215,7 +215,7 @@ test('home cards usam o n da coleção, não o n de itens', async ({ page }) => 
 })
 
 test('órgão para contratação com denominador visível', async ({ page }) => {
-  await page.goto('/orgaos?take=50')
+  await page.goto('/orgaos?take=100')
   await page.locator('table.data').getByRole('link', { name: voltaName }).click()
   await expect(page.getByText(/volta redonda/i).first()).toBeVisible()
   await expect(page.locator('.stats .kicker', { hasText: 'Contratações' })).toBeVisible()

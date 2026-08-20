@@ -53,6 +53,9 @@ CREATE TABLE IF NOT EXISTS item (
   "valorUnitario" numeric(18, 6),
   "valorTotal" numeric(18, 6),
   "valorPorUnidadeCanonica" numeric(18, 6),
+  "specConcentracao" text,
+  "specDosagem" text,
+  "specTamanho" text,
   uf text NOT NULL,
   quarter text NOT NULL,
   "snapshotId" text NOT NULL,
@@ -111,3 +114,6 @@ CREATE INDEX IF NOT EXISTS item_exclusion_item_idx ON item_exclusion ("itemId");
 CREATE INDEX IF NOT EXISTS item_exclusion_reason_idx ON item_exclusion (reason);
 
 ALTER TABLE item ADD COLUMN IF NOT EXISTS "valorPorUnidadeCanonica" numeric(18, 6);
+ALTER TABLE item ADD COLUMN IF NOT EXISTS "specConcentracao" text;
+ALTER TABLE item ADD COLUMN IF NOT EXISTS "specDosagem" text;
+ALTER TABLE item ADD COLUMN IF NOT EXISTS "specTamanho" text;

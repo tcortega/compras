@@ -71,15 +71,17 @@ PUBLISHED = {
     "3303906": ("municipio de petropolis", "RJ"),
     "3131307": ("municipio de ipatinga", "MG"),
     "3302403": ("municipio de macae", "RJ"),
+    "3157807": ("municipio de santa luzia", "MG"),
+    "3303401": ("municipio de nova friburgo", "RJ"),
 }
 
 
 def main() -> int:
-    orgaos = get_json(f"{API}/api/orgaos?skip=0&take=50")
+    orgaos = get_json(f"{API}/api/orgaos?skip=0&take=100")
     deny_flags(orgaos, f"{API}/api/orgaos")
     deny_stub(json.dumps(orgaos, ensure_ascii=False), "api /api/orgaos")
     items_page = orgaos.get("items") or []
-    if len(items_page) < 45:
+    if len(items_page) < 47:
         raise SystemExit(f"api /api/orgaos returned {len(items_page)} rows, need the published slice")
     by_ibge = {str(row.get("municipioIbge") or ""): row for row in items_page}
     for ibge, (nome, uf) in PUBLISHED.items():
@@ -96,7 +98,7 @@ def main() -> int:
     orgao_cov = orgaos.get("coverage") or {}
     if orgao_cov.get("uf") not in (None, ""):
         raise SystemExit(f"mixed orgao list invented a UF: {orgao_cov}")
-    if not isinstance(orgao_cov.get("n"), int) or orgao_cov["n"] < 45:
+    if not isinstance(orgao_cov.get("n"), int) or orgao_cov["n"] < 47:
         raise SystemExit(f"api orgaos coverage.n missing the extra slice: {orgao_cov}")
     if not orgao_cov.get("methodologyVersion"):
         raise SystemExit(f"api orgaos coverage missing methodologyVersion: {orgao_cov}")
@@ -366,6 +368,16 @@ def main() -> int:
     macae_rows = macae.get("items") or []
     if len(macae_rows) != 1 or str(macae_rows[0].get("municipioIbge") or "") != "3302403":
         raise SystemExit(f"api municipio filter 3302403 failed: {macae_rows}")
+    santa_luzia = get_json(f"{API}/api/orgaos?municipioIbge=3157807&skip=0&take=50")
+    deny_flags(santa_luzia, f"{API}/api/orgaos?municipioIbge=3157807")
+    santa_luzia_rows = santa_luzia.get("items") or []
+    if len(santa_luzia_rows) != 1 or str(santa_luzia_rows[0].get("municipioIbge") or "") != "3157807":
+        raise SystemExit(f"api municipio filter 3157807 failed: {santa_luzia_rows}")
+    nova_friburgo = get_json(f"{API}/api/orgaos?municipioIbge=3303401&skip=0&take=50")
+    deny_flags(nova_friburgo, f"{API}/api/orgaos?municipioIbge=3303401")
+    nova_friburgo_rows = nova_friburgo.get("items") or []
+    if len(nova_friburgo_rows) != 1 or str(nova_friburgo_rows[0].get("municipioIbge") or "") != "3303401":
+        raise SystemExit(f"api municipio filter 3303401 failed: {nova_friburgo_rows}")
 
     orgao = by_ibge["3306305"]
     oid = orgao["id"]
@@ -530,14 +542,18 @@ def main() -> int:
         raise SystemExit("web / missing Ipatinga")
     if "macae" not in folded and "macaé" not in folded:
         raise SystemExit("web / missing Macaé")
+    if "santa luzia" not in folded:
+        raise SystemExit("web / missing Santa Luzia")
+    if "nova friburgo" not in folded:
+        raise SystemExit("web / missing Nova Friburgo")
     if "UF mista" not in home:
         raise SystemExit("web / missing honest mixed UF")
-    if "Quarenta e cinco municípios" not in home:
+    if "Quarenta e sete municípios" not in home:
         raise SystemExit("web / missing short brand kicker")
     if "UF Brasil" in home or "total nacional" in folded:
         raise SystemExit("web / invented a national total")
 
-    orgaos_html = get_text(f"{WEB}/orgaos?take=50")
+    orgaos_html = get_text(f"{WEB}/orgaos?take=100")
     assert_served_page(orgaos_html, "web /orgaos")
     orgaos_fold = orgaos_html.casefold()
     if "volta redonda" not in orgaos_fold:
@@ -630,6 +646,10 @@ def main() -> int:
         raise SystemExit("web /orgaos missing Ipatinga")
     if "macae" not in orgaos_fold and "macaé" not in orgaos_fold:
         raise SystemExit("web /orgaos missing Macaé")
+    if "santa luzia" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing Santa Luzia")
+    if "nova friburgo" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing Nova Friburgo")
     if "UF mista" not in orgaos_html:
         raise SystemExit("web /orgaos missing honest mixed UF")
 
@@ -1243,6 +1263,34 @@ def main() -> int:
     if "UF RJ" not in macae_html:
         raise SystemExit("web Macaé filter missing UF RJ")
 
+    santa_luzia_html = get_text(f"{WEB}/orgaos?municipioIbge=3157807")
+    assert_served_page(santa_luzia_html, "web /orgaos?municipioIbge=3157807")
+    santa_luzia_table = table_html(santa_luzia_html)
+    if "municipio de santa luzia" not in santa_luzia_table.casefold() and "município de santa luzia" not in santa_luzia_table.casefold():
+        raise SystemExit("web /orgaos?municipioIbge=3157807 missing Santa Luzia")
+    if "municipio de nova friburgo" in santa_luzia_table.casefold() or "município de nova friburgo" in santa_luzia_table.casefold():
+        raise SystemExit("web municipio filter leaked Nova Friburgo")
+    if "prefeitura municipal de volta redonda" in santa_luzia_table.casefold():
+        raise SystemExit("web municipio filter leaked Volta Redonda")
+    if not re.search(r"n=1", santa_luzia_html):
+        raise SystemExit("web Santa Luzia filter missing n=1")
+    if "UF MG" not in santa_luzia_html:
+        raise SystemExit("web Santa Luzia filter missing UF MG")
+
+    nova_friburgo_html = get_text(f"{WEB}/orgaos?municipioIbge=3303401")
+    assert_served_page(nova_friburgo_html, "web /orgaos?municipioIbge=3303401")
+    nova_friburgo_table = table_html(nova_friburgo_html)
+    if "municipio de nova friburgo" not in nova_friburgo_table.casefold() and "município de nova friburgo" not in nova_friburgo_table.casefold():
+        raise SystemExit("web /orgaos?municipioIbge=3303401 missing Nova Friburgo")
+    if "municipio de santa luzia" in nova_friburgo_table.casefold() or "município de santa luzia" in nova_friburgo_table.casefold():
+        raise SystemExit("web municipio filter leaked Santa Luzia")
+    if "prefeitura municipal de volta redonda" in nova_friburgo_table.casefold():
+        raise SystemExit("web municipio filter leaked Volta Redonda")
+    if not re.search(r"n=1", nova_friburgo_html):
+        raise SystemExit("web Nova Friburgo filter missing n=1")
+    if "UF RJ" not in nova_friburgo_html:
+        raise SystemExit("web Nova Friburgo filter missing UF RJ")
+
     orgao_html = get_text(f"{WEB}/orgaos/{oid}")
     assert_served_page(orgao_html, "web /orgaos/{id}")
     if STAT_HOMOLOGADO.search(orgao_html):
@@ -1408,6 +1456,10 @@ def main() -> int:
         raise SystemExit("web /cobertura missing Ipatinga IBGE")
     if "3302403" not in cobertura:
         raise SystemExit("web /cobertura missing Macaé IBGE")
+    if "3157807" not in cobertura:
+        raise SystemExit("web /cobertura missing Santa Luzia IBGE")
+    if "3303401" not in cobertura:
+        raise SystemExit("web /cobertura missing Nova Friburgo IBGE")
     if "não é um total nacional" not in cobertura:
         raise SystemExit("web /cobertura missing disclaimer")
     if "UF mista" not in cobertura:

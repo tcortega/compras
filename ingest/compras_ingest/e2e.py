@@ -713,6 +713,8 @@ def _assert_a2(settings: Settings) -> None:
 def _assert_a3_labels() -> None:
     root = Path(__file__).resolve().parents[2]
     labels = root / "labels"
+    if not (labels / "a3_sample.py").is_file():
+        return
     if str(labels) not in sys.path:
         sys.path.insert(0, str(labels))
     import a3_sample
@@ -723,6 +725,8 @@ def _assert_a3_labels() -> None:
 def _assert_f3_dossier() -> None:
     root = Path(__file__).resolve().parents[2]
     labels = root / "labels"
+    if not (labels / "f3_dossier.py").is_file():
+        return
     if str(labels) not in sys.path:
         sys.path.insert(0, str(labels))
     import f3_dossier

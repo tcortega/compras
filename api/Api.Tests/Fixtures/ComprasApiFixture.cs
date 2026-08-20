@@ -400,6 +400,28 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			MunicipioIbge = "3136702",
 			MunicipioNome = "Juiz de Fora",
 		};
+		var foz = new Orgao
+		{
+			Id = SliceIds.OrgaoFoz,
+			Cnpj = "76206606000140",
+			RazaoSocial = "Municipio de Foz do Iguacu",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "PR",
+			MunicipioIbge = "4108304",
+			MunicipioNome = "Foz do Iguacu",
+		};
+		var santaMaria = new Orgao
+		{
+			Id = SliceIds.OrgaoSantaMaria,
+			Cnpj = "88488366000100",
+			RazaoSocial = "Municipio de Santa Maria",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "RS",
+			MunicipioIbge = "4316907",
+			MunicipioNome = "Santa Maria",
+		};
 		var fornecedor = new Fornecedor
 		{
 			Id = SliceIds.Fornecedor,
@@ -824,6 +846,34 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			Ano = 2024,
 			ValorHomologado = 160214m,
 			PublicadoEm = Instant.FromUtc(2024, 9, 13, 14, 21),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoFoz = new Contratacao
+		{
+			Id = SliceIds.ContratacaoFoz,
+			PncpId = "76206606000140-1-000362/2024",
+			OrgaoId = SliceIds.OrgaoFoz,
+			Modalidade = "dispensa",
+			Objeto = "Aquisicao de fermento biologico",
+			Ano = 2024,
+			ValorHomologado = 41175m,
+			PublicadoEm = Instant.FromUtc(2024, 9, 10, 9, 39),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoSantaMaria = new Contratacao
+		{
+			Id = SliceIds.ContratacaoSantaMaria,
+			PncpId = "88488366000100-1-000435/2024",
+			OrgaoId = SliceIds.OrgaoSantaMaria,
+			Modalidade = "pregao eletronico",
+			Objeto = "RP - Medicamentos",
+			Ano = 2024,
+			ValorHomologado = 28182m,
+			PublicadoEm = Instant.FromUtc(2024, 10, 15, 7, 6),
 			Source = "compras.gov.br",
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
@@ -1269,11 +1319,45 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
 		};
+		var itemFoz = new Item
+		{
+			Id = SliceIds.ItemFoz,
+			ContratacaoId = SliceIds.ContratacaoFoz,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Fermento",
+			Catmat = "459596",
+			Quantidade = 2500m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 16.47m,
+			ValorTotal = 41175m,
+			Uf = "PR",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var itemSantaMaria = new Item
+		{
+			Id = SliceIds.ItemSantaMaria,
+			ContratacaoId = SliceIds.ContratacaoSantaMaria,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Risperidona",
+			Catmat = "272839",
+			Quantidade = 200000m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 0.141m,
+			ValorTotal = 28182m,
+			Uf = "RS",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
 
-		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville, uberlandia, londrina, feira, caruaru, anapolis, vilaVelha, campinaGrande, caucaia, imperatriz, arapiraca, dourados, maraba, varzeaGrande, jiParana, parnamirim, cruzeiroDoSul, santana, rorainopolis, maringa, taubate, cascavel, juizDeFora);
+		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville, uberlandia, londrina, feira, caruaru, anapolis, vilaVelha, campinaGrande, caucaia, imperatriz, arapiraca, dourados, maraba, varzeaGrande, jiParana, parnamirim, cruzeiroDoSul, santana, rorainopolis, maringa, taubate, cascavel, juizDeFora, foz, santaMaria);
 		db.Fornecedores.AddRange(fornecedor, fornecedorExtra);
-		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina, contratacaoFeira, contratacaoCaruaru, contratacaoAnapolis, contratacaoVilaVelha, contratacaoCampinaGrande, contratacaoCaucaia, contratacaoImperatriz, contratacaoArapiraca, contratacaoDourados, contratacaoMaraba, contratacaoVarzeaGrande, contratacaoJiParana, contratacaoParnamirim, contratacaoCruzeiroDoSul, contratacaoSantana, contratacaoRorainopolis, contratacaoMaringa, contratacaoTaubate, contratacaoCascavel, contratacaoJuizDeFora);
-		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina, itemFeira, itemCaruaru, itemAnapolis, itemVilaVelha, itemCampinaGrande, itemCaucaia, itemImperatriz, itemArapiraca, itemDourados, itemMaraba, itemVarzeaGrande, itemJiParana, itemParnamirim, itemCruzeiroDoSul, itemSantana, itemRorainopolis, itemMaringa, itemTaubate, itemCascavel, itemJuizDeFora);
+		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina, contratacaoFeira, contratacaoCaruaru, contratacaoAnapolis, contratacaoVilaVelha, contratacaoCampinaGrande, contratacaoCaucaia, contratacaoImperatriz, contratacaoArapiraca, contratacaoDourados, contratacaoMaraba, contratacaoVarzeaGrande, contratacaoJiParana, contratacaoParnamirim, contratacaoCruzeiroDoSul, contratacaoSantana, contratacaoRorainopolis, contratacaoMaringa, contratacaoTaubate, contratacaoCascavel, contratacaoJuizDeFora, contratacaoFoz, contratacaoSantaMaria);
+		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina, itemFeira, itemCaruaru, itemAnapolis, itemVilaVelha, itemCampinaGrande, itemCaucaia, itemImperatriz, itemArapiraca, itemDourados, itemMaraba, itemVarzeaGrande, itemJiParana, itemParnamirim, itemCruzeiroDoSul, itemSantana, itemRorainopolis, itemMaringa, itemTaubate, itemCascavel, itemJuizDeFora, itemFoz, itemSantaMaria);
 	}
 
 	private static JsonSerializerOptions CreateJson()

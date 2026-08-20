@@ -1250,6 +1250,48 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Coverage = s_juizDeForaOrgaoCoverage,
 	};
 
+	private static readonly Coverage s_fozOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "PR",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_foz = new()
+	{
+		Id = SliceIds.OrgaoFoz,
+		Cnpj = "76206606000140",
+		RazaoSocial = "Municipio de Foz do Iguacu",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "PR",
+		MunicipioIbge = "4108304",
+		MunicipioNome = "Foz do Iguacu",
+		Coverage = s_fozOrgaoCoverage,
+	};
+
+	private static readonly Coverage s_santaMariaOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "RS",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_santaMaria = new()
+	{
+		Id = SliceIds.OrgaoSantaMaria,
+		Cnpj = "88488366000100",
+		RazaoSocial = "Municipio de Santa Maria",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "RS",
+		MunicipioIbge = "4316907",
+		MunicipioNome = "Santa Maria",
+		Coverage = s_santaMariaOrgaoCoverage,
+	};
+
 	private static readonly ItemRecord s_itemDourados = new()
 	{
 		Id = SliceIds.ItemDourados,
@@ -1562,6 +1604,58 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		},
 	};
 
+	private static readonly ItemRecord s_itemFoz = new()
+	{
+		Id = SliceIds.ItemFoz,
+		ContratacaoId = SliceIds.ContratacaoFoz,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Fermento",
+		Catmat = "459596",
+		Catser = null,
+		Quantidade = 2500m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 16.47m,
+		ValorTotal = 41175m,
+		Uf = "PR",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "PR",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
+	private static readonly ItemRecord s_itemSantaMaria = new()
+	{
+		Id = SliceIds.ItemSantaMaria,
+		ContratacaoId = SliceIds.ContratacaoSantaMaria,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Risperidona",
+		Catmat = "272839",
+		Catser = null,
+		Quantidade = 200000m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 0.141m,
+		ValorTotal = 28182m,
+		Uf = "RS",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "RS",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
 	[Fact]
 	public async Task FullCycle_BrowseMunicipioAndUf()
 	{
@@ -1636,13 +1730,13 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(
 			new Coverage
 			{
-				N = 3,
+				N = 4,
 				Uf = "PR",
 				Quarter = SliceIds.Quarter,
 				MethodologyVersion = SliceIds.Methodology,
 			},
 			londrinaPage.Coverage);
-		Assert.Equal(new[] { s_cascavel, s_londrina, s_maringa }, londrinaPage.Items);
+		Assert.Equal(new[] { s_cascavel, s_foz, s_londrina, s_maringa }, londrinaPage.Items);
 		await ValidateOrgao(client, s_londrina);
 
 		var feiraPage = await client.ListOrgaos(municipioIbge: "2910800", quarter: SliceIds.Quarter);
@@ -1905,6 +1999,32 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(new[] { s_juizDeFora }, juizDeForaPage.Items);
 		await ValidateOrgao(client, s_juizDeFora);
 
+		var fozPage = await client.ListOrgaos(municipioIbge: "4108304", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			fozPage.Coverage);
+		Assert.Equal(new[] { s_foz }, fozPage.Items);
+		await ValidateOrgao(client, s_foz);
+
+		var santaMariaPage = await client.ListOrgaos(municipioIbge: "4316907", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			santaMariaPage.Coverage);
+		Assert.Equal(new[] { s_santaMaria }, santaMariaPage.Items);
+		await ValidateOrgao(client, s_santaMaria);
+
 		var mixed = await client.ListOrgaos(quarter: SliceIds.Quarter);
 		Assert.Equal("", mixed.Coverage.Uf);
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3306305", StringComparison.Ordinal));
@@ -1934,6 +2054,8 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3554102", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "4104808", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3136702", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "4108304", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "4316907", StringComparison.Ordinal));
 
 		var spItems = await client.ListItems(uf: "SP", quarter: SliceIds.Quarter);
 		Assert.Equal(
@@ -1993,13 +2115,13 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(
 			new Coverage
 			{
-				N = 3,
+				N = 4,
 				Uf = "PR",
 				Quarter = SliceIds.Quarter,
 				MethodologyVersion = SliceIds.Methodology,
 			},
 			prItems.Coverage);
-		Assert.Equal(new[] { s_itemLondrina, s_itemMaringa, s_itemCascavel }, prItems.Items);
+		Assert.Equal(new[] { s_itemLondrina, s_itemMaringa, s_itemFoz, s_itemCascavel }, prItems.Items);
 		await ValidateItem(client, new()
 		{
 			Item = s_itemLondrina,
@@ -2263,6 +2385,22 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 			OrgaoRazaoSocial = "Municipio de Juiz de Fora",
 			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
 			ContratacaoPncpId = "18338178000102-1-000200/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemFoz,
+			OrgaoId = SliceIds.OrgaoFoz,
+			OrgaoRazaoSocial = "Municipio de Foz do Iguacu",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "76206606000140-1-000362/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemSantaMaria,
+			OrgaoId = SliceIds.OrgaoSantaMaria,
+			OrgaoRazaoSocial = "Municipio de Santa Maria",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "88488366000100-1-000435/2024",
 		});
 
 		var empty = new Coverage

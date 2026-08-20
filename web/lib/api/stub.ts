@@ -1,19 +1,14 @@
 import { coverageFromItems } from '@/lib/coverage'
 import type {
   Contratacao,
-  ContratacaoDetail,
   ExplorerClient,
   Fornecedor,
-  FornecedorDetail,
   Item,
-  ItemDetail,
   Orgao,
-  OrgaoDetail,
   PageRequest,
   SkipTakePage,
-  Totals,
 } from '@/lib/types'
-import { ApiNotFoundError } from '@/lib/types'
+import { ApiNotFoundError, isPublished } from '@/lib/types'
 import { contratacoes, fornecedores, items, orgaos } from '@/lib/api/fixtures'
 
 function norm(s: string): string {
@@ -24,6 +19,30 @@ function matchesQ(q: string | undefined, parts: Array<string | null | undefined>
   if (!q) return true
   const n = norm(q)
   return parts.some((p) => p != null && norm(p).includes(n))
+}
+
+function liveOrgaos(): Orgao[] {
+  return orgaos.filter(isPublished)
+}
+
+function liveFornecedores(): Fornecedor[] {
+  return fornecedores.filter(isPublished)
+}
+
+function liveContratacoes(): Contratacao[] {
+  const hiddenOrgaos = new Set(orgaos.filter((o) => !isPublished(o)).map((o) => o.id))
+  return contratacoes.filter((c) => isPublished(c) && !hiddenOrgaos.has(c.orgaoId))
+}
+
+function liveItems(): Item[] {
+  const liveCtIds = new Set(liveContratacoes().map((c) => c.id))
+  const hiddenFornecedores = new Set(fornecedores.filter((f) => !isPublished(f)).map((f) => f.id))
+  return items.filter((i) => {
+    if (!isPublished(i)) return false
+    if (!liveCtIds.has(i.contratacaoId)) return false
+    if (i.fornecedorId && hiddenFornecedores.has(i.fornecedorId)) return false
+    return true
+  })
 }
 
 function page<T>(rows: T[], req: PageRequest, coverageItems: Item[]): SkipTakePage<T> {
@@ -39,41 +58,31 @@ function page<T>(rows: T[], req: PageRequest, coverageItems: Item[]): SkipTakePa
 }
 
 function orgaoItems(orgaoId: string): Item[] {
-  const ctIds = new Set(contratacoes.filter((c) => c.orgaoId === orgaoId).map((c) => c.id))
-  return items.filter((i) => ctIds.has(i.contratacaoId))
-}
-
-function totalsFor(itemRows: Item[], cts: Contratacao[]): Totals {
-  const valores = cts.map((c) => c.valorHomologado).filter((v): v is number => v != null)
-  return {
-    contratacoes: cts.length,
-    items: itemRows.length,
-    valorHomologado: valores.length ? valores.reduce((a, b) => a + b, 0) : null,
-    coverage: coverageFromItems(itemRows),
-  }
+  const ctIds = new Set(liveContratacoes().filter((c) => c.orgaoId === orgaoId).map((c) => c.id))
+  return liveItems().filter((i) => ctIds.has(i.contratacaoId))
 }
 
 function requireOrgao(id: string): Orgao {
-  const row = orgaos.find((o) => o.id === id)
+  const row = liveOrgaos().find((o) => o.id === id)
   if (!row) throw new ApiNotFoundError('orgao', id)
   return row
 }
 
 function requireFornecedor(id: string): Fornecedor {
-  const row = fornecedores.find((f) => f.id === id)
+  const row = liveFornecedores().find((f) => f.id === id)
   if (!row) throw new ApiNotFoundError('fornecedor', id)
   return row
 }
 
 function requireContratacao(id: string): Contratacao {
-  const row = contratacoes.find((c) => c.id === id)
+  const row = liveContratacoes().find((c) => c.id === id)
   if (!row) throw new ApiNotFoundError('contratacao', id)
   return row
 }
 
 export const stubClient: ExplorerClient = {
   async listOrgaos(req) {
-    const rows = orgaos
+    const rows = liveOrgaos()
       .filter((o) => matchesQ(req.q, [o.razaoSocial, o.cnpj, o.municipioNome, o.uf]))
       .filter((o) => !req.uf || o.uf === req.uf)
       .filter((o) => !req.esfera || o.esfera === req.esfera)
@@ -84,68 +93,44 @@ export const stubClient: ExplorerClient = {
   },
 
   async getOrgao(id) {
-    const row = requireOrgao(id)
-    const cts = contratacoes.filter((c) => c.orgaoId === id)
-    const itemRows = orgaoItems(id)
-    const detail: OrgaoDetail = {
-      ...row,
-      coverage: coverageFromItems(itemRows),
-      totals: totalsFor(itemRows, cts),
-    }
-    return detail
+    return requireOrgao(id)
   },
 
   async listFornecedores(req) {
-    const rows = fornecedores
+    const rows = liveFornecedores()
       .filter((f) => matchesQ(req.q, [f.razaoSocial, f.cnpj, f.cnae]))
       .slice()
       .sort((a, b) => a.razaoSocial.localeCompare(b.razaoSocial, 'pt-BR'))
-    const related = items.filter((i) => rows.some((f) => f.id === i.fornecedorId))
+    const related = liveItems().filter((i) => rows.some((f) => f.id === i.fornecedorId))
     return page(rows, req, related)
   },
 
   async getFornecedor(id) {
-    const row = requireFornecedor(id)
-    const itemRows = items.filter((i) => i.fornecedorId === id)
-    const ctIds = new Set(itemRows.map((i) => i.contratacaoId))
-    const cts = contratacoes.filter((c) => ctIds.has(c.id))
-    const detail: FornecedorDetail = {
-      ...row,
-      coverage: coverageFromItems(itemRows),
-      totals: totalsFor(itemRows, cts),
-    }
-    return detail
+    return requireFornecedor(id)
   },
 
   async listContratacoes(req) {
-    const rows = contratacoes
+    const publishedItems = liveItems()
+    const rows = liveContratacoes()
       .filter((c) => matchesQ(req.q, [c.objeto, c.pncpId, c.modalidade, c.source]))
       .filter((c) => !req.orgaoId || c.orgaoId === req.orgaoId)
       .filter((c) => {
         if (!req.fornecedorId) return true
-        return items.some((i) => i.contratacaoId === c.id && i.fornecedorId === req.fornecedorId)
+        return publishedItems.some((i) => i.contratacaoId === c.id && i.fornecedorId === req.fornecedorId)
       })
       .filter((c) => !req.ano || c.ano === req.ano)
       .slice()
       .sort((a, b) => (b.publicadoEm ?? '').localeCompare(a.publicadoEm ?? ''))
-    const related = items.filter((i) => rows.some((c) => c.id === i.contratacaoId))
+    const related = publishedItems.filter((i) => rows.some((c) => c.id === i.contratacaoId))
     return page(rows, req, related)
   },
 
   async getContratacao(id) {
-    const row = requireContratacao(id)
-    const itemRows = items.filter((i) => i.contratacaoId === id)
-    const detail: ContratacaoDetail = {
-      ...row,
-      orgao: requireOrgao(row.orgaoId),
-      coverage: coverageFromItems(itemRows),
-      itemCount: itemRows.length,
-    }
-    return detail
+    return requireContratacao(id)
   },
 
   async listItems(req) {
-    const rows = items
+    const rows = liveItems()
       .filter((i) =>
         matchesQ(req.q, [i.descricao, i.catmat, i.catser, i.unidadeMedida, i.snapshotId]),
       )
@@ -155,7 +140,7 @@ export const stubClient: ExplorerClient = {
       .filter((i) => !req.quarter || i.quarter === req.quarter)
       .filter((i) => {
         if (!req.orgaoId) return true
-        const ct = contratacoes.find((c) => c.id === i.contratacaoId)
+        const ct = liveContratacoes().find((c) => c.id === i.contratacaoId)
         return ct?.orgaoId === req.orgaoId
       })
       .slice()
@@ -164,19 +149,8 @@ export const stubClient: ExplorerClient = {
   },
 
   async getItem(id) {
-    const row = items.find((i) => i.id === id)
+    const row = liveItems().find((i) => i.id === id)
     if (!row) throw new ApiNotFoundError('item', id)
-    const ct = requireContratacao(row.contratacaoId)
-    const peers = items.filter((i) => i.uf === row.uf && i.quarter === row.quarter)
-    const detail: ItemDetail = {
-      ...row,
-      contratacao: ct,
-      orgao: requireOrgao(ct.orgaoId),
-      fornecedor: row.fornecedorId ? requireFornecedor(row.fornecedorId) : null,
-      coverage: coverageFromItems(peers),
-    }
-    return detail
+    return row
   },
 }
-
-export const stubSliceCoverage = coverageFromItems(items)

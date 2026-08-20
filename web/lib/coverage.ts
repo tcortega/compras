@@ -15,11 +15,10 @@ export function coverageFromItems(items: Item[]): Coverage {
   if (items.length === 0) return emptyCoverage()
   const ufs = [...new Set(items.map((i) => i.uf))]
   const quarters = [...new Set(items.map((i) => i.quarter))]
-  const years = [...new Set(quarters.map((q) => q.slice(0, 4)))]
   return {
     n: items.length,
     uf: ufs.length === 1 ? (ufs[0] ?? null) : null,
-    quarter: quarters.length === 1 ? (quarters[0] ?? null) : years.length === 1 ? (years[0] ?? null) : null,
+    quarter: quarters.length === 1 ? (quarters[0] ?? null) : null,
     methodologyVersion: items[0]?.methodologyVersion ?? METHOD_VERSION,
   }
 }

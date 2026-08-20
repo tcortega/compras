@@ -5,7 +5,7 @@ import { Shell } from '@/components/Shell'
 import { SourceLine } from '@/components/SourceLine'
 import { Stat } from '@/components/Stat'
 import { api, safeDetail } from '@/lib/api'
-import { formatCnpj, formatMoney, formatNumber, formatQuarter } from '@/lib/format'
+import { formatCnpj, formatDecimal, formatMoney, formatQuarter } from '@/lib/format'
 import { routes } from '@/lib/routes'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
@@ -33,30 +33,38 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
   const row = await safeDetail(() => api.getItem(id))
   if (!row) notFound()
 
+  const fornecedorId = row.fornecedorId
+  const [ct, fornecedor, peers] = await Promise.all([
+    safeDetail(() => api.getContratacao(row.contratacaoId)),
+    fornecedorId ? safeDetail(() => api.getFornecedor(fornecedorId)) : Promise.resolve(null),
+    api.listItems({ skip: 0, take: 1, uf: row.uf, quarter: row.quarter }),
+  ])
+  const orgao = ct ? await safeDetail(() => api.getOrgao(ct.orgaoId)) : null
+
   return (
-    <Shell coverage={row.coverage} current={routes.itens}>
+    <Shell coverage={peers.coverage} current={routes.itens}>
       <EntityHeader kicker={`Item · ${row.uf} · ${formatQuarter(row.quarter)}`} title={row.descricao} />
       <FieldList
         fields={[
           {
             label: 'Contratação',
-            value: <a href={routes.contratacao(row.contratacao.id)}>{row.contratacao.objeto}</a>,
+            value: ct ? <a href={routes.contratacao(ct.id)}>{ct.objeto}</a> : 'n/d',
           },
           {
             label: 'Órgão',
-            value: <a href={routes.orgao(row.orgao.id)}>{row.orgao.razaoSocial}</a>,
+            value: orgao ? <a href={routes.orgao(orgao.id)}>{orgao.razaoSocial}</a> : 'n/d',
           },
           {
             label: 'Fornecedor',
-            value: row.fornecedor ? (
-              <a href={routes.fornecedor(row.fornecedor.id)}>{row.fornecedor.razaoSocial}</a>
+            value: fornecedor ? (
+              <a href={routes.fornecedor(fornecedor.id)}>{fornecedor.razaoSocial}</a>
             ) : (
               'n/d'
             ),
           },
           {
             label: 'CNPJ do fornecedor',
-            value: row.fornecedor ? formatCnpj(row.fornecedor.cnpj) : 'n/d',
+            value: fornecedor ? formatCnpj(fornecedor.cnpj) : 'n/d',
             mono: true,
           },
           { label: 'CATMAT', value: row.catmat ?? 'n/d', mono: true },
@@ -68,22 +76,22 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
       <div className="stats">
         <Stat
           label={`Quantidade (${row.unidadeMedida})`}
-          value={formatNumber(row.quantidade)}
-          coverage={row.coverage}
+          value={formatDecimal(row.quantidade)}
+          coverage={peers.coverage}
         />
-        <Stat label="Valor unitário" value={<Money value={row.valorUnitario} />} coverage={row.coverage} />
-        <Stat label="Valor total" value={<Money value={row.valorTotal} />} coverage={row.coverage} />
+        <Stat label="Valor unitário" value={<Money value={row.valorUnitario} />} coverage={peers.coverage} />
+        <Stat label="Valor total" value={<Money value={row.valorTotal} />} coverage={peers.coverage} />
       </div>
       <p className="source">
         <span>
-          Quantidade × unitário = {formatNumber(row.quantidade)} × {formatMoney(row.valorUnitario)} = {formatMoney(row.valorTotal)}.
+          Quantidade × unitário = {formatDecimal(row.quantidade)} × {formatMoney(row.valorUnitario)} = {formatMoney(row.valorTotal)}.
         </span>
         <span>
           O denominador acima (n, UF, trimestre) conta itens do mesmo UF e trimestre neste recorte, não o país.
         </span>
       </p>
       <SourceLine
-        source={row.contratacao.source}
+        source={ct?.source}
         snapshotId={row.snapshotId}
         methodologyVersion={row.methodologyVersion}
       />

@@ -1,9 +1,8 @@
 import { createHttpClient } from '@/lib/api/http'
 import { stubClient } from '@/lib/api/stub'
-import type { ExplorerClient } from '@/lib/types'
+import type { Coverage, ExplorerClient } from '@/lib/types'
 
 export { ids } from '@/lib/api/fixtures'
-export { stubSliceCoverage } from '@/lib/api/stub'
 
 function resolveBase(): string {
   return (process.env.API_BASE_URL ?? 'stub').trim()
@@ -28,6 +27,11 @@ export const api: ExplorerClient = {
   getContratacao: (id) => getClient().getContratacao(id),
   listItems: (req) => getClient().listItems(req),
   getItem: (id) => getClient().getItem(id),
+}
+
+export async function loadSliceCoverage(): Promise<Coverage> {
+  const page = await api.listItems({ skip: 0, take: 1 })
+  return page.coverage
 }
 
 export async function safeDetail<T>(load: () => Promise<T>): Promise<T | null> {

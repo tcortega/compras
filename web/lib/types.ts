@@ -37,6 +37,7 @@ export type Orgao = {
   uf: string
   municipioIbge: string
   municipioNome: string
+  suspended: boolean
   createdAt: string
   updatedAt: string
 }
@@ -47,6 +48,7 @@ export type Fornecedor = {
   razaoSocial: string
   openedOn: string | null
   cnae: string | null
+  suspended: boolean
   createdAt: string
   updatedAt: string
 }
@@ -63,6 +65,7 @@ export type Contratacao = {
   source: string
   snapshotId: string
   methodologyVersion: string
+  suspended: boolean
   createdAt: string
   updatedAt: string
 }
@@ -83,49 +86,24 @@ export type Item = {
   quarter: string
   snapshotId: string
   methodologyVersion: string
+  suspended: boolean
   createdAt: string
   updatedAt: string
 }
 
-export type Totals = {
-  contratacoes: number
-  items: number
-  valorHomologado: number | null
-  coverage: Coverage
-}
-
-export type OrgaoDetail = Orgao & {
-  coverage: Coverage
-  totals: Totals
-}
-
-export type FornecedorDetail = Fornecedor & {
-  coverage: Coverage
-  totals: Totals
-}
-
-export type ContratacaoDetail = Contratacao & {
-  orgao: Orgao
-  coverage: Coverage
-  itemCount: number
-}
-
-export type ItemDetail = Item & {
-  contratacao: Contratacao
-  orgao: Orgao
-  fornecedor: Fornecedor | null
-  coverage: Coverage
-}
-
 export type ExplorerClient = {
   listOrgaos: (req: PageRequest) => Promise<SkipTakePage<Orgao>>
-  getOrgao: (id: string) => Promise<OrgaoDetail>
+  getOrgao: (id: string) => Promise<Orgao>
   listFornecedores: (req: PageRequest) => Promise<SkipTakePage<Fornecedor>>
-  getFornecedor: (id: string) => Promise<FornecedorDetail>
+  getFornecedor: (id: string) => Promise<Fornecedor>
   listContratacoes: (req: PageRequest) => Promise<SkipTakePage<Contratacao>>
-  getContratacao: (id: string) => Promise<ContratacaoDetail>
+  getContratacao: (id: string) => Promise<Contratacao>
   listItems: (req: PageRequest) => Promise<SkipTakePage<Item>>
-  getItem: (id: string) => Promise<ItemDetail>
+  getItem: (id: string) => Promise<Item>
+}
+
+export function isPublished<T extends { suspended?: boolean }>(row: T): boolean {
+  return row.suspended !== true
 }
 
 export class ApiNotFoundError extends Error {

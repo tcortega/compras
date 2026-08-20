@@ -35,18 +35,21 @@ export default async function ContratacaoPage({ params }: { params: Promise<{ id
   const row = await safeDetail(() => api.getContratacao(id))
   if (!row) notFound()
 
-  const its = await api.listItems({ skip: 0, take: 50, contratacaoId: id })
+  const [orgao, its] = await Promise.all([
+    safeDetail(() => api.getOrgao(row.orgaoId)),
+    api.listItems({ skip: 0, take: 50, contratacaoId: id }),
+  ])
 
   return (
-    <Shell coverage={row.coverage} current={routes.contratacoes}>
+    <Shell coverage={its.coverage} current={routes.contratacoes}>
       <EntityHeader kicker={`Contratação · ${row.modalidade} · ${row.ano}`} title={row.objeto} />
       <FieldList
         fields={[
           {
             label: 'Órgão',
-            value: <a href={routes.orgao(row.orgao.id)}>{row.orgao.razaoSocial}</a>,
+            value: orgao ? <a href={routes.orgao(orgao.id)}>{orgao.razaoSocial}</a> : 'n/d',
           },
-          { label: 'CNPJ do órgão', value: formatCnpj(row.orgao.cnpj), mono: true },
+          { label: 'CNPJ do órgão', value: orgao ? formatCnpj(orgao.cnpj) : 'n/d', mono: true },
           { label: 'PNCP', value: row.pncpId, mono: true },
           { label: 'Modalidade', value: row.modalidade },
           { label: 'Publicado em', value: formatDate(row.publicadoEm) },
@@ -54,9 +57,9 @@ export default async function ContratacaoPage({ params }: { params: Promise<{ id
         ]}
       />
       <div className="stats">
-        <Stat label="Homologado" value={<Money value={row.valorHomologado} />} coverage={row.coverage} />
-        <Stat label="Itens" value={formatNumber(row.itemCount)} coverage={row.coverage} />
-        <Stat label="Fonte" value={formatSource(row.source)} coverage={row.coverage} />
+        <Stat label="Homologado" value={<Money value={row.valorHomologado} />} coverage={its.coverage} />
+        <Stat label="Itens" value={formatNumber(its.total)} coverage={its.coverage} />
+        <Stat label="Fonte" value={formatSource(row.source)} coverage={its.coverage} />
       </div>
       <SourceLine
         source={row.source}

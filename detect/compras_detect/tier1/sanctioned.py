@@ -4,7 +4,7 @@ from datetime import date
 
 import polars as pl
 
-from compras_detect.tier1.common import flag, to_frame
+from compras_detect.tier1.common import award_date, flag, to_frame
 from compras_normalize.text import fold, parse_date
 
 
@@ -20,7 +20,7 @@ def detect_sanctioned(items: pl.DataFrame, sanctions: pl.DataFrame | None) -> pl
         cnpj = "".join(c for c in str(row.get("fornecedor_cnpj") or "") if c.isdigit())
         if len(cnpj) != 14 or cnpj not in by_cnpj:
             continue
-        award = _award_date(row)
+        award = award_date(row)
         if award is None:
             continue
         hit = _first_overlap(by_cnpj[cnpj], award)
@@ -42,10 +42,6 @@ def detect_sanctioned(items: pl.DataFrame, sanctions: pl.DataFrame | None) -> pl
             )
         )
     return to_frame(rows)
-
-
-def _award_date(row: dict) -> date | None:
-    return parse_date(row.get("award_date") or row.get("data_resultado") or row.get("publicado_em"))
 
 
 def _first_overlap(rows: list[tuple[date | None, date | None, str, str]], award: date) -> tuple[str, str] | None:

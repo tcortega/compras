@@ -100,6 +100,10 @@ A caixa or pacote without a count keeps the catalog row (`CX` stays `cx`, factor
 ### flag (internal only)
 
 No public explorer route reads this until the Phase 0 precision number exists and is >= 20%.
+`kind` is a detector name.
+`cnpj_age` is the flag tier when `award_date` minus `opened_on` is under 90 days.
+`cnpj_age_info` is the info tier when that age is at least 90 days and under 365 days.
+Both stay `state=detected` and are not public alerts.
 `id` uuid.
 `itemId` uuid.
 `kind` text.

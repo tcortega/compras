@@ -40,17 +40,28 @@ class LandingStore:
         payload = buf.getvalue()
         digest = sha256_bytes(payload)
         key = f"{source}/date={partition_date}/{digest}.parquet"
-        uri = self.put(key, payload)
-        manifest = {
-            "source": source,
-            "partition_date": partition_date,
-            "sha256": digest,
-            "rows": df.height,
-            "columns": df.columns,
-            "written_at": datetime.now(timezone.utc).isoformat(),
-        }
-        self.put(f"{source}/date={partition_date}/{digest}.manifest.json", json.dumps(manifest).encode())
-        return LandingRef(source, partition_date, digest, uri, df.height, key)
+        manifest_key = f"{source}/date={partition_date}/{digest}.manifest.json"
+        if not self.head(key):
+            self.put(key, payload)
+        if not self.head(manifest_key):
+            manifest = {
+                "source": source,
+                "partition_date": partition_date,
+                "sha256": digest,
+                "rows": df.height,
+                "columns": df.columns,
+                "written_at": datetime.now(timezone.utc).isoformat(),
+            }
+            self.put(manifest_key, json.dumps(manifest).encode())
+        return LandingRef(source, partition_date, digest, self.uri_for(key), df.height, key)
+
+    def head(self, key: str) -> bool:
+        return self.exists(key)
+
+    def uri_for(self, key: str) -> str:
+        if self._kind == "file":
+            return (self._root / key).resolve().as_uri()
+        return f"s3://{self._root}/{key}"
 
     def put(self, key: str, data: bytes) -> str:
         if self._kind == "file":

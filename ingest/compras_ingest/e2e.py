@@ -1,25 +1,39 @@
 from __future__ import annotations
 
 import sys
+from pathlib import Path
 
 from compras_detect.tier1 import run_tier1
 from compras_ingest.cpf import assert_no_raw_cpf, mask_cpf
 from compras_ingest.landing import LandingStore
+from compras_ingest.official import (
+    OCDS_OCP_REGISTRY_URL,
+    OCDS_PUBLISHER_URL,
+    RFB_SHARE_URL,
+    resolve_ocds_feed,
+    resolve_receita_index,
+)
 from compras_ingest.pipeline import _collect_landing_records, land_second_snapshot, run_compras_slice
 from compras_ingest.settings import Settings
+from compras_ingest.sources.ocds import land_ocds
+from compras_ingest.sources.receita_cnpj import cnpj_basicos_from_frame, land_receita_cnpj
 from compras_ingest.warehouse import fetch_contratacao, fetch_items_for, fetch_one_orgao, fetch_raw_text_blobs, write_flags
 
 
 ORGAO_CNPJ = "29477000000180"
 PNCP_ID = "29477000000180-1-2024-000001"
 RAW_CPF = "12345678901"
+LANDED_SOURCES = ("compras_gov", "ocds", "receita_cnpj", "receita_cnpj_socios")
 
 
 def main() -> int:
     settings = Settings.from_env()
     _check_defs()
+    official = _assert_official_urls(settings)
     result = run_compras_slice(settings)
     _assert_landing(settings, result.landing.sha256)
+    _assert_tier_a_landing(settings, result.ocds_report)
+    _assert_write_once(settings)
     orgao = fetch_one_orgao(settings, ORGAO_CNPJ)
     if orgao is None:
         raise SystemExit(f"missing orgao {ORGAO_CNPJ}")
@@ -42,14 +56,18 @@ def main() -> int:
     if "retroactive_edit" not in kinds:
         raise SystemExit("expected retroactive_edit after second landing")
     blobs = fetch_raw_text_blobs(settings)
-    for key in store.list_parquet("compras_gov"):
-        df = store.read_parquet(key)
-        blobs.extend(str(v) for col in df.columns for v in df[col].to_list())
+    for source in LANDED_SOURCES:
+        for key in store.list_parquet(source):
+            df = store.read_parquet(key)
+            blobs.extend(str(v) for col in df.columns for v in df[col].to_list())
     assert_no_raw_cpf(blobs)
     if mask_cpf(RAW_CPF) not in " ".join(blobs):
         raise SystemExit("masked CPF not present in landing")
     print("e2e ok")
     print(f"landing={result.landing.uri}")
+    print(f"ocds={result.ocds_report.get('ocds_n')} matched={result.ocds_report.get('matched_n')}")
+    print(f"official_ocds={official['ocds_jsonl']}")
+    print(f"official_rfb={official['rfb_index']}")
     print(f"orgao={orgao['cnpj']} contratacao={contratacao['pncpId']} items={len(items)}")
     print(f"flags={sorted(kinds)}")
     return 0
@@ -64,6 +82,27 @@ def _check_defs() -> None:
         raise SystemExit(str(exc)) from exc
 
 
+def _assert_official_urls(settings: Settings) -> dict:
+    try:
+        ocds = resolve_ocds_feed(settings.ocds_year)
+        rfb = resolve_receita_index()
+    except Exception as exc:
+        raise SystemExit(f"official URL resolve failed: {exc}") from exc
+    if ocds.publisher_url != OCDS_PUBLISHER_URL:
+        raise SystemExit(f"OCDS publisher URL is not official: {ocds.publisher_url}")
+    if ocds.ocp_registry_url != OCDS_OCP_REGISTRY_URL:
+        raise SystemExit(f"OCDS OCP registry URL is not official: {ocds.ocp_registry_url}")
+    if "data.open-contracting.org" not in ocds.ocp_jsonl_url:
+        raise SystemExit(f"OCDS OCP jsonl URL is not official: {ocds.ocp_jsonl_url}")
+    if rfb.index_url != RFB_SHARE_URL:
+        raise SystemExit(f"Receita index URL is not official: {rfb.index_url}")
+    if "arquivos.receitafederal.gov.br" not in rfb.webdav_root:
+        raise SystemExit(f"Receita WebDAV host is not official: {rfb.webdav_root}")
+    if not rfb.month or not rfb.files:
+        raise SystemExit("Receita index resolved without month or files")
+    return {"ocds_jsonl": ocds.ocp_jsonl_url, "rfb_index": rfb.index_url, "rfb_month": rfb.month}
+
+
 def _assert_landing(settings: Settings, sha256: str) -> None:
     store = LandingStore(settings)
     keys = store.list_parquet("compras_gov")
@@ -76,6 +115,60 @@ def _assert_landing(settings: Settings, sha256: str) -> None:
         raise SystemExit(f"landing not partitioned by date: {hashed[0]}")
     if len(sha256) != 64:
         raise SystemExit("content hash is not sha256")
+
+
+def _assert_tier_a_landing(settings: Settings, ocds_report: dict) -> None:
+    store = LandingStore(settings)
+    for source in ("ocds", "receita_cnpj", "receita_cnpj_socios"):
+        keys = [k for k in store.list_parquet(source) if k.endswith(".parquet")]
+        if not keys:
+            raise SystemExit(f"no {source} parquet in landing")
+        for key in keys:
+            if "date=" not in key:
+                raise SystemExit(f"{source} not partitioned by date: {key}")
+            digest = Path(key).stem
+            if len(digest) != 64:
+                raise SystemExit(f"{source} key is not content-hashed sha256: {key}")
+            df = store.read_parquet(key)
+            blobs = [str(v) for col in df.columns for v in df[col].to_list()]
+            assert_no_raw_cpf(blobs)
+            if source == "receita_cnpj" and df.is_empty():
+                raise SystemExit("receita_cnpj landed empty from fixture")
+            if source == "receita_cnpj_socios":
+                if df.is_empty():
+                    raise SystemExit("receita_cnpj_socios landed empty from fixture")
+                if mask_cpf(RAW_CPF) not in " ".join(blobs):
+                    raise SystemExit("receita socios missing masked CPF")
+            if source == "ocds" and df.is_empty():
+                raise SystemExit("ocds landed empty from fixture")
+    if ocds_report.get("skipped"):
+        raise SystemExit("ocds_crosscheck skipped")
+    if ocds_report.get("primary") is not False:
+        raise SystemExit("OCDS must stay secondary")
+    if int(ocds_report.get("ocds_n") or 0) < 1:
+        raise SystemExit("OCDS fixture produced no releases")
+    if int(ocds_report.get("matched_n") or 0) < 1:
+        raise SystemExit("OCDS cross-check matched no compras ids")
+
+
+def _assert_write_once(settings: Settings) -> None:
+    store = LandingStore(settings)
+    first = store.list_parquet("ocds")
+    ref, _ = land_ocds(settings, store=store)
+    if ref.key not in first:
+        raise SystemExit("ocds reland produced a new content-hashed key")
+    if len(store.list_parquet("ocds")) != len(first):
+        raise SystemExit("ocds reland wrote a second parquet")
+    basicos: set[str] = set()
+    for key in store.list_parquet("compras_gov"):
+        basicos |= cnpj_basicos_from_frame(store.read_parquet(key))
+    receita_first = store.list_parquet("receita_cnpj")
+    socios_first = store.list_parquet("receita_cnpj_socios")
+    land_receita_cnpj(settings, store, cnpj_basicos=basicos)
+    if len(store.list_parquet("receita_cnpj")) != len(receita_first):
+        raise SystemExit("receita reland wrote a second parquet")
+    if len(store.list_parquet("receita_cnpj_socios")) != len(socios_first):
+        raise SystemExit("receita socios reland wrote a second parquet")
 
 
 if __name__ == "__main__":

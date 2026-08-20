@@ -1,0 +1,31 @@
+<Project>
+  <PropertyGroup>
+	<LangVersion>latest</LangVersion>
+
+	<Nullable>enable</Nullable>
+	<WarningsAsErrors>Nullable</WarningsAsErrors>
+
+	<ImplicitUsings>enable</ImplicitUsings>
+
+	<TargetFramework>net8.0</TargetFramework>
+	<AnalysisLevel>latest-all</AnalysisLevel>
+	<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+	<TieredPGO>true</TieredPGO>
+
+	<AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
+
+	<GenerateDocumentationFile>true</GenerateDocumentationFile>
+	<NoWarn>$(NoWarn);1591;IDE0022;IDE0058;CA1002;CA1716;CA1724;CA1308;CA1311;CA1862;MA0009;MA0011;MA0053</NoWarn>
+
+	<PublishRepositoryUrl>true</PublishRepositoryUrl>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+	<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+	<EmbedUntrackedSources>true</EmbedUntrackedSources>
+	<CollectCoverage>true</CollectCoverage>
+	<CoverletOutputFormat>opencover</CoverletOutputFormat>
+  </PropertyGroup>
+</Project>

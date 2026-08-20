@@ -211,7 +211,10 @@ These are data-quality tags, not public alerts.
 Excluded items leave the price-anomaly pool and stay in `item`.
 They remain on GET /api/items.
 No explorer route may return an exclusion reason.
-Closed reason set: qty_unit_price_neq_total, decimal_shift, qty_eq_1_collapse, zero_or_negative, duplicate_row, catalog_magnitude.
+Closed reason set: qty_unit_price_neq_total, decimal_shift, qty_eq_1_collapse, zero_or_negative, duplicate_row, catalog_magnitude, excluded_no_award.
+`excluded_no_award` marks a row with no homologated award: situacao Fracassado / Deserto / Anulado / Revogado / Cancelado, resultados HTTP 204, Em andamento without a positive `valor_unitario_resultado`, or a missing homologado unit price.
+The anomaly pool scores `valorUnitarioHomologado` / `valor_unitario_resultado` only.
+It never scores the CSV estimate.
 `itemId` uuid FK item.
 `reason` text.
 `detail` text.

@@ -96,7 +96,8 @@ CREATE TABLE IF NOT EXISTS item_exclusion (
     'qty_eq_1_collapse',
     'zero_or_negative',
     'duplicate_row',
-    'catalog_magnitude'
+    'catalog_magnitude',
+    'excluded_no_award'
   )),
   detail text,
   "snapshotId" text NOT NULL,
@@ -231,6 +232,17 @@ CREATE TABLE IF NOT EXISTS co_bid_screen (
 CREATE INDEX IF NOT EXISTS co_bid_screen_kind_idx ON co_bid_screen (kind);
 CREATE INDEX IF NOT EXISTS co_bid_screen_subject_idx ON co_bid_screen ("subjectId");
 CREATE INDEX IF NOT EXISTS co_bid_screen_state_idx ON co_bid_screen (state);
+
+ALTER TABLE item_exclusion DROP CONSTRAINT IF EXISTS item_exclusion_reason_check;
+ALTER TABLE item_exclusion ADD CONSTRAINT item_exclusion_reason_check CHECK (reason IN (
+  'qty_unit_price_neq_total',
+  'decimal_shift',
+  'qty_eq_1_collapse',
+  'zero_or_negative',
+  'duplicate_row',
+  'catalog_magnitude',
+  'excluded_no_award'
+));
 
 ALTER TABLE item ADD COLUMN IF NOT EXISTS "valorPorUnidadeCanonica" numeric(18, 6);
 ALTER TABLE item ADD COLUMN IF NOT EXISTS "specConcentracao" text;

@@ -199,12 +199,12 @@ class PncpConsultaClient:
         result = self.get(f"{self.official.api_base}{path}")
         return _as_rows(result.payload)
 
-    def resultados(self, cnpj: str, ano: int, sequencial: int, numero_item: int) -> list[dict]:
+    def resultados(self, cnpj: str, ano: int, sequencial: int, numero_item: int) -> tuple[int, list[dict]]:
         path = PNCP_ITEM_RESULTADOS_PATH.format(
             cnpj=cnpj, ano=ano, sequencial=sequencial, numeroItem=numero_item
         )
         result = self.get(f"{self.official.api_base}{path}")
-        return _as_rows(result.payload)
+        return result.status_code, _as_rows(result.payload)
 
 
 def land_pncp_consulta(
@@ -407,14 +407,17 @@ def _ingest(
                         items = client.itens(cnpj, ano, sequencial)
                         item_rows = items or [{}]
                         for item in item_rows:
-                            resultados = []
+                            resultados: list[dict] = []
+                            resultado_http = None
                             numero = item.get("numeroItem")
                             if item.get("temResultado") and numero is not None:
-                                resultados = client.resultados(cnpj, ano, sequencial, int(numero))
+                                resultado_http, resultados = client.resultados(
+                                    cnpj, ano, sequencial, int(numero)
+                                )
                             if not resultados:
                                 resultados = [{}]
                             for resultado in resultados:
-                                rows.append(_row(detail, item, resultado))
+                                rows.append(_row(detail, item, resultado, resultado_http))
                         if pncp_id:
                             seen.add(pncp_id)
                         fetched += 1
@@ -674,7 +677,7 @@ def _compra_key(compra: dict) -> tuple[str, int, int]:
     return cnpj, ano, sequencial
 
 
-def _row(compra: dict, item: dict, resultado: dict) -> dict:
+def _row(compra: dict, item: dict, resultado: dict, resultado_http: int | None = None) -> dict:
     org = compra.get("orgaoEntidade") or {}
     unid = compra.get("unidadeOrgao") or {}
     pncp_id = str(compra.get("numeroControlePNCP") or "")
@@ -709,7 +712,12 @@ def _row(compra: dict, item: dict, resultado: dict) -> dict:
         "nome_fornecedor": str(resultado.get("nomeRazaoSocialFornecedor") or ""),
         "tipo_pessoa": str(resultado.get("tipoPessoa") or ""),
         "valor_unitario_homologado": resultado.get("valorUnitarioHomologado"),
+        "valor_unitario_resultado": resultado.get("valorUnitarioHomologado"),
         "quantidade_homologada": resultado.get("quantidadeHomologada"),
+        "situacao": str(
+            item.get("situacaoCompraItemNome") or compra.get("situacaoCompraNome") or ""
+        ),
+        "resultado_http": resultado_http,
         "source": SOURCE,
         "record_id": record_id,
     }
@@ -758,7 +766,10 @@ def _empty_cols() -> list[str]:
         "nome_fornecedor",
         "tipo_pessoa",
         "valor_unitario_homologado",
+        "valor_unitario_resultado",
         "quantidade_homologada",
+        "situacao",
+        "resultado_http",
         "source",
         "record_id",
         "record_hash",

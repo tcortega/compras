@@ -63,15 +63,20 @@ from compras_ingest.pipeline import (
     run_compras_slice,
     warehouse_data_error_fixture,
 )
+from compras_ingest.pncp_ids import complete_compra_keys, live_ibge_targets
+from compras_ingest.slice import SLICE_IBGE_CODES
 from compras_ingest.settings import Settings
+from compras_ingest.sources.compras_gov import land_compras_gov
 from compras_ingest.sources.ocds import land_ocds
 from compras_ingest.sources.pncp_consulta import (
     CURSOR_KEY,
+    GAPS_CURSOR_KEY,
     MIN_INTERVAL_S,
     FixtureTransport,
     InterruptTransport,
     RateLimiter,
     land_pncp_consulta,
+    land_pncp_consulta_gaps,
 )
 from compras_ingest.sources.cgu_ceis_cnep import SOURCE as CGU_SOURCE
 from compras_ingest.sources.cgu_ceis_cnep import land_cgu_ceis_cnep, load_landed_sanctions
@@ -264,6 +269,8 @@ DATA_ERROR_CLEAN = frozenset(
 MAIN_MISMATCH_RECORD = "I-2024-000002"
 PNCP_COMPRA_1 = "29477000000180-1-000001/2024"
 PNCP_COMPRA_2 = "29477000000180-1-000002/2024"
+PNCP_COMPRA_GAP = "29477000000180-1-000099/2024"
+PNCP_GAP_DESC = "GRAMPEADOR DE MESA METALICO"
 EXTRA_ORGAOS = (
     ("28521748000159", "3303302", "RJ"),
     ("46137410000180", "3506003", "SP"),
@@ -336,6 +343,7 @@ def main() -> int:
         official = _assert_official_urls(settings)
         _assert_compras_gov_official_urls(settings)
         _assert_pncp_spacing_and_resume(settings)
+        _assert_pncp_gaps_job(settings)
         result = run_compras_slice(settings)
         _assert_landing(settings, result.landing.sha256)
         _assert_compras_gov_years(settings)
@@ -369,6 +377,7 @@ def main() -> int:
     items = fetch_items_for(settings, str(contratacao["id"]))
     if not items:
         raise SystemExit("missing item rows for contratacao")
+    _assert_pncp_gap_warehouse(settings)
     _assert_units(settings, result.items)
     store = LandingStore(settings)
     mutate = str(result.items["record_id"][0])
@@ -1216,6 +1225,8 @@ def _assert_tier_a_landing(settings: Settings, ocds_report: dict) -> None:
                 ids = {str(v) for v in df["numero_controle_pncp"].to_list()} if "numero_controle_pncp" in df.columns else set()
                 if PNCP_COMPRA_1 not in ids or PNCP_COMPRA_2 not in ids:
                     raise SystemExit(f"pncp_consulta fixture missing compras: {ids}")
+                if PNCP_COMPRA_GAP not in ids:
+                    raise SystemExit(f"pncp_consulta fixture missing planted gap: {ids}")
                 if mask_cpf(RAW_CPF) not in " ".join(blobs):
                     raise SystemExit("pncp_consulta missing masked CPF")
     if ocds_report.get("skipped"):
@@ -1303,6 +1314,7 @@ def _assert_pncp_spacing_and_resume(settings: Settings) -> None:
         raise SystemExit("PNCP_CONSULTA_DIR fixture is missing")
     _assert_pncp_spacing(settings)
     _assert_pncp_resume(settings)
+    _assert_pncp_gaps_planted(settings)
 
 
 def _assert_pncp_spacing(settings: Settings) -> None:
@@ -1370,6 +1382,131 @@ def _assert_pncp_resume(settings: Settings) -> None:
         raise SystemExit(f"pncp resume dropped rows: {ids}")
     if ref.source != "pncp_consulta" or "date=" not in ref.key:
         raise SystemExit(f"pncp resume landing is not hashed by source/date: {ref.key}")
+
+
+def _assert_pncp_gaps_job(settings: Settings) -> None:
+    from compras_ingest.assets import (
+        GAPS_ASSET_NAME,
+        GAPS_JOB_NAME,
+        GAPS_SCHEDULE_CRON,
+        GAPS_SCHEDULE_NAME,
+        GAPS_SCHEDULE_TZ,
+        defs,
+    )
+
+    if settings.pncp_consulta_fetch:
+        raise SystemExit("fixture e2e must run with PNCP_CONSULTA_FETCH off")
+    targets = live_ibge_targets()
+    if len(targets) != 59:
+        raise SystemExit(f"PNCP gaps live targets {len(targets)} != 59")
+    ibges = {ibge for ibge, _ in targets}
+    if ibges != set(SLICE_IBGE_CODES):
+        raise SystemExit("PNCP gaps live targets drifted from the 59")
+    pub = f"{PNCP_CONSULTA_BASE}{PNCP_PUBLICACAO_PATH}"
+    compra = f"{PNCP_CONSULTA_BASE}{PNCP_COMPRA_PATH}"
+    itens = f"{PNCP_API_BASE}{PNCP_ITENS_PATH}"
+    resultados = f"{PNCP_API_BASE}{PNCP_ITEM_RESULTADOS_PATH}"
+    for url in (pub, compra, itens, resultados):
+        if "pncp.gov.br" not in url:
+            raise SystemExit(f"PNCP URL is not official: {url}")
+        if not url.startswith("https://pncp.gov.br/"):
+            raise SystemExit(f"PNCP URL host shape is wrong: {url}")
+    if pub != "https://pncp.gov.br/api/consulta/v1/contratacoes/publicacao":
+        raise SystemExit(f"publicacao URL drifted: {pub}")
+    if GAPS_SCHEDULE_TZ != "America/Sao_Paulo":
+        raise SystemExit(f"PNCP gaps tz is {GAPS_SCHEDULE_TZ}")
+    found = next((s for s in (defs.schedules or []) if s.name == GAPS_SCHEDULE_NAME), None)
+    if found is None:
+        raise SystemExit(f"defs missing schedule {GAPS_SCHEDULE_NAME}")
+    if found.cron_schedule != GAPS_SCHEDULE_CRON:
+        raise SystemExit(f"PNCP gaps cron {found.cron_schedule} != {GAPS_SCHEDULE_CRON}")
+    if found.execution_timezone != GAPS_SCHEDULE_TZ:
+        raise SystemExit(f"PNCP gaps tz is {found.execution_timezone}")
+    target = found.job_name or getattr(found.job, "name", "")
+    if target != GAPS_JOB_NAME:
+        raise SystemExit(f"gaps schedule does not target {GAPS_JOB_NAME}: {target}")
+    job = defs.resolve_job_def(GAPS_JOB_NAME)
+    from compras_ingest.assets import _job_asset_keys
+
+    selected = _job_asset_keys(job)
+    if selected and GAPS_ASSET_NAME not in selected:
+        raise SystemExit(f"{GAPS_JOB_NAME} missing {GAPS_ASSET_NAME}")
+
+
+def _assert_pncp_gaps_planted(settings: Settings) -> None:
+    if settings.pncp_consulta_dir is None:
+        raise SystemExit("PNCP_CONSULTA_DIR fixture is missing")
+    if settings.pncp_consulta_fetch:
+        raise SystemExit("fixture e2e must not call resolve_pncp_consulta")
+    tmp = Path(tempfile.mkdtemp(prefix="pncp-gaps-"))
+    local = replace(settings, landing_uri=str(tmp))
+    store = LandingStore(local)
+    land_compras_gov(local, store)
+    covered = complete_compra_keys(store)
+    if not covered:
+        raise SystemExit("planted gaps test has no compras.gov coverage")
+    first = FixtureTransport(local.pncp_consulta_dir)
+    ref, df, report = land_pncp_consulta_gaps(
+        local,
+        store,
+        official=_fixture_official(),
+        transport=first,
+        sleeper=_RecordSleep(),
+        covered=covered,
+    )
+    if report.get("mode") != "fixture":
+        raise SystemExit(f"PNCP gaps fixture mode leaked fetch: {report}")
+    if _fetched_sequencial(first.calls, 1):
+        raise SystemExit("PNCP gaps re-fetched a complete compras.gov compra")
+    if _fetched_sequencial(first.calls, 2):
+        raise SystemExit("PNCP gaps re-fetched the second complete compra")
+    if not _fetched_sequencial(first.calls, 99):
+        raise SystemExit("PNCP gaps did not fetch the planted gap")
+    if not any(PNCP_PUBLICACAO_PATH in url for url, _ in first.calls):
+        raise SystemExit("PNCP gaps skipped publicacao discovery")
+    for url, _query in first.calls:
+        if "pncp.gov.br" not in url:
+            raise SystemExit(f"PNCP gaps used a non-official URL: {url}")
+        if not url.startswith(PNCP_CONSULTA_BASE) and not url.startswith(PNCP_API_BASE):
+            raise SystemExit(f"PNCP gaps URL is not an official constant shape: {url}")
+    ids = {str(v) for v in df["numero_controle_pncp"].to_list()} if "numero_controle_pncp" in df.columns else set()
+    if PNCP_COMPRA_GAP not in ids:
+        raise SystemExit(f"PNCP gaps landing missed the planted gap: {ids}")
+    blobs = [str(v) for col in df.columns for v in df[col].to_list()]
+    assert_no_raw_cpf(blobs)
+    if not store.exists(GAPS_CURSOR_KEY):
+        raise SystemExit("PNCP gaps lost the cursor")
+    first_keys = set(store.list_parquet("pncp_consulta"))
+    second = FixtureTransport(local.pncp_consulta_dir)
+    ref2, _, _ = land_pncp_consulta_gaps(
+        local,
+        store,
+        official=_fixture_official(),
+        transport=second,
+        sleeper=_RecordSleep(),
+        covered=covered,
+    )
+    if _fetched_sequencial(second.calls, 1) or _fetched_sequencial(second.calls, 99):
+        raise SystemExit("PNCP gaps second run re-fetched a completed or complete row")
+    if len(store.list_parquet("pncp_consulta")) != len(first_keys):
+        raise SystemExit("PNCP gaps second run wrote a second parquet")
+    if ref2.sha256 != ref.sha256:
+        raise SystemExit("PNCP gaps content hash moved with the same payload")
+
+
+def _assert_pncp_gap_warehouse(settings: Settings) -> None:
+    if fetch_contratacao(settings, PNCP_COMPRA_1) is not None:
+        raise SystemExit("complete PNCP compra was written as a gap")
+    gap = fetch_contratacao(settings, PNCP_COMPRA_GAP)
+    if gap is None:
+        raise SystemExit(f"warehouse missing planted PNCP gap {PNCP_COMPRA_GAP}")
+    if str(gap.get("source") or "") != "pncp_consulta":
+        raise SystemExit(f"PNCP gap source is not pncp_consulta: {gap.get('source')}")
+    rows = fetch_items_for(settings, str(gap["id"]))
+    if not rows:
+        raise SystemExit("warehouse missing items for the planted PNCP gap")
+    if not any(PNCP_GAP_DESC in str(row.get("descricao") or "") for row in rows):
+        raise SystemExit("warehouse gap item is not the planted grampeador")
 
 
 def _assert_tce_sp_host_refused() -> None:

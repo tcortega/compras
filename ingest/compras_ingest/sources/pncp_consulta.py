@@ -14,6 +14,12 @@ import polars as pl
 from compras_ingest.cpf import assert_no_raw_cpf, mask_frame
 from compras_ingest.ids import record_hash
 from compras_ingest.landing import LandingRef, LandingStore, partition_date_of
+from compras_ingest.pncp_ids import (
+    complete_compra_keys,
+    fixture_ibge_targets,
+    is_complete_compra,
+    live_ibge_targets,
+)
 from compras_ingest.official import (
     PNCP_API_BASE,
     PNCP_COMPRA_PATH,
@@ -33,6 +39,7 @@ from compras_normalize.text import parse_datetime
 
 SOURCE = "pncp_consulta"
 CURSOR_KEY = "pncp_consulta/_cursor.json"
+GAPS_CURSOR_KEY = "pncp_consulta/_gaps_cursor.json"
 ROWS_KEY = "pncp_consulta/_rows.json"
 PAGE_SIZE = 50
 MIN_INTERVAL_S = 1.0
@@ -209,6 +216,8 @@ def land_pncp_consulta(
     clock: Clock | None = None,
     client_holder: httpx.Client | None = None,
     window: tuple[date, date] | None = None,
+    gaps_only: bool = False,
+    covered: set[tuple[str, int, int]] | None = None,
 ) -> tuple[LandingRef, pl.DataFrame, dict]:
     store = store or LandingStore(settings)
     if official is None:
@@ -233,14 +242,22 @@ def land_pncp_consulta(
             transport = FixtureTransport(root)
     client = PncpConsultaClient(transport, limiter, official)
     try:
-        rows, report = _ingest(settings, store, client, official, window=window)
+        rows, report = _ingest(
+            settings,
+            store,
+            client,
+            official,
+            window=window,
+            gaps_only=gaps_only,
+            covered=covered,
+        )
     finally:
         if owned_client is not None and client_holder is None:
             owned_client.close()
     df = _frame(rows)
     df = mask_frame(df)
     _assert_no_raw_cpf_frame(df)
-    if df.is_empty() and not report.get("resumed_empty"):
+    if df.is_empty() and not report.get("resumed_empty") and not report.get("gaps_empty"):
         raise RuntimeError("pncp_consulta produced no rows")
     dates = [parse_datetime(v) for v in df["data_publicacao_pncp"].to_list()] if "data_publicacao_pncp" in df.columns else []
     part = partition_date_of(dates) if dates else datetime.now(timezone.utc).date().isoformat()
@@ -249,7 +266,9 @@ def land_pncp_consulta(
         {
             "consulta_base": official.consulta_base,
             "api_base": official.api_base,
+            "publicacao_url": f"{official.consulta_base}{PNCP_PUBLICACAO_PATH}",
             "mode": "fetch" if settings.pncp_consulta_fetch else "fixture",
+            "gaps_only": gaps_only,
             "http_calls": len(client.calls),
             "trailing_window_days": settings.trailing_window_days,
         }
@@ -264,22 +283,59 @@ def land_pncp_consulta(
     return ref, df, report
 
 
+def land_pncp_consulta_gaps(
+    settings: Settings,
+    store: LandingStore | None = None,
+    official: PncpOfficial | None = None,
+    transport: Transport | None = None,
+    sleeper: Sleeper | None = None,
+    clock: Clock | None = None,
+    covered: set[tuple[str, int, int]] | None = None,
+) -> tuple[LandingRef, pl.DataFrame, dict]:
+    store = store or LandingStore(settings)
+    covered = covered if covered is not None else complete_compra_keys(store)
+    return land_pncp_consulta(
+        settings,
+        store,
+        official=official,
+        transport=transport,
+        sleeper=sleeper,
+        clock=clock,
+        gaps_only=True,
+        covered=covered,
+    )
+
+
 def _ingest(
     settings: Settings,
     store: LandingStore,
     client: PncpConsultaClient,
     official: PncpOfficial,
     window: tuple[date, date] | None = None,
+    gaps_only: bool = False,
+    covered: set[tuple[str, int, int]] | None = None,
 ) -> tuple[list[dict], dict]:
-    ibge = settings.pncp_consulta_ibge
     year = settings.pncp_consulta_year
-    uf = settings.pncp_consulta_uf
+    targets = _targets(settings, official)
     windows, modalidades = _plan(settings, official, window=window)
-    cursor = _read_cursor(store)
-    if cursor and cursor.get("done") and cursor.get("ibge") == ibge and int(cursor.get("year") or 0) == year:
+    cursor_key = GAPS_CURSOR_KEY if gaps_only else CURSOR_KEY
+    if gaps_only and covered is None:
+        covered = complete_compra_keys(store)
+    covered = covered or set()
+    if gaps_only and not covered and not store.list_parquet("compras_gov"):
+        raise RuntimeError("PNCP gaps need compras.gov landing for the 59")
+    cursor = _read_cursor(store, cursor_key)
+    target_ibges = {ibge for ibge, _ in targets}
+    if _cursor_done(cursor, year, target_ibges):
         existing = _read_rows(store) or _rows_from_landing(store)
-        return existing, {"resumed_empty": False, "done": True, "skipped_http": True, "rows": len(existing)}
-    start = _resume_point(cursor, ibge, year, windows, modalidades)
+        return existing, {
+            "resumed_empty": False,
+            "done": True,
+            "skipped_http": True,
+            "gaps_only": gaps_only,
+            "rows": len(existing),
+        }
+    start = _resume_point(cursor, targets, year, windows, modalidades)
     rows = _read_rows(store)
     if not rows:
         rows = _rows_from_landing(store)
@@ -287,108 +343,170 @@ def _ingest(
     if cursor:
         seen.update(str(x) for x in (cursor.get("completed_ids") or []) if x)
     skipped = 0
+    skipped_complete = 0
     fetched = 0
     started = False
-    for data_inicial, data_final in windows:
-        for modalidade in modalidades:
-            if not started:
-                if (data_inicial, data_final, modalidade) != start["window"]:
-                    continue
-                started = True
-                page = int(start["page"])
-            else:
-                page = 1
-            last_id = start["last_id"] if (data_inicial, data_final, modalidade) == start["window"] else ""
-            while True:
-                payload = client.publicacao(data_inicial, data_final, modalidade, page, ibge, uf)
-                compras = _page_data(payload)
-                if not compras:
-                    break
-                for compra in compras:
-                    pncp_id = str(compra.get("numeroControlePNCP") or "")
-                    if last_id and pncp_id == last_id:
-                        last_id = ""
+    completed_ibges = set(str(x) for x in (cursor or {}).get("completed_ibges") or [])
+    last_ibge = ""
+    last_uf = ""
+    for ibge, uf in targets:
+        last_ibge, last_uf = ibge, uf
+        if ibge in completed_ibges:
+            continue
+        for data_inicial, data_final in windows:
+            for modalidade in modalidades:
+                if not started:
+                    if (ibge, data_inicial, data_final, modalidade) != start["window"]:
                         continue
-                    if last_id:
-                        continue
-                    if pncp_id and pncp_id in seen:
-                        skipped += 1
-                        continue
-                    cnpj, ano, sequencial = _compra_key(compra)
-                    detail = client.compra(cnpj, ano, sequencial) or compra
-                    items = client.itens(cnpj, ano, sequencial)
-                    item_rows = items or [{}]
-                    for item in item_rows:
-                        resultados = []
-                        numero = item.get("numeroItem")
-                        if item.get("temResultado") and numero is not None:
-                            resultados = client.resultados(cnpj, ano, sequencial, int(numero))
-                        if not resultados:
-                            resultados = [{}]
-                        for resultado in resultados:
-                            rows.append(_row(detail, item, resultado))
-                    if pncp_id:
-                        seen.add(pncp_id)
-                    fetched += 1
-                    _write_rows(store, rows)
+                    started = True
+                    page = int(start["page"])
+                else:
+                    page = 1
+                same_window = (ibge, data_inicial, data_final, modalidade) == start["window"]
+                last_id = start["last_id"] if same_window else ""
+                while True:
+                    payload = client.publicacao(data_inicial, data_final, modalidade, page, ibge, uf)
+                    compras = _page_data(payload)
+                    if not compras:
+                        break
+                    for compra in compras:
+                        pncp_id = str(compra.get("numeroControlePNCP") or "")
+                        if last_id and pncp_id == last_id:
+                            last_id = ""
+                            continue
+                        if last_id:
+                            continue
+                        if pncp_id and pncp_id in seen:
+                            skipped += 1
+                            continue
+                        if gaps_only and is_complete_compra(pncp_id, covered):
+                            if pncp_id:
+                                seen.add(pncp_id)
+                            skipped_complete += 1
+                            skipped += 1
+                            _write_cursor(
+                                store,
+                                _cursor_payload(
+                                    ibge,
+                                    year,
+                                    data_inicial,
+                                    data_final,
+                                    modalidade,
+                                    page,
+                                    pncp_id,
+                                    seen,
+                                    completed_ibges,
+                                    False,
+                                    gaps_only,
+                                ),
+                                cursor_key,
+                            )
+                            continue
+                        cnpj, ano, sequencial = _compra_key(compra)
+                        detail = client.compra(cnpj, ano, sequencial) or compra
+                        items = client.itens(cnpj, ano, sequencial)
+                        item_rows = items or [{}]
+                        for item in item_rows:
+                            resultados = []
+                            numero = item.get("numeroItem")
+                            if item.get("temResultado") and numero is not None:
+                                resultados = client.resultados(cnpj, ano, sequencial, int(numero))
+                            if not resultados:
+                                resultados = [{}]
+                            for resultado in resultados:
+                                rows.append(_row(detail, item, resultado))
+                        if pncp_id:
+                            seen.add(pncp_id)
+                        fetched += 1
+                        _write_rows(store, rows)
+                        _write_cursor(
+                            store,
+                            _cursor_payload(
+                                ibge,
+                                year,
+                                data_inicial,
+                                data_final,
+                                modalidade,
+                                page,
+                                pncp_id,
+                                seen,
+                                completed_ibges,
+                                False,
+                                gaps_only,
+                            ),
+                            cursor_key,
+                        )
+                    total_pages = (payload or {}).get("totalPaginas")
+                    if total_pages is not None:
+                        if page >= int(total_pages):
+                            break
+                    elif len(compras) < PAGE_SIZE:
+                        break
+                    page += 1
                     _write_cursor(
                         store,
-                        {
-                            "ibge": ibge,
-                            "year": year,
-                            "data_inicial": data_inicial,
-                            "data_final": data_final,
-                            "modalidade": modalidade,
-                            "page": page,
-                            "last_id": pncp_id,
-                            "completed_ids": sorted(seen),
-                            "done": False,
-                        },
+                        _cursor_payload(
+                            ibge,
+                            year,
+                            data_inicial,
+                            data_final,
+                            modalidade,
+                            page,
+                            "",
+                            seen,
+                            completed_ibges,
+                            False,
+                            gaps_only,
+                        ),
+                        cursor_key,
                     )
-                total_pages = (payload or {}).get("totalPaginas")
-                if total_pages is not None:
-                    if page >= int(total_pages):
-                        break
-                elif len(compras) < PAGE_SIZE:
-                    break
-                page += 1
-                _write_cursor(
-                    store,
-                    {
-                        "ibge": ibge,
-                        "year": year,
-                        "data_inicial": data_inicial,
-                        "data_final": data_final,
-                        "modalidade": modalidade,
-                        "page": page,
-                        "last_id": "",
-                        "completed_ids": sorted(seen),
-                        "done": False,
-                    },
-                )
+        completed_ibges.add(ibge)
     _write_cursor(
         store,
-        {
-            "ibge": ibge,
-            "year": year,
-            "data_inicial": windows[-1][0] if windows else "",
-            "data_final": windows[-1][1] if windows else "",
-            "modalidade": modalidades[-1] if modalidades else 0,
-            "page": 1,
-            "last_id": "",
-            "completed_ids": sorted(seen),
-            "done": True,
-        },
+        _cursor_payload(
+            last_ibge,
+            year,
+            windows[-1][0] if windows else "",
+            windows[-1][1] if windows else "",
+            modalidades[-1] if modalidades else 0,
+            1,
+            "",
+            seen,
+            completed_ibges,
+            True,
+            gaps_only,
+        ),
+        cursor_key,
     )
     return rows, {
         "done": True,
         "skipped_http": False,
+        "gaps_only": gaps_only,
+        "gaps_empty": gaps_only and fetched == 0,
         "rows": len(rows),
         "fetched_compras": fetched,
         "skipped_compras": skipped,
-        "ibge": ibge,
+        "skipped_complete": skipped_complete,
+        "ibge": last_ibge,
+        "ibges": [ibge for ibge, _ in targets],
         "year": year,
+        "covered_n": len(covered),
     }
+
+
+def _targets(settings: Settings, official: PncpOfficial) -> list[tuple[str, str]]:
+    _ = official
+    if settings.pncp_consulta_fetch:
+        return live_ibge_targets()
+    if settings.pncp_consulta_dir is None:
+        raise FileNotFoundError("PNCP_CONSULTA_DIR missing")
+    manifest_path = settings.pncp_consulta_dir / "manifest.json"
+    if manifest_path.exists():
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        ibge = str(manifest.get("ibge") or settings.pncp_consulta_ibge)
+        uf = str(manifest.get("uf") or settings.pncp_consulta_uf)
+        return fixture_ibge_targets(ibge, uf)
+    return fixture_ibge_targets(settings.pncp_consulta_ibge, settings.pncp_consulta_uf)
 
 
 def _plan(
@@ -441,13 +559,17 @@ def _windows_for_range(start: date, end: date) -> list[tuple[str, str]]:
 
 def _resume_point(
     cursor: dict | None,
-    ibge: str,
+    targets: list[tuple[str, str]],
     year: int,
     windows: list[tuple[str, str]],
     modalidades: list[int],
 ) -> dict:
-    first = {"window": (windows[0][0], windows[0][1], modalidades[0]), "page": 1, "last_id": ""}
-    if not cursor or cursor.get("ibge") != ibge or int(cursor.get("year") or 0) != year:
+    first_ibge = targets[0][0]
+    first = {"window": (first_ibge, windows[0][0], windows[0][1], modalidades[0]), "page": 1, "last_id": ""}
+    if not cursor or int(cursor.get("year") or 0) != year:
+        return first
+    ibge = str(cursor.get("ibge") or "")
+    if ibge not in {code for code, _ in targets}:
         return first
     data_inicial = str(cursor.get("data_inicial") or "")
     data_final = str(cursor.get("data_final") or "")
@@ -455,20 +577,57 @@ def _resume_point(
     if (data_inicial, data_final) not in windows or modalidade not in modalidades:
         return first
     return {
-        "window": (data_inicial, data_final, modalidade),
+        "window": (ibge, data_inicial, data_final, modalidade),
         "page": int(cursor.get("page") or 1),
         "last_id": str(cursor.get("last_id") or ""),
     }
 
 
-def _read_cursor(store: LandingStore) -> dict | None:
-    if not store.exists(CURSOR_KEY):
+def _cursor_done(cursor: dict | None, year: int, target_ibges: set[str]) -> bool:
+    if not cursor or not cursor.get("done") or int(cursor.get("year") or 0) != year:
+        return False
+    done = {str(x) for x in (cursor.get("completed_ibges") or []) if x}
+    if cursor.get("ibge"):
+        done.add(str(cursor["ibge"]))
+    return target_ibges <= done
+
+
+def _cursor_payload(
+    ibge: str,
+    year: int,
+    data_inicial: str,
+    data_final: str,
+    modalidade: int,
+    page: int,
+    last_id: str,
+    seen: set[str],
+    completed_ibges: set[str],
+    done: bool,
+    gaps_only: bool,
+) -> dict:
+    return {
+        "ibge": ibge,
+        "year": year,
+        "data_inicial": data_inicial,
+        "data_final": data_final,
+        "modalidade": modalidade,
+        "page": page,
+        "last_id": last_id,
+        "completed_ids": sorted(seen),
+        "completed_ibges": sorted(completed_ibges),
+        "done": done,
+        "gaps_only": gaps_only,
+    }
+
+
+def _read_cursor(store: LandingStore, key: str = CURSOR_KEY) -> dict | None:
+    if not store.exists(key):
         return None
-    return json.loads(store.get(CURSOR_KEY).decode())
+    return json.loads(store.get(key).decode())
 
 
-def _write_cursor(store: LandingStore, cursor: dict) -> None:
-    store.put_replace(CURSOR_KEY, json.dumps(cursor, indent=2).encode())
+def _write_cursor(store: LandingStore, cursor: dict, key: str = CURSOR_KEY) -> None:
+    store.put_replace(key, json.dumps(cursor, indent=2).encode())
 
 
 def _read_rows(store: LandingStore) -> list[dict]:

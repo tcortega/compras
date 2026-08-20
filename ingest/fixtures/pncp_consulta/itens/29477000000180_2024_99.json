@@ -1,0 +1,16 @@
+[
+  {
+    "numeroItem": 1,
+    "descricao": "GRAMPEADOR DE MESA METALICO",
+    "materialOuServico": "M",
+    "materialOuServicoNome": "Material",
+    "valorUnitarioEstimado": 20.0,
+    "valorTotal": 80.0,
+    "quantidade": 4.0,
+    "unidadeMedida": "UN",
+    "catalogoCodigoItem": "123456",
+    "temResultado": true,
+    "situacaoCompraItem": 2,
+    "situacaoCompraItemNome": "Homologado"
+  }
+]

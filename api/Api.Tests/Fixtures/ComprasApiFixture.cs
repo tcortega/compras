@@ -290,6 +290,28 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			MunicipioIbge = "1504208",
 			MunicipioNome = "Maraba",
 		};
+		var varzeaGrande = new Orgao
+		{
+			Id = SliceIds.OrgaoVarzeaGrande,
+			Cnpj = "03507548000110",
+			RazaoSocial = "Municipio de Varzea Grande",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "MT",
+			MunicipioIbge = "5108402",
+			MunicipioNome = "Varzea Grande",
+		};
+		var jiParana = new Orgao
+		{
+			Id = SliceIds.OrgaoJiParana,
+			Cnpj = "04092672000125",
+			RazaoSocial = "Municipio de Ji-Parana",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "RO",
+			MunicipioIbge = "1100122",
+			MunicipioNome = "Ji-Parana",
+		};
 		var fornecedor = new Fornecedor
 		{
 			Id = SliceIds.Fornecedor,
@@ -578,6 +600,34 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
 		};
+		var contratacaoVarzeaGrande = new Contratacao
+		{
+			Id = SliceIds.ContratacaoVarzeaGrande,
+			PncpId = "03507548000110-1-000073/2024",
+			OrgaoId = SliceIds.OrgaoVarzeaGrande,
+			Modalidade = "dispensa",
+			Objeto = "Fornecimento de equipamentos permanentes de informatica",
+			Ano = 2024,
+			ValorHomologado = 52042m,
+			PublicadoEm = Instant.FromUtc(2024, 11, 27, 9, 10),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoJiParana = new Contratacao
+		{
+			Id = SliceIds.ContratacaoJiParana,
+			PncpId = "04092672000125-1-000139/2024",
+			OrgaoId = SliceIds.OrgaoJiParana,
+			Modalidade = "inexigibilidade",
+			Objeto = "Fornecimento de assinatura anual de banco de dados",
+			Ano = 2024,
+			ValorHomologado = 38540m,
+			PublicadoEm = Instant.FromUtc(2024, 10, 18, 9, 52),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
 		var itemNiteroi = new Item
 		{
 			Id = SliceIds.ItemNiteroi,
@@ -850,11 +900,45 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
 		};
+		var itemVarzeaGrande = new Item
+		{
+			Id = SliceIds.ItemVarzeaGrande,
+			ContratacaoId = SliceIds.ContratacaoVarzeaGrande,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Microcomputador",
+			Catmat = "606229",
+			Quantidade = 2m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 26021m,
+			ValorTotal = 52042m,
+			Uf = "MT",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var itemJiParana = new Item
+		{
+			Id = SliceIds.ItemJiParana,
+			ContratacaoId = SliceIds.ContratacaoJiParana,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Assinatura de banco de imagens",
+			Catmat = "30130",
+			Quantidade = 1m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 38540m,
+			ValorTotal = 38540m,
+			Uf = "RO",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
 
-		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville, uberlandia, londrina, feira, caruaru, anapolis, vilaVelha, campinaGrande, caucaia, imperatriz, arapiraca, dourados, maraba);
+		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville, uberlandia, londrina, feira, caruaru, anapolis, vilaVelha, campinaGrande, caucaia, imperatriz, arapiraca, dourados, maraba, varzeaGrande, jiParana);
 		db.Fornecedores.AddRange(fornecedor, fornecedorExtra);
-		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina, contratacaoFeira, contratacaoCaruaru, contratacaoAnapolis, contratacaoVilaVelha, contratacaoCampinaGrande, contratacaoCaucaia, contratacaoImperatriz, contratacaoArapiraca, contratacaoDourados, contratacaoMaraba);
-		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina, itemFeira, itemCaruaru, itemAnapolis, itemVilaVelha, itemCampinaGrande, itemCaucaia, itemImperatriz, itemArapiraca, itemDourados, itemMaraba);
+		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina, contratacaoFeira, contratacaoCaruaru, contratacaoAnapolis, contratacaoVilaVelha, contratacaoCampinaGrande, contratacaoCaucaia, contratacaoImperatriz, contratacaoArapiraca, contratacaoDourados, contratacaoMaraba, contratacaoVarzeaGrande, contratacaoJiParana);
+		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina, itemFeira, itemCaruaru, itemAnapolis, itemVilaVelha, itemCampinaGrande, itemCaucaia, itemImperatriz, itemArapiraca, itemDourados, itemMaraba, itemVarzeaGrande, itemJiParana);
 	}
 
 	private static JsonSerializerOptions CreateJson()

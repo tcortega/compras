@@ -1,0 +1,81 @@
+{
+  "municipio": "Volta Redonda",
+  "ibge": "3306305",
+  "uf": "RJ",
+  "year": 2024,
+  "esfera": "M",
+  "public_flag": false,
+  "explorer_dto": false,
+  "label_source": "labels/labels.csv",
+  "label_meaning": "real means a surviving price anomaly, not a fraud verdict",
+  "n_cases": 9,
+  "id_compra_item": [
+    "4500680700113202400020",
+    "9277610590104202400016",
+    "4500680590077202400098",
+    "4500680590126202400008",
+    "9268500590078202400042",
+    "4500680590045202400004",
+    "4500680590104202400074",
+    "4500680700113202400010",
+    "4500680700118202400006"
+  ],
+  "ranks": [
+    9,
+    11,
+    43,
+    50,
+    58,
+    59,
+    83,
+    85,
+    100
+  ],
+  "git_sha": "8c4b882a9b0aa815ff4902ef92145fb5bc956fa3",
+  "computed_at_utc": "2026-08-20T16:00:00Z",
+  "methods": {
+    "b1": "compras_detect.tier1.sanctioned.detect_sanctioned on official Portal da Transparencia CEIS and CNEP bulk extracts dated 20260820 joined to PNCP dataResultado",
+    "b2": "compras_detect.tier1.cnpj_age.detect_cnpj_age using opened_on from public RFB-sourced CNPJ cards and award_date from PNCP resultados dataResultado",
+    "f1": "compras_detect.adjacency.build_adjacencies on the six awarded legal-entity CNPJ cards only. Full RFB dump reverse search was not landed in this run."
+  },
+  "detector_versions": {
+    "sanctioned": "compras_detect.tier1.sanctioned",
+    "cnpj_age": "compras_detect.tier1.cnpj_age",
+    "adjacency": "compras_detect.adjacency"
+  },
+  "official_sources": [
+    "https://pncp.gov.br/api/pncp/v1/orgaos/{cnpj}/compras/{ano}/{sequencial}/itens/{n}",
+    "https://pncp.gov.br/api/pncp/v1/orgaos/{cnpj}/compras/{ano}/{sequencial}/itens/{n}/resultados",
+    "https://portaldatransparencia.gov.br/download-de-dados/ceis",
+    "https://portaldatransparencia.gov.br/download-de-dados/cnep",
+    "https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/ceis/20260820_CEIS.zip",
+    "https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/cnep/20260820_CNEP.zip",
+    "https://minhareceita.org/{cnpj}",
+    "https://brasilapi.com.br/api/cnpj/v1/{cnpj}",
+    "https://arquivos.receitafederal.gov.br/index.php/s/YggdBLfdninEJX9"
+  ],
+  "cgu_extract_day": "20260820",
+  "cgu_ceis_n": 23555,
+  "cgu_cnep_n": 1761,
+  "signals_fired": {
+    "b1_sanctioned_ceis_cnep": 0,
+    "b2_cnpj_age": 0,
+    "b2_cnpj_age_info": 1,
+    "f1_adjacency": 0
+  },
+  "f1_scope": "awarded legal-entity CNPJ cards in this nine-row set",
+  "phase0_untouched": {
+    "n_real": 9,
+    "n_unit_error": 9,
+    "n_spec_difference": 35,
+    "n_data_error": 47,
+    "precision_real": 0.09,
+    "catmat_percent_coded": 81.75
+  },
+  "notes": [
+    "This folder is internal. It is not a public flag and it does not add an explorer DTO.",
+    "Empty signal cells are misses. They were not invented.",
+    "F1 on a six-card set cannot claim a national Receita miss.",
+    "Sprint data+unit-under-15% is not claimed met."
+  ]
+}

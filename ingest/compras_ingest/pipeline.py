@@ -20,13 +20,16 @@ from compras_ingest.settings import Settings
 from compras_ingest.sources.catalogo_cnbs import land_catalogo_cnbs
 from compras_ingest.sources.compras_gov import land_compras_gov
 from compras_ingest.sources.ocds import land_ocds
-from compras_ingest.sources.pncp_consulta import land_pncp_consulta
+from compras_ingest.pncp_ids import complete_compra_keys, parquet_sha, pncp_gap_rows
+from compras_ingest.sources.pncp_consulta import land_pncp_consulta, land_pncp_consulta_gaps
 from compras_ingest.sources.cgu_ceis_cnep import land_cgu_ceis_cnep, load_landed_sanctions
 from compras_ingest.sources.receita_cnpj import cnpj_basicos_from_frame, land_receita_cnpj
 from compras_ingest.sources.tce_rs_licitacon import land_tce_rs_licitacon
 from compras_ingest.sources.tce_sp_licitacao import land_tce_sp_licitacao
+from compras_ingest.ids import item_id
 from compras_ingest.warehouse import (
     apply_schema,
+    fetch_all_items,
     write_adjacencies,
     write_catalog,
     write_entities,
@@ -63,7 +66,7 @@ def run_compras_slice(settings: Settings, store: LandingStore | None = None) -> 
     landed_cnpj, _cnpj_df = land_receita_cnpj(settings, store, cnpj_basicos=cnpj_basicos_from_frame(raw))
     receita_ref = landed_cnpj.as_dict()
     _, ocds_report = land_ocds(settings, compras_ids, store)
-    land_pncp_consulta(settings, store)
+    pncp_ref, _, _ = land_pncp_consulta(settings, store)
     land_tce_sp_licitacao(settings, store)
     land_tce_rs_licitacon(settings, store)
     land_cgu_ceis_cnep(settings, store)
@@ -73,6 +76,7 @@ def run_compras_slice(settings: Settings, store: LandingStore | None = None) -> 
         landing.as_dict(),
         catalog_ref.as_dict(),
         receita_ref,
+        pncp_ref.as_dict(),
     )
     flags, flag_rows = run_tier1_and_write_flags(settings, store, items)
     _, adjacency_rows = run_adjacency_and_write(settings, store)
@@ -95,6 +99,7 @@ def warehouse_from_landing(
     compras: dict,
     catalog: dict,
     receita: dict | None = None,
+    pncp: dict | None = None,
 ) -> tuple[pl.DataFrame, dict]:
     """Normalize landed parquet, write warehouse rows, persist data-error exclusions. Does not land or run B-track detectors."""
     apply_schema(settings)
@@ -123,6 +128,16 @@ def warehouse_from_landing(
     if not snapshot_id:
         raise ValueError("compras_gov landing missing sha256")
     items = pl.concat(item_frames, how="diagonal_relaxed") if item_frames else pl.DataFrame()
+    gap_items, gap_n = _normalize_pncp_gaps(
+        settings,
+        store,
+        catalog_model,
+        units,
+        cnpj_df,
+        pncp,
+    )
+    if gap_items.height:
+        items = pl.concat([items, gap_items], how="diagonal_relaxed") if items.height else gap_items
     entity_counts = write_entities(settings, items)
     fact_rows = write_facts(settings, items)
     catalog_rows = write_catalog(settings, catalog_df)
@@ -155,7 +170,118 @@ def warehouse_from_landing(
         "anomaly_pool_key": pool_ref.key,
         "items_key": items_ref.key,
         "snapshot_id": snapshot_id,
+        "pncp_gaps": gap_n,
     }
+
+
+def run_pncp_consulta_gaps(
+    settings: Settings,
+    store: LandingStore | None = None,
+    official=None,
+    transport=None,
+    sleeper=None,
+    clock=None,
+) -> tuple[LandingRef, pl.DataFrame, dict]:
+    """Land PNCP gaps for the 59, write only those rows. Skip complete compras.gov compras."""
+    store = store or LandingStore(settings)
+    covered = complete_compra_keys(store)
+    ref, raw, report = land_pncp_consulta_gaps(
+        settings,
+        store,
+        official=official,
+        transport=transport,
+        sleeper=sleeper,
+        clock=clock,
+        covered=covered,
+    )
+    apply_schema(settings)
+    catalog_ref, catalog_df = land_catalogo_cnbs(settings, store)
+    catalog_model = load_catalog([catalog_df])
+    units = load_unit_table()
+    receita_keys = store.list_parquet("receita_cnpj")
+    cnpj_df = store.read_parquet(receita_keys[-1]) if receita_keys else None
+    gap_items, gap_n = _normalize_pncp_gaps(
+        settings,
+        store,
+        catalog_model,
+        units,
+        cnpj_df if cnpj_df is not None and cnpj_df.height else None,
+        ref.as_dict(),
+    )
+    entity_counts = write_entities(settings, gap_items) if gap_items.height else {}
+    fresh = _new_items(settings, gap_items)
+    fact_rows = write_facts(settings, fresh) if fresh.height else 0
+    write_landing_sources(settings, store)
+    _ = catalog_ref
+    return ref, raw, {
+        **report,
+        "pncp_gaps": gap_n,
+        "entities": entity_counts,
+        "facts": fact_rows,
+    }
+
+
+def _normalize_pncp_gaps(
+    settings: Settings,
+    store: LandingStore,
+    catalog_model,
+    units,
+    cnpj_df,
+    pncp: dict | None,
+) -> tuple[pl.DataFrame, int]:
+    covered = complete_compra_keys(store)
+    keys = store.list_parquet("pncp_consulta")
+    if not keys:
+        return pl.DataFrame(), 0
+    snap = str((pncp or {}).get("sha256") or "")
+    frames: list[pl.DataFrame] = []
+    seen: set[str] = set()
+    for key in keys:
+        raw = store.read_parquet(key)
+        if raw.is_empty():
+            continue
+        gaps = pncp_gap_rows(raw, covered)
+        if gaps.is_empty():
+            continue
+        digest = snap or parquet_sha(key)
+        normalized = normalize_frame(
+            gaps,
+            catalog_model,
+            units,
+            cnpj_df,
+            digest,
+            settings.methodology_version,
+        )
+        if "record_id" in normalized.columns:
+            keep = []
+            for row in normalized.iter_rows(named=True):
+                rid = str(row.get("record_id") or "")
+                if rid and rid in seen:
+                    keep.append(False)
+                    continue
+                if rid:
+                    seen.add(rid)
+                keep.append(True)
+            normalized = normalized.filter(pl.Series("keep", keep))
+        if normalized.height:
+            frames.append(normalized)
+    if not frames:
+        return pl.DataFrame(), 0
+    out = pl.concat(frames, how="diagonal_relaxed")
+    return out, out.height
+
+
+def _new_items(settings: Settings, items: pl.DataFrame) -> pl.DataFrame:
+    if items.is_empty():
+        return items
+    have = {str(row["id"]) for row in fetch_all_items(settings)}
+    keep = []
+    for row in items.iter_rows(named=True):
+        iid = item_id(str(row.get("pncp_id") or ""), str(row.get("record_id") or ""))
+        keep.append(iid not in have)
+    if not any(keep):
+        return items.head(0)
+    return items.filter(pl.Series("keep", keep))
 
 
 def warehouse_data_error_fixture(settings: Settings) -> tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame]:

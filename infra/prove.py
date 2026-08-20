@@ -47,6 +47,8 @@ PUBLISHED = {
     "1100122": ("ji-parana", "RO"),
     "2403251": ("parnamirim", "RN"),
     "1200203": ("cruzeiro do sul", "AC"),
+    "1600600": ("municipio de santana", "AP"),
+    "1400472": ("rorainopolis", "RR"),
 }
 
 
@@ -55,7 +57,7 @@ def main() -> int:
     deny_flags(orgaos, f"{API}/api/orgaos")
     deny_stub(json.dumps(orgaos, ensure_ascii=False), "api /api/orgaos")
     items_page = orgaos.get("items") or []
-    if len(items_page) < 21:
+    if len(items_page) < 23:
         raise SystemExit(f"api /api/orgaos returned {len(items_page)} rows, need the published slice")
     by_ibge = {str(row.get("municipioIbge") or ""): row for row in items_page}
     for ibge, (nome, uf) in PUBLISHED.items():
@@ -72,7 +74,7 @@ def main() -> int:
     orgao_cov = orgaos.get("coverage") or {}
     if orgao_cov.get("uf") not in (None, ""):
         raise SystemExit(f"mixed orgao list invented a UF: {orgao_cov}")
-    if not isinstance(orgao_cov.get("n"), int) or orgao_cov["n"] < 21:
+    if not isinstance(orgao_cov.get("n"), int) or orgao_cov["n"] < 23:
         raise SystemExit(f"api orgaos coverage.n missing the extra slice: {orgao_cov}")
     if not orgao_cov.get("methodologyVersion"):
         raise SystemExit(f"api orgaos coverage missing methodologyVersion: {orgao_cov}")
@@ -207,6 +209,19 @@ def main() -> int:
     if str((cruzeiro.get("coverage") or {}).get("uf") or "") != "AC":
         raise SystemExit(f"api UF=AC coverage lost slice UF: {cruzeiro.get('coverage')}")
 
+    santana = get_json(f"{API}/api/orgaos?municipioIbge=1600600&skip=0&take=50")
+    deny_flags(santana, f"{API}/api/orgaos?municipioIbge=1600600")
+    santana_rows = santana.get("items") or []
+    if len(santana_rows) != 1 or str(santana_rows[0].get("municipioIbge") or "") != "1600600":
+        raise SystemExit(f"api municipio filter 1600600 failed: {santana_rows}")
+    rorainopolis = get_json(f"{API}/api/orgaos?uf=RR&skip=0&take=50")
+    deny_flags(rorainopolis, f"{API}/api/orgaos?uf=RR")
+    rorainopolis_rows = rorainopolis.get("items") or []
+    if not rorainopolis_rows or any(str(row.get("uf") or "") != "RR" for row in rorainopolis_rows):
+        raise SystemExit(f"api UF=RR filter failed: {rorainopolis_rows}")
+    if str((rorainopolis.get("coverage") or {}).get("uf") or "") != "RR":
+        raise SystemExit(f"api UF=RR coverage lost slice UF: {rorainopolis.get('coverage')}")
+
     orgao = by_ibge["3306305"]
     oid = orgao["id"]
     got = get_json(f"{API}/api/orgaos/{oid}")
@@ -249,8 +264,8 @@ def main() -> int:
     if unknown and unknown[0].get("valorPorUnidadeCanonica") is not None:
         raise SystemExit("api invented a base price for unknown unit")
     ufs = {str(row.get("uf") or "") for row in rows}
-    if ufs != {"RJ", "SP", "RS", "SC", "MG", "PR", "BA", "PE", "GO", "ES", "PB", "CE", "MA", "AL", "MS", "PA", "MT", "RO", "RN", "AC"}:
-        raise SystemExit(f"api items UF set is not RJ+SP+RS+SC+MG+PR+BA+PE+GO+ES+PB+CE+MA+AL+MS+PA+MT+RO+RN+AC: {sorted(ufs)}")
+    if ufs != {"RJ", "SP", "RS", "SC", "MG", "PR", "BA", "PE", "GO", "ES", "PB", "CE", "MA", "AL", "MS", "PA", "MT", "RO", "RN", "AC", "AP", "RR"}:
+        raise SystemExit(f"api items UF set is not RJ+SP+RS+SC+MG+PR+BA+PE+GO+ES+PB+CE+MA+AL+MS+PA+MT+RO+RN+AC+AP+RR: {sorted(ufs)}")
     iid = rows[0]["id"]
     item = get_json(f"{API}/api/items/{iid}")
     deny_flags(item, f"{API}/api/items/{iid}")
@@ -322,9 +337,13 @@ def main() -> int:
         raise SystemExit("web / missing Parnamirim")
     if "cruzeiro do sul" not in folded:
         raise SystemExit("web / missing Cruzeiro do Sul")
+    if "santana (ap)" not in folded:
+        raise SystemExit("web / missing Santana")
+    if "rorainopolis" not in folded and "rorainópolis" not in folded:
+        raise SystemExit("web / missing Rorainópolis")
     if "UF mista" not in home:
         raise SystemExit("web / missing honest mixed UF")
-    if "Vinte e um municípios" not in home:
+    if "Vinte e três municípios" not in home:
         raise SystemExit("web / missing short brand kicker")
     if "UF Brasil" in home or "total nacional" in folded:
         raise SystemExit("web / invented a national total")
@@ -374,6 +393,10 @@ def main() -> int:
         raise SystemExit("web /orgaos missing Parnamirim")
     if "cruzeiro do sul" not in orgaos_fold:
         raise SystemExit("web /orgaos missing Cruzeiro do Sul")
+    if "municipio de santana" not in orgaos_fold and "município de santana" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing Santana")
+    if "rorainopolis" not in orgaos_fold and "rorainópolis" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing Rorainópolis")
     if "UF mista" not in orgaos_html:
         raise SystemExit("web /orgaos missing honest mixed UF")
 
@@ -637,6 +660,32 @@ def main() -> int:
     if "UF AC" not in ac_html:
         raise SystemExit("web UF=AC missing coverage UF")
 
+    santana_html = get_text(f"{WEB}/orgaos?municipioIbge=1600600")
+    assert_served_page(santana_html, "web /orgaos?municipioIbge=1600600")
+    santana_table = table_html(santana_html)
+    if "municipio de santana" not in santana_table.casefold() and "município de santana" not in santana_table.casefold():
+        raise SystemExit("web /orgaos?municipioIbge=1600600 missing Santana")
+    if "municipio de rorainopolis" in santana_table.casefold() or "município de rorainópolis" in santana_table.casefold():
+        raise SystemExit("web municipio filter leaked Rorainópolis")
+    if "prefeitura municipal de volta redonda" in santana_table.casefold():
+        raise SystemExit("web municipio filter leaked Volta Redonda")
+    if not re.search(r"n=1", santana_html):
+        raise SystemExit("web Santana filter missing n=1")
+    if "UF AP" not in santana_html:
+        raise SystemExit("web Santana filter missing UF AP")
+
+    rr_html = get_text(f"{WEB}/orgaos?uf=RR")
+    assert_served_page(rr_html, "web /orgaos?uf=RR")
+    rr_table = table_html(rr_html)
+    if "rorainopolis" not in rr_table.casefold() and "rorainópolis" not in rr_table.casefold():
+        raise SystemExit("web /orgaos?uf=RR missing Rorainópolis")
+    if "municipio de santana" in rr_table.casefold() or "município de santana" in rr_table.casefold():
+        raise SystemExit("web UF=RR filter leaked Santana")
+    if "prefeitura municipal de volta redonda" in rr_table.casefold():
+        raise SystemExit("web UF=RR filter leaked Volta Redonda")
+    if "UF RR" not in rr_html:
+        raise SystemExit("web UF=RR missing coverage UF")
+
     orgao_html = get_text(f"{WEB}/orgaos/{oid}")
     assert_served_page(orgao_html, "web /orgaos/{id}")
     if STAT_HOMOLOGADO.search(orgao_html):
@@ -754,6 +803,10 @@ def main() -> int:
         raise SystemExit("web /cobertura missing Parnamirim IBGE")
     if "1200203" not in cobertura:
         raise SystemExit("web /cobertura missing Cruzeiro do Sul IBGE")
+    if "1600600" not in cobertura:
+        raise SystemExit("web /cobertura missing Santana IBGE")
+    if "1400472" not in cobertura:
+        raise SystemExit("web /cobertura missing Rorainópolis IBGE")
     if "não é um total nacional" not in cobertura:
         raise SystemExit("web /cobertura missing disclaimer")
     if "UF mista" not in cobertura:
@@ -811,7 +864,7 @@ def assert_served_page(html: str, where: str) -> None:
         raise SystemExit(f"{where} leaked banned copy")
     if not re.search(r"n=\d+", html):
         raise SystemExit(f"{where} missing coverage n")
-    if not any(token in html for token in ("UF RJ", "UF SP", "UF RS", "UF SC", "UF MG", "UF PR", "UF BA", "UF PE", "UF GO", "UF ES", "UF PB", "UF CE", "UF MA", "UF AL", "UF MS", "UF PA", "UF MT", "UF RO", "UF RN", "UF AC", "UF mista", "filtro sem registros")):
+    if not any(token in html for token in ("UF RJ", "UF SP", "UF RS", "UF SC", "UF MG", "UF PR", "UF BA", "UF PE", "UF GO", "UF ES", "UF PB", "UF CE", "UF MA", "UF AL", "UF MS", "UF PA", "UF MT", "UF RO", "UF RN", "UF AC", "UF AP", "UF RR", "UF mista", "filtro sem registros")):
         raise SystemExit(f"{where} missing UF / empty-filter chip")
     if not re.search(r"trimestre|trim\.", html, re.I):
         raise SystemExit(f"{where} missing trimestre")

@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 
 const banned = /fraude|corrupto|roubo|\bflag\b|ranking|adjacenc|shared_qsa|shared_partner|cover[_-]?bidd|bid_variance|winner_rotation|co[_-]?bid/i
+const bannedKinds = /cnae_mismatch/
 const stubLeak = /7c2e1f40-3306-4050|Dipirona|Distribuidora de Medicamentos Serra|sha256:dev-slice-vr-2024/
 const againstCompose = Boolean(process.env.PLAYWRIGHT_BASE_URL)
 const niteroiName = /Prefeitura Municipal de Niter[oó]i/i
@@ -130,6 +131,9 @@ async function assertCoverageAndBan(page: Page) {
   await expect(page.getByText(/trimestre|trim\./i).first()).toBeVisible()
   await expect(page.getByText(/metodologia/i).first()).toBeVisible()
   await expect(page.locator('body')).not.toHaveText(banned)
+  if (!page.url().includes('/metodologia')) {
+    await expect(page.locator('body')).not.toHaveText(bannedKinds)
+  }
   if (againstCompose) {
     await expect(page.locator('body')).not.toHaveText(stubLeak)
   }
@@ -581,6 +585,9 @@ test('metodologia 0.2 cita ressalva de fracionamento e acórdãos do TCU', async
   await expect(body).toHaveText(/297\/2009/)
   await expect(body).toHaveText(/1\.793\/2011/)
   await expect(body).toHaveText(/2\.803\/2016/)
+  await expect(body).toHaveText(/cnae_mismatch/)
+  await expect(body).toHaveText(/risco alto de falso positivo/i)
+  await expect(body).toHaveText(/conjunto de novembro/i)
   await expect(body).not.toHaveText(/fraude|corrupto/i)
   const caveat = page.locator('.notice-caveat').first()
   const wrap = page.locator('main .wrap')

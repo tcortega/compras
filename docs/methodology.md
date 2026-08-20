@@ -101,6 +101,17 @@ O sinal nasce quando preço, quantidade ou fornecedor muda depois da publicaçã
 Mudança só de descrição não gera sinal.
 Snapshot anterior à publicação não gera sinal.
 
+### CNAE fora da allow-list da classe
+
+`cnae_mismatch` marca um item de material homologado quando a classe CATMAT tem prefixos CNAE mapeados e nenhum CNAE do vencedor (principal ou secundário) começa com esses prefixos.
+A tabela é conservadora e cita o catálogo CATMAT e a CNAE 2.0 da CONCLA.
+Classe ausente, CNAE ausente ou não numérico, e classe sem mapeamento não geram sinal, mas continuam no denominador de cobertura.
+Linha de serviço ou CATSER fica de fora.
+Este sinal tem risco alto de falso positivo.
+Ele fica fora do conjunto de novembro até uma amostragem posterior cruzar o limiar.
+Não é alerta público.
+Nada acusatório é publicado antes de 25 de outubro de 2026.
+
 ## Ressalvas legais
 
 Estas frases são ressalvas, não acusações.

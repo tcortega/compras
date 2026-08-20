@@ -1,0 +1,16 @@
+{
+  "kind": "cnae_mismatch",
+  "flag": [
+    "I-2024-B5-HIT-FOOD",
+    "I-2024-B5-HIT-HOME",
+    "I-2024-B5-HIT-OUT"
+  ],
+  "absent": [
+    "I-2024-B5-CLEAN-PRI",
+    "I-2024-B5-CLEAN-SEC",
+    "I-2024-B5-CLEAN-UNMAP",
+    "I-2024-B5-CLEAN-NOCNAE",
+    "I-2024-B5-CLEAN-NOCAT",
+    "I-2024-B5-CLEAN-SERV"
+  ]
+}

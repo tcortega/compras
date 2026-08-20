@@ -1778,6 +1778,12 @@ def main() -> int:
         raise SystemExit("web /metodologia missing methodology 0.2")
     if "fracionamento" not in metodologia.lower():
         raise SystemExit("web /metodologia missing fracionamento caveat")
+    if "cnae_mismatch" not in metodologia:
+        raise SystemExit("web /metodologia missing cnae_mismatch")
+    if "falso positivo" not in metodologia.lower():
+        raise SystemExit("web /metodologia missing cnae_mismatch high-FP caveat")
+    if "novembro" not in metodologia.lower():
+        raise SystemExit("web /metodologia missing cnae_mismatch November exclusion")
     if "dolo específico" not in metodologia and "dolo especifico" not in metodologia:
         raise SystemExit("web /metodologia missing dolo específico caveat")
     if "297/2009" not in metodologia:
@@ -1821,6 +1827,11 @@ def main() -> int:
     qty = get_json(f"{API}/api/internal/flags?kind=qty_unit_price_neq_total&state=detected")
     if not (qty.get("items") or []):
         raise SystemExit("internal flags kind filter missed qty_unit_price_neq_total")
+    cnae = get_json(f"{API}/api/internal/flags?kind=cnae_mismatch&state=detected")
+    if not (cnae.get("items") or []):
+        raise SystemExit("internal flags kind filter missed cnae_mismatch")
+    if str((cnae.get("coverage") or {}).get("uf") or "") != "":
+        raise SystemExit("internal cnae_mismatch coverage.uf is not empty")
     first_flag = flag_rows[0]
     audit = get_json(f"{API}/api/internal/flags/{first_flag['id']}/audit")
     audit_items = audit.get("items") or []
@@ -1851,6 +1862,8 @@ def assert_served_page(html: str, where: str) -> None:
     deny_stub(html, where)
     if BANNED_COPY.search(html):
         raise SystemExit(f"{where} leaked banned copy")
+    if "metodologia" not in where and "cnae_mismatch" in html:
+        raise SystemExit(f"{where} leaked cnae_mismatch")
     if not re.search(r"n=\d+", html):
         raise SystemExit(f"{where} missing coverage n")
     if not any(token in html for token in ("UF RJ", "UF SP", "UF RS", "UF SC", "UF MG", "UF PR", "UF BA", "UF PE", "UF GO", "UF ES", "UF PB", "UF CE", "UF MA", "UF AL", "UF MS", "UF PA", "UF MT", "UF RO", "UF RN", "UF AC", "UF AP", "UF RR", "UF mista", "filtro sem registros")):
@@ -1937,6 +1950,8 @@ def prove_search(item: dict, orgao: dict, fornecedor: dict, slice_n: int) -> Non
 
     meili = meili_search(token)
     deny_flags(meili, "meili /indexes/compras/search")
+    if "cnae_mismatch" in json.dumps(meili):
+        raise SystemExit("meili leaked cnae_mismatch")
     if not (meili.get("hits") or []):
         raise SystemExit("meili index missed planted item text")
 

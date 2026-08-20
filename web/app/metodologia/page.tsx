@@ -34,6 +34,7 @@ export default async function MetodologiaPage() {
             Um desvio de preço não é, por si só, um ilícito.
             A precisão do método ingênuo da Fase 0 neste recorte é 9%.
             Sinais públicos permanecem fechados.
+            Nada acusatório é publicado antes de 25 de outubro de 2026.
           </p>
         </div>
         <section className="section">
@@ -78,6 +79,19 @@ export default async function MetodologiaPage() {
             O agrupamento pede ao menos três dispensas na última décima do limiar, com datas em
             janela de 90 dias.
             Os valores do limiar vêm da tabela oficial de decretos, não de um número solto no código.
+          </p>
+        </section>
+        <section className="section">
+          <p className="kind">cnae_mismatch</p>
+          <h2>CNAE fora da allow-list da classe</h2>
+          <p>
+            O sinal nasce em item de material homologado quando a classe CATMAT tem prefixos
+            CNAE mapeados e nenhum CNAE do vencedor, principal ou secundário, começa com esses prefixos.
+            Classe ausente, CNAE ausente e classe sem mapeamento não geram sinal e permanecem no denominador.
+            Linha de serviço fica de fora.
+            Este sinal tem risco alto de falso positivo.
+            Ele fica fora do conjunto de novembro até uma amostragem posterior cruzar o limiar.
+            Não é alerta público.
           </p>
         </section>
         <section className="section">

@@ -137,6 +137,10 @@ No public explorer route reads this until the Phase 0 precision number exists an
 `fracionamento_cluster` is the sprint cluster: at least three dispensas in that group, each in the last tenth under the limit, all award dates inside a 90-day window.
 The aggregate key prefers `codigo_classe`, then `codigo_grupo`, then the CATMAT/CATSER class/group join, then the item code.
 Threshold amounts live in `detect/compras_detect/data/dispensa_thresholds.csv` and are not Python literals.
+`cnae_mismatch` is the internal CATMAT-class allow-list miss when every winner CNAE (primary and secondary) sits outside the mapped prefixes.
+Unmapped class, missing class, missing CNAE, and CATSER/service rows do not flag.
+Those rows still count in the coverage denominator.
+The kind stays out of the November set until sampled.
 All of these kinds stay `state=detected` and are not public alerts.
 `id` uuid.
 `itemId` uuid.

@@ -114,6 +114,28 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			MunicipioIbge = "3205309",
 			MunicipioNome = "Vitoria",
 		};
+		var niteroi = new Orgao
+		{
+			Id = SliceIds.OrgaoNiteroi,
+			Cnpj = "28521748000159",
+			RazaoSocial = "Municipio de Niteroi",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = SliceIds.Uf,
+			MunicipioIbge = "3303302",
+			MunicipioNome = "Niteroi",
+		};
+		var bauru = new Orgao
+		{
+			Id = SliceIds.OrgaoBauru,
+			Cnpj = "46137410000180",
+			RazaoSocial = "Municipio de Bauru",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "SP",
+			MunicipioIbge = "3506003",
+			MunicipioNome = "Bauru",
+		};
 		var fornecedor = new Fornecedor
 		{
 			Id = SliceIds.Fornecedor,
@@ -170,11 +192,81 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
 		};
+		var fornecedorExtra = new Fornecedor
+		{
+			Id = SliceIds.FornecedorExtra,
+			Cnpj = "55667788000191",
+			RazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			OpenedOn = new LocalDate(2018, 4, 2),
+			Cnae = "4761-0/01",
+		};
+		var contratacaoNiteroi = new Contratacao
+		{
+			Id = SliceIds.ContratacaoNiteroi,
+			PncpId = "3303302-1-000001/2024",
+			OrgaoId = SliceIds.OrgaoNiteroi,
+			Modalidade = "pregao eletronico",
+			Objeto = "Aquisicao de material de limpeza",
+			Ano = 2024,
+			ValorHomologado = 120m,
+			PublicadoEm = Instant.FromUtc(2024, 3, 20, 14, 0),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoBauru = new Contratacao
+		{
+			Id = SliceIds.ContratacaoBauru,
+			PncpId = "3506003-1-000001/2024",
+			OrgaoId = SliceIds.OrgaoBauru,
+			Modalidade = "pregao eletronico",
+			Objeto = "Aquisicao de material de expediente",
+			Ano = 2024,
+			ValorHomologado = 80m,
+			PublicadoEm = Instant.FromUtc(2024, 4, 12, 11, 0),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var itemNiteroi = new Item
+		{
+			Id = SliceIds.ItemNiteroi,
+			ContratacaoId = SliceIds.ContratacaoNiteroi,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Detergente neutro 5L",
+			Catmat = "654321",
+			Quantidade = 8m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 15m,
+			ValorTotal = 120m,
+			Uf = SliceIds.Uf,
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var itemBauru = new Item
+		{
+			Id = SliceIds.ItemBauru,
+			ContratacaoId = SliceIds.ContratacaoBauru,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Resma papel A4 Bauru",
+			Catmat = "654321",
+			Quantidade = 16m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 5m,
+			ValorTotal = 80m,
+			Uf = "SP",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
 
-		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta);
-		db.Fornecedores.Add(fornecedor);
-		db.Contratacoes.Add(contratacao);
-		db.Items.AddRange(item1, item2);
+		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru);
+		db.Fornecedores.AddRange(fornecedor, fornecedorExtra);
+		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru);
+		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru);
 	}
 
 	private static JsonSerializerOptions CreateJson()

@@ -8,8 +8,11 @@ The explorer may start on Postgres.
 
 ## Identity
 
-Município of the Phase 0 slice: Volta Redonda, RJ, IBGE 3306305, year 2024.
-That slice does not limit the schema.
+Phase 0 precision slice: Volta Redonda, RJ, IBGE 3306305, year 2024.
+The published explorer slice also lands Niterói, RJ, IBGE 3303302, and Bauru, SP, IBGE 3506003, year 2024, from the same Compras.gov / PNCP 2024 bulk.
+That published set does not limit the schema.
+A mixed-UF aggregate leaves `uf` empty.
+It is not a national total.
 
 CPF is masked at ingest as `***.XXX.XXX-**`.
 Never store raw CPF.

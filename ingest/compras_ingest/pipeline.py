@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import date, timedelta
+from pathlib import Path
 
 import polars as pl
 
@@ -175,38 +177,86 @@ def _collect_landing_records(store: LandingStore, source: str) -> pl.DataFrame:
     frames = []
     for key in keys:
         df = store.read_parquet(key)
-        keep = [c for c in ("record_id", "record_hash", "numerocontrolepncp") if c in df.columns]
-        if "record_id" not in keep:
+        if "record_id" not in df.columns:
             continue
-        slim = df.select(keep)
-        if "pncp_id" not in slim.columns and "numerocontrolepncp" in slim.columns:
-            slim = slim.rename({"numerocontrolepncp": "pncp_id"})
-        frames.append(slim)
+        digest = Path(key).stem
+        part = _partition_date_from_key(key)
+        extra = df.with_columns(
+            pl.lit(digest).alias("_landing_sha256"),
+            pl.lit(part).alias("_partition_date"),
+        )
+        if "snapshot_id" not in extra.columns:
+            extra = extra.with_columns(pl.lit(digest).alias("snapshot_id"))
+        if "pncp_id" not in extra.columns and "numerocontrolepncp" in extra.columns:
+            extra = extra.rename({"numerocontrolepncp": "pncp_id"})
+        frames.append(extra)
     return pl.concat(frames, how="diagonal_relaxed") if frames else pl.DataFrame()
 
 
 def land_second_snapshot(settings: Settings, mutate_record_id: str, store: LandingStore | None = None) -> LandingRef:
-    """Second landing of the same source with one field changed. Exercises retroactive_edit."""
+    """Second landing with planted watched-field edits. Exercises retroactive_edit."""
     from compras_ingest.sources.compras_gov import load_compras_gov, _with_record_hash
-    from compras_ingest.landing import partition_date_of
-    from compras_normalize.text import parse_datetime
 
+    _ = mutate_record_id
     store = store or LandingStore(settings)
     raw = _with_record_hash(load_compras_gov(settings))
-    if "objetocompra" in raw.columns:
-        raw = raw.with_columns(
-            pl.when(pl.col("record_id") == mutate_record_id)
-            .then(pl.col("objetocompra") + pl.lit(" [edit]"))
-            .otherwise(pl.col("objetocompra"))
-            .alias("objetocompra")
-        )
-        raw = _with_record_hash(raw.drop(["record_id", "record_hash"]))
-    dates = [parse_datetime(v) for v in raw["datapublicacaopncp"].to_list()] if "datapublicacaopncp" in raw.columns else []
-    part = partition_date_of(dates)
-    # Force a later partition so both hashes remain.
-    later = part
-    if later.endswith("15"):
-        later = later[:-2] + "16"
-    else:
-        later = part[:8] + "28"
+    overlay = _load_retroactive_edit_snap2()
+    raw = _overlay_item_snapshot(raw, overlay)
+    drop = [c for c in ("record_id", "record_hash") if c in raw.columns]
+    raw = _with_record_hash(raw.drop(drop) if drop else raw)
+    later = _next_compras_partition(store)
     return store.write_parquet("compras_gov", later, raw)
+
+
+def _load_retroactive_edit_snap2() -> pl.DataFrame:
+    from compras_detect.tier1.retroactive_edit import fixture_dir
+    from compras_ingest.csvio import read_csv
+
+    path = fixture_dir() / "snap2.csv"
+    if not path.exists():
+        raise FileNotFoundError(f"retroactive_edit snap2 missing: {path}")
+    return read_csv(path)
+
+
+def _overlay_item_snapshot(raw: pl.DataFrame, snap2: pl.DataFrame) -> pl.DataFrame:
+    from compras_ingest.sources.compras_gov import _lower_cols
+
+    overlay = _lower_cols(snap2)
+    key = "idcompraitem"
+    if key not in overlay.columns:
+        raise ValueError("retroactive_edit snap2 needs idCompraItem")
+    by_id = {str(row[key]): row for row in overlay.iter_rows(named=True)}
+    rows = []
+    for row in raw.iter_rows(named=True):
+        rid = str(row.get(key) or row.get("record_id") or "")
+        if rid not in by_id:
+            rows.append(row)
+            continue
+        updated = dict(row)
+        for col, value in by_id[rid].items():
+            if col in updated:
+                updated[col] = value
+        rows.append(updated)
+    return pl.DataFrame(rows)
+
+
+def _partition_date_from_key(key: str) -> str:
+    for part in Path(key).parts:
+        if part.startswith("date="):
+            return part.split("=", 1)[1]
+    return ""
+
+
+def _next_compras_partition(store: LandingStore) -> str:
+    found: list[date] = []
+    for key in store.list_parquet("compras_gov"):
+        raw = _partition_date_from_key(key)
+        if not raw:
+            continue
+        try:
+            found.append(date.fromisoformat(raw))
+        except ValueError:
+            continue
+    if not found:
+        return date.today().isoformat()
+    return (max(found) + timedelta(days=1)).isoformat()

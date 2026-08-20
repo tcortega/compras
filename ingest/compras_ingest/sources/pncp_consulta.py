@@ -3,7 +3,7 @@ from __future__ import annotations
 import calendar
 import json
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Callable
 from urllib.parse import parse_qs, urlparse
@@ -208,6 +208,7 @@ def land_pncp_consulta(
     sleeper: Sleeper | None = None,
     clock: Clock | None = None,
     client_holder: httpx.Client | None = None,
+    window: tuple[date, date] | None = None,
 ) -> tuple[LandingRef, pl.DataFrame, dict]:
     store = store or LandingStore(settings)
     if official is None:
@@ -232,7 +233,7 @@ def land_pncp_consulta(
             transport = FixtureTransport(root)
     client = PncpConsultaClient(transport, limiter, official)
     try:
-        rows, report = _ingest(settings, store, client, official)
+        rows, report = _ingest(settings, store, client, official, window=window)
     finally:
         if owned_client is not None and client_holder is None:
             owned_client.close()
@@ -250,8 +251,12 @@ def land_pncp_consulta(
             "api_base": official.api_base,
             "mode": "fetch" if settings.pncp_consulta_fetch else "fixture",
             "http_calls": len(client.calls),
+            "trailing_window_days": settings.trailing_window_days,
         }
     )
+    if window:
+        report["window_start"] = window[0].isoformat()
+        report["window_end"] = window[1].isoformat()
     store.put(
         f"{SOURCE}/date={ref.partition_date}/{ref.sha256}.source.json",
         json.dumps(report, indent=2).encode(),
@@ -264,11 +269,12 @@ def _ingest(
     store: LandingStore,
     client: PncpConsultaClient,
     official: PncpOfficial,
+    window: tuple[date, date] | None = None,
 ) -> tuple[list[dict], dict]:
     ibge = settings.pncp_consulta_ibge
     year = settings.pncp_consulta_year
     uf = settings.pncp_consulta_uf
-    windows, modalidades = _plan(settings, official)
+    windows, modalidades = _plan(settings, official, window=window)
     cursor = _read_cursor(store)
     if cursor and cursor.get("done") and cursor.get("ibge") == ibge and int(cursor.get("year") or 0) == year:
         existing = _read_rows(store) or _rows_from_landing(store)
@@ -385,8 +391,14 @@ def _ingest(
     }
 
 
-def _plan(settings: Settings, official: PncpOfficial) -> tuple[list[tuple[str, str]], list[int]]:
+def _plan(
+    settings: Settings,
+    official: PncpOfficial,
+    window: tuple[date, date] | None = None,
+) -> tuple[list[tuple[str, str]], list[int]]:
     if settings.pncp_consulta_fetch:
+        if window:
+            return _windows_for_range(window[0], window[1]), list(official.modalidades)
         return _month_windows(settings.pncp_consulta_year), list(official.modalidades)
     root = settings.pncp_consulta_dir
     if root is None:
@@ -407,6 +419,23 @@ def _month_windows(year: int) -> list[tuple[str, str]]:
     for month in range(1, 13):
         last = calendar.monthrange(year, month)[1]
         out.append((f"{year}{month:02d}01", f"{year}{month:02d}{last:02d}"))
+    return out
+
+
+def _windows_for_range(start: date, end: date) -> list[tuple[str, str]]:
+    if end < start:
+        raise ValueError("trailing window end is before start")
+    out: list[tuple[str, str]] = []
+    year, month = start.year, start.month
+    while (year, month) <= (end.year, end.month):
+        last = calendar.monthrange(year, month)[1]
+        lo = max(date(year, month, 1), start)
+        hi = min(date(year, month, last), end)
+        out.append((lo.strftime("%Y%m%d"), hi.strftime("%Y%m%d")))
+        if month == 12:
+            year, month = year + 1, 1
+        else:
+            month += 1
     return out
 
 

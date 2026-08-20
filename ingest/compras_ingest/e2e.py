@@ -160,6 +160,12 @@ AGE_SILENT_IDS = frozenset(
         "I-2024-B2-FUTURE",
         "I-2024-B2-NOOPEN",
         "I-2024-B2-NOAWARD",
+        "I-2024-B4-PRICE",
+        "I-2024-B4-QTY",
+        "I-2024-B4-SUPPLIER",
+        "I-2024-B4-DESC",
+        "I-2024-B4-SAME",
+        "I-2024-B4-PREPUB",
     }
 )
 FRAC_OVER_IDS = frozenset({"I-2024-B3-OVER-1", "I-2024-B3-OVER-2", "I-2024-B3-OVER-3"})
@@ -191,6 +197,22 @@ FRAC_DELTA_TOKENS = (
     "decree=",
     "kind=",
     "rule=",
+)
+EDIT_KIND = "retroactive_edit"
+EDIT_FLAG_IDS = frozenset({"I-2024-B4-PRICE", "I-2024-B4-QTY", "I-2024-B4-SUPPLIER"})
+EDIT_ABSENT_IDS = frozenset({"I-2024-B4-DESC", "I-2024-B4-SAME", "I-2024-B4-PREPUB"})
+OFFICIAL_HOST_NEEDLES = (
+    "compras.gov.br",
+    "pncp.gov.br",
+    "dados.gov.br",
+    "planalto",
+    "tce.sp.gov.br",
+    "tce.rs.gov.br",
+    "tcers.tc.br",
+    "cgu.gov.br",
+    "portaldatransparencia.gov.br",
+    "receitafederal.gov.br",
+    "open-contracting.org",
 )
 TCE_RS_TABLES = {
     "LICITANTE",
@@ -312,6 +334,7 @@ def main() -> int:
         _assert_tce_rs_landing(settings)
         _assert_cgu_ceis_cnep_landing(settings)
         _assert_write_once(settings)
+        _assert_refetch_schedule(settings)
         _assert_data_error_suite(settings, result.items)
         _assert_a2(settings)
         _assert_a3_labels()
@@ -337,6 +360,7 @@ def main() -> int:
     _assert_units(settings, result.items)
     store = LandingStore(settings)
     mutate = str(result.items["record_id"][0])
+    hashes_before_edit = {Path(k).stem for k in store.list_parquet("compras_gov")}
     land_second_snapshot(settings, mutate, store)
     landing_records = _collect_landing_records(store, "compras_gov")
     sanctions = load_landed_sanctions(store)
@@ -349,6 +373,7 @@ def main() -> int:
     _assert_sanction_flags(result.items, result.flags, stored)
     _assert_cnpj_age_flags(result.items, result.flags, stored)
     _assert_fracionamento_flags(result.items, flags, stored)
+    _assert_retroactive_edit_flags(result.items, flags, stored, hashes_before_edit, store)
     if "qty_unit_price_neq_total" not in kinds:
         raise SystemExit("warehouse missing qty_unit_price_neq_total after write_flags")
     if "retroactive_edit" not in kinds:
@@ -742,9 +767,149 @@ class _official_hosts_blocked:
 
 
 def _fail_if_official_host(url) -> None:
-    host = httpx.URL(str(url)).host or ""
-    if host in OFFICIAL_HOSTS:
+    host = (httpx.URL(str(url)).host or "").lower()
+    if host in OFFICIAL_HOSTS or any(token in host for token in OFFICIAL_HOST_NEEDLES):
         raise RuntimeError(f"fixture mode hit official host {host}")
+
+
+def _assert_refetch_schedule(settings: Settings) -> None:
+    from compras_ingest.assets import (
+        JOB_NAME,
+        SCHEDULE_CRON,
+        SCHEDULE_NAME,
+        SCHEDULE_TZ,
+        defs,
+        trailing_window_refetch_job,
+    )
+    from compras_ingest.refetch import REFETCH_SOURCES
+    from compras_ingest.settings import TRAILING_WINDOW_DAYS
+
+    if settings.trailing_window_days != TRAILING_WINDOW_DAYS:
+        raise SystemExit(f"trailing_window_days {settings.trailing_window_days} != {TRAILING_WINDOW_DAYS}")
+    schedules = list(defs.schedules or [])
+    found = next((s for s in schedules if s.name == SCHEDULE_NAME), None)
+    if found is None:
+        raise SystemExit(f"defs missing schedule {SCHEDULE_NAME}")
+    if not found.cron_schedule:
+        raise SystemExit("refetch schedule missing cron")
+    if found.cron_schedule != SCHEDULE_CRON:
+        raise SystemExit(f"refetch cron {found.cron_schedule} != {SCHEDULE_CRON}")
+    if found.execution_timezone != SCHEDULE_TZ:
+        raise SystemExit(f"refetch tz {found.execution_timezone} != {SCHEDULE_TZ}")
+    target = found.job_name or getattr(found.job, "name", "")
+    if target != JOB_NAME:
+        raise SystemExit(f"schedule does not target {JOB_NAME}: {target}")
+    store = LandingStore(settings)
+    before = {src: set(store.list_parquet(src)) for src in REFETCH_SOURCES}
+    result = trailing_window_refetch_job.execute_in_process()
+    if not result.success:
+        raise SystemExit("trailing_window_refetch job failed")
+    mid = {src: set(store.list_parquet(src)) for src in REFETCH_SOURCES}
+    extra = {src: sorted(mid[src] - before[src]) for src in REFETCH_SOURCES if mid[src] - before[src]}
+    if extra:
+        raise SystemExit(f"refetch wrote new landing hashes: {extra}")
+    result2 = trailing_window_refetch_job.execute_in_process()
+    if not result2.success:
+        raise SystemExit("second trailing_window_refetch job failed")
+    after = {src: set(store.list_parquet(src)) for src in REFETCH_SOURCES}
+    extra2 = {src: sorted(after[src] - mid[src]) for src in REFETCH_SOURCES if after[src] - mid[src]}
+    if extra2:
+        raise SystemExit(f"second refetch wrote new landing hashes: {extra2}")
+
+
+def _assert_retroactive_edit_flags(items, flags, stored, hashes_before, store) -> None:
+    expected = _load_retroactive_edit_expected()
+    want = set(expected["flag"])
+    absent = set(expected["absent"])
+    if want != set(EDIT_FLAG_IDS) or absent != set(EDIT_ABSENT_IDS):
+        raise SystemExit("retroactive_edit expected.json drifted from planted ids")
+    planted = want | absent
+    have_items = {str(v) for v in items["record_id"].to_list()}
+    missing_items = planted - have_items
+    if missing_items:
+        raise SystemExit(f"retroactive_edit plants missing from normalized items: {sorted(missing_items)}")
+
+    got: dict[str, dict] = {}
+    for row in flags.iter_rows(named=True):
+        if str(row.get("kind") or "") != EDIT_KIND:
+            continue
+        rid = str(row.get("record_id") or "")
+        delta = _parse_edit_delta(row.get("delta"))
+        got[rid] = delta
+    extra = set(got) - want
+    missing = want - set(got)
+    leaked = set(got) & absent
+    if extra or missing or leaked:
+        raise SystemExit(
+            f"retroactive_edit record_ids extra={sorted(extra)} missing={sorted(missing)} leaked={sorted(leaked)}"
+        )
+    for rid, spec in expected["flag"].items():
+        delta = got[rid]
+        field = spec["field"]
+        fields = delta.get("fields") or {}
+        if field not in fields:
+            raise SystemExit(f"{rid} delta missing {field}: {delta}")
+        pair = fields[field]
+        if parse_decimal(pair.get("before")) != parse_decimal(spec["before"]):
+            raise SystemExit(f"{rid} before {pair.get('before')} != {spec['before']}")
+        if field == "fornecedor_cnpj":
+            if str(pair.get("before") or "") != spec["before"] or str(pair.get("after") or "") != spec["after"]:
+                raise SystemExit(f"{rid} cnpj diff drifted: {pair}")
+        elif parse_decimal(pair.get("after")) != parse_decimal(spec["after"]):
+            raise SystemExit(f"{rid} after {pair.get('after')} != {spec['after']}")
+        if not delta.get("old_hash") or not delta.get("new_hash"):
+            raise SystemExit(f"{rid} delta missing hashes: {delta}")
+        if delta.get("old_hash") == delta.get("new_hash"):
+            raise SystemExit(f"{rid} old_hash equals new_hash")
+        if not delta.get("old_snapshot_id") or not delta.get("new_snapshot_id"):
+            raise SystemExit(f"{rid} delta missing snapshot ids: {delta}")
+
+    hashes_after = {Path(k).stem for k in store.list_parquet("compras_gov")}
+    if not (hashes_after - hashes_before):
+        raise SystemExit("second landing wrote no new compras_gov hash")
+
+    id_to_rid = {
+        item_id(str(row.get("pncp_id") or ""), str(row.get("record_id") or "")): str(row.get("record_id") or "")
+        for row in items.iter_rows(named=True)
+    }
+    ware: dict[str, dict] = {}
+    for row in stored:
+        if str(row.get("kind") or "") != EDIT_KIND:
+            continue
+        if str(row.get("state") or "") != "detected":
+            raise SystemExit(f"retroactive_edit state is not detected: {row.get('state')}")
+        if row.get("publishedAt") not in (None, ""):
+            raise SystemExit(f"retroactive_edit publishedAt is set: {row.get('publishedAt')}")
+        rid = id_to_rid.get(str(row.get("itemId") or ""))
+        if not rid:
+            raise SystemExit(f"retroactive_edit itemId not in slice: {row.get('itemId')}")
+        ware[rid] = _parse_edit_delta(row.get("delta"))
+    if set(ware) != want:
+        raise SystemExit(f"warehouse retroactive_edit ids {sorted(ware)} != planted {sorted(want)}")
+    if set(ware) & absent:
+        raise SystemExit(f"warehouse flagged silent retroactive_edit plants {sorted(set(ware) & absent)}")
+    for rid, spec in expected["flag"].items():
+        fields = (ware[rid].get("fields") or {})
+        if spec["field"] not in fields:
+            raise SystemExit(f"warehouse {rid} delta missing {spec['field']}: {ware[rid]}")
+
+
+def _load_retroactive_edit_expected() -> dict:
+    from compras_detect.tier1.retroactive_edit import fixture_dir
+
+    path = fixture_dir() / "expected.json"
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _parse_edit_delta(raw) -> dict:
+    text = str(raw or "")
+    try:
+        payload = json.loads(text)
+    except json.JSONDecodeError as exc:
+        raise SystemExit(f"retroactive_edit delta is not JSON: {text}") from exc
+    if not isinstance(payload, dict):
+        raise SystemExit(f"retroactive_edit delta is not an object: {text}")
+    return payload
 
 
 def _check_defs() -> None:

@@ -20,13 +20,22 @@ public sealed record FlagAuditRow
 	public string ToState { get; init; } = "";
 }
 
-public sealed class ComprasApiFixture : IAsyncLifetime
+public class ComprasApiFixture : IAsyncLifetime
 {
 	public static readonly Instant Start = Instant.FromUtc(2024, 6, 15, 12, 0);
 
 	private static readonly JsonSerializerOptions s_json = CreateJson();
 
-	private readonly Factory _factory = new();
+	private readonly Factory _factory;
+
+	public ComprasApiFixture() : this("", "")
+	{
+	}
+
+	protected ComprasApiFixture(string meiliBase, string meiliKey)
+	{
+		_factory = new Factory(meiliBase, meiliKey);
+	}
 
 	public FakeClock Clock => _factory.Clock;
 
@@ -2688,7 +2697,7 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 		return options;
 	}
 
-	private sealed class Factory : WebApplicationFactory<Program>
+	private sealed class Factory(string meiliUrl, string meiliKey) : WebApplicationFactory<Program>
 	{
 		private readonly string _dbPath = Path.Combine(
 			Path.GetTempPath(),
@@ -2702,6 +2711,8 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			builder.UseSetting("App:MethodologyVersion", "0.1");
 			builder.UseSetting("App:Host", "127.0.0.1");
 			builder.UseSetting("App:Port", "5080");
+			builder.UseSetting("App:MeiliUrl", meiliUrl);
+			builder.UseSetting("App:MeiliMasterKey", meiliKey);
 			builder.ConfigureServices(services =>
 			{
 				foreach (var descriptor in services.Where(d => d.ServiceType == typeof(IClock)).ToList())

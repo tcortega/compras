@@ -7,6 +7,8 @@ import type {
   Item,
   Orgao,
   PageRequest,
+  SearchPage,
+  SearchSource,
   SkipTakePage,
 } from '@/lib/types'
 import { ApiError, ApiNotFoundError, isPublished } from '@/lib/types'
@@ -141,7 +143,31 @@ export function createHttpClient(baseUrl: string): ExplorerClient {
     async getCobertura() {
       return readCobertura(await getJson<unknown>('/api/cobertura', 60))
     },
+    async search(req) {
+      const raw = await getJson<unknown>(`/api/busca?${queryOf(req)}`, 0)
+      return readSearchPage(raw, req.skip, req.take)
+    },
   }
+}
+
+function readSearchPage(raw: unknown, skip: number, take: number): SearchPage {
+  if (!raw || typeof raw !== 'object') {
+    throw new ApiError(502, 'API sem busca em /api/busca')
+  }
+  const o = raw as Record<string, unknown>
+  const source = readSearchSource(o.source)
+  return {
+    orgaos: publishedPage<Orgao>(o.orgaos, skip, take),
+    fornecedores: publishedPage<Fornecedor>(o.fornecedores, skip, take),
+    items: publishedPage<Item>(o.items, skip, take),
+    coverage: fillCoverage(readCoverage(o.coverage), []),
+    source,
+  }
+}
+
+function readSearchSource(raw: unknown): SearchSource {
+  if (raw === 'meilisearch' || raw === 'unset' || raw === 'unavailable' || raw === 'warehouse') return raw
+  return 'unavailable'
 }
 
 function readCobertura(raw: unknown): CoberturaPayload {

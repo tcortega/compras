@@ -16,6 +16,7 @@ O cliente tipado fala só com o contrato de `docs/CONTRACT.md`:
 - `GET /api/fornecedores` e `GET /api/fornecedores/{id}`
 - `GET /api/contratacoes` e `GET /api/contratacoes/{id}`
 - `GET /api/items` e `GET /api/items/{id}`
+- `GET /api/busca` (Meilisearch de descrições e razões sociais)
 
 Listas usam `PageRequest` com `skip` e `take`.
 Páginas de entidade renderizam sob demanda.

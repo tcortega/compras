@@ -8,6 +8,7 @@ import type {
   Item,
   Orgao,
   PageRequest,
+  SearchPage,
   SkipTakePage,
 } from '@/lib/types'
 import { ApiNotFoundError, isPublished } from '@/lib/types'
@@ -162,6 +163,26 @@ export const stubClient: ExplorerClient = {
 
   async getCobertura() {
     return stubCobertura()
+  },
+
+  async search(req) {
+    const preview = { ...req, skip: req.skip, take: req.take || 5 }
+    const [orgaos, fornecedores, items] = await Promise.all([
+      stubClient.listOrgaos(preview),
+      stubClient.listFornecedores(preview),
+      stubClient.listItems(preview),
+    ])
+    const slice = coverageFromItems(liveItems())
+    const empty = !req.q
+    return {
+      orgaos: empty ? { ...orgaos, items: [], total: 0, coverage: { ...orgaos.coverage, n: 0 } } : orgaos,
+      fornecedores: empty
+        ? { ...fornecedores, items: [], total: 0, coverage: { ...fornecedores.coverage, n: 0 } }
+        : fornecedores,
+      items: empty ? { ...items, items: [], total: 0, coverage: { ...items.coverage, n: 0 } } : items,
+      coverage: empty ? slice : { ...items.coverage, uf: items.coverage.uf },
+      source: 'warehouse',
+    } satisfies SearchPage
   },
 }
 

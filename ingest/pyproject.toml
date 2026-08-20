@@ -24,6 +24,7 @@ dependencies = [
 [project.scripts]
 compras-e2e = "compras_ingest.e2e:main"
 compras-seed = "compras_ingest.seed:main"
+compras-search = "compras_ingest.search:main"
 
 [tool.setuptools]
 include-package-data = true

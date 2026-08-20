@@ -144,7 +144,7 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - dagster_home:/opt/dagster/home
+      - dagster_home_web:/opt/dagster/home
       - ../ingest:/app/ingest
       - ../normalize:/app/normalize
       - ../detect:/app/detect
@@ -172,7 +172,7 @@ services:
     environment:
       <<: *dagster-env
     volumes:
-      - dagster_home:/opt/dagster/home
+      - dagster_home_daemon:/opt/dagster/home
       - ../ingest:/app/ingest
       - ../normalize:/app/normalize
       - ../detect:/app/detect
@@ -264,7 +264,8 @@ volumes:
   clickhouse_logs:
   minio_data:
   meili_data:
-  dagster_home:
+  dagster_home_web:
+  dagster_home_daemon:
 
 networks:
   compras:

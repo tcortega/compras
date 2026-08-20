@@ -1,0 +1,14 @@
+{
+  "bid_variance": ["VARIANCE"],
+  "skew": ["SKEW"],
+  "cover_bidding": ["COVER"],
+  "winner_rotation": ["ROTATION"],
+  "absent": ["CLEAN", "OTHER-UF", "CPFONLY"],
+  "cover_licitacoes": ["COVER-1", "COVER-2"],
+  "rotation_licitacoes": ["ROTATION-1", "ROTATION-2", "ROTATION-3"],
+  "cpf_licitacao": "CPFONLY",
+  "cpf_masked": "***.654.321-**",
+  "cpf_raw_forbidden": ["98765432100"],
+  "other_uf": "OTHER-UF",
+  "landing_sources": ["tce_sp", "tce_rs"]
+}

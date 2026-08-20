@@ -11,6 +11,14 @@ from pathlib import Path
 import httpx
 
 from compras_detect.adjacency import load_expected as load_adjacency_expected
+from compras_detect.cobid import (
+    KIND_COVER,
+    KIND_ROTATION,
+    KIND_SKEW,
+    KIND_VARIANCE,
+    load_expected as load_cobid_expected,
+    load_thresholds as load_cade_thresholds,
+)
 from compras_detect.data_error import anomaly_pool, detect_data_errors
 from compras_detect.tier1 import run_tier1
 from compras_detect.tier1.fracionamento import (
@@ -107,7 +115,11 @@ from compras_ingest.warehouse import (
     fetch_item_facts,
     fetch_items_for,
     fetch_landing_sources,
+    fetch_cobid_edges,
+    fetch_cobid_screens,
+    fetch_explorer_text_blobs,
     fetch_one_orgao,
+    fetch_participants,
     fetch_raw_text_blobs,
     item_columns,
     write_entities,
@@ -412,6 +424,7 @@ def main() -> int:
     _assert_retroactive_edit_flags(result.items, flags, stored, hashes_before_edit, store)
     _assert_receita_adjacency(settings)
     _assert_fornecedor_receita_facts(settings)
+    _assert_cobid_suite(settings)
     if "qty_unit_price_neq_total" not in kinds:
         raise SystemExit("warehouse missing qty_unit_price_neq_total after write_flags")
     if "retroactive_edit" not in kinds:
@@ -460,6 +473,9 @@ def main() -> int:
     print(f"flags={sorted(kinds)}")
     print(f"exclusions={result.exclusion_rows}")
     print(f"adjacencies={result.adjacency_rows}")
+    print(f"participants={result.participant_rows}")
+    print(f"cobid_edges={result.cobid_edge_rows}")
+    print(f"cobid_screens={result.cobid_screen_rows}")
     return 0
 
 
@@ -1172,6 +1188,94 @@ def _assert_fornecedor_receita_facts(settings: Settings) -> None:
         raise SystemExit("warehouse socio stored raw CPF")
 
 
+def _assert_cobid_suite(settings: Settings) -> None:
+    expected = load_cobid_expected()
+    thresh = load_cade_thresholds()
+    if not thresh:
+        raise SystemExit("cade_screens.csv is empty")
+    parts = fetch_participants(settings)
+    if not parts:
+        raise SystemExit("licitacao_participante is empty")
+    by_lic = {str(row.get("licitacaoId") or "") for row in parts}
+    for lid in expected["cover_licitacoes"] + expected["rotation_licitacoes"] + ["VARIANCE", "SKEW", "CLEAN", "CPFONLY"]:
+        if lid not in by_lic:
+            raise SystemExit(f"warehouse missing planted licitacao {lid}")
+    if expected["other_uf"] in by_lic:
+        raise SystemExit("OTHER-UF participant was persisted")
+    ufs = {str(row.get("uf") or "") for row in parts}
+    sources = {str(row.get("source") or "") for row in parts}
+    if ufs - {"SP", "RS"}:
+        raise SystemExit(f"participant uf outside SP/RS: {sorted(ufs)}")
+    if sources - {"tce_sp", "tce_rs"}:
+        raise SystemExit(f"participant source not tce_sp/tce_rs: {sorted(sources)}")
+    landing_sp = [r for r in parts if r.get("source") == "tce_sp" and "34914897000180" in str(r.get("participante") or "")]
+    landing_rs = [r for r in parts if r.get("source") == "tce_rs" and "03722885000120" in str(r.get("participante") or "")]
+    if not landing_sp:
+        raise SystemExit("warehouse dropped TCE-SP landing participant")
+    if not landing_rs:
+        raise SystemExit("warehouse dropped TCE-RS landing participant")
+    cpf_rows = [r for r in parts if str(r.get("licitacaoId") or "") == expected["cpf_licitacao"]]
+    if not cpf_rows:
+        raise SystemExit("warehouse missing CPFONLY participante")
+    if any(expected["cpf_masked"] not in str(r.get("participante") or "") for r in cpf_rows):
+        raise SystemExit("CPFONLY participante is not masked")
+    forbidden = [str(v) for v in expected.get("cpf_raw_forbidden") or []]
+    for row in parts:
+        blobs = [str(v) for v in row.values() if v is not None]
+        assert_no_raw_cpf(blobs)
+        for raw in forbidden:
+            if raw and raw in " ".join(blobs):
+                raise SystemExit(f"participante stored raw CPF {raw}")
+    screens = fetch_cobid_screens(settings)
+    got: dict[str, set[str]] = {}
+    for row in screens:
+        kind = str(row.get("kind") or "")
+        got.setdefault(kind, set()).add(str(row.get("subjectId") or ""))
+        if str(row.get("state") or "") != "detected":
+            raise SystemExit(f"cobid screen state is not detected: {row.get('state')}")
+        if str(row.get("methodologyVersion") or "") != settings.methodology_version:
+            raise SystemExit(f"cobid screen methodologyVersion {row.get('methodologyVersion')!r}")
+        evidence = str(row.get("evidence") or "")
+        if "indicio a verificar" not in evidence:
+            raise SystemExit(f"cobid screen missing framing: {evidence}")
+        assert_no_raw_cpf([evidence])
+        for raw in forbidden:
+            if raw and raw in evidence:
+                raise SystemExit(f"cobid evidence stored raw CPF {raw}")
+    want = {
+        KIND_VARIANCE: set(expected["bid_variance"]),
+        KIND_SKEW: set(expected["skew"]),
+        KIND_COVER: set(expected["cover_bidding"]),
+        KIND_ROTATION: set(expected["winner_rotation"]),
+    }
+    for kind, ids in want.items():
+        have = got.get(kind, set())
+        if have != ids:
+            raise SystemExit(f"{kind} subjects {sorted(have)} != planted {sorted(ids)}")
+    absent = set(expected["absent"])
+    flagged = {sid for ids in got.values() for sid in ids}
+    leaked = absent & flagged
+    if leaked:
+        raise SystemExit(f"clean/other-uf screens leaked: {sorted(leaked)}")
+    extra = flagged - {sid for ids in want.values() for sid in ids}
+    if extra:
+        raise SystemExit(f"unexpected cobid subjects {sorted(extra)}")
+    edges = fetch_cobid_edges(settings)
+    if not edges:
+        raise SystemExit("co_bid_edge is empty")
+    cover_pair = {e for e in edges if e.get("licitacaoId") in set(expected["cover_licitacoes"])}
+    if not cover_pair:
+        raise SystemExit("missing COVER co_bid edges")
+    for row in edges:
+        if str(row.get("kind") or "") != "co_bid":
+            raise SystemExit(f"co_bid edge kind is not co_bid: {row.get('kind')}")
+        if str(row.get("leftCnpj") or "") >= str(row.get("rightCnpj") or ""):
+            raise SystemExit("co_bid pair is not stored leftCnpj < rightCnpj")
+        if expected["other_uf"] in str(row.get("licitacaoId") or ""):
+            raise SystemExit("OTHER-UF produced a co_bid edge")
+        assert_no_raw_cpf([str(v) for v in row.values() if v is not None])
+
+
 def _load_retroactive_edit_expected() -> dict:
     from compras_detect.tier1.retroactive_edit import fixture_dir
 
@@ -1835,10 +1939,10 @@ def _assert_propostas_not_winner_only(df, label: str) -> None:
 
 
 def _assert_tce_sp_not_public(settings: Settings) -> None:
-    blobs = fetch_raw_text_blobs(settings)
+    blobs = fetch_explorer_text_blobs(settings)
     leaked = [token for token in (TCE_LOSER_CNPJ, TCE_WINNER_CNPJ, TCE_LOSER_PROPOSTA) if token in " ".join(blobs)]
     if leaked:
-        raise SystemExit(f"TCE-SP participant proposal leaked into warehouse: {leaked}")
+        raise SystemExit(f"TCE-SP participant proposal leaked into explorer tables: {leaked}")
 
 
 def _assert_tce_rs_host_refused() -> None:
@@ -1955,14 +2059,14 @@ def _assert_tce_rs_propostas_not_winner_only(df, label: str) -> None:
 
 
 def _assert_tce_rs_not_public(settings: Settings) -> None:
-    blobs = fetch_raw_text_blobs(settings)
+    blobs = fetch_explorer_text_blobs(settings)
     leaked = [
         token
         for token in (TCE_RS_LOSER_CNPJ, TCE_RS_WINNER_CNPJ, TCE_RS_LOSER_PROPOSTA)
         if token in " ".join(blobs)
     ]
     if leaked:
-        raise SystemExit(f"TCE-RS participant proposal leaked into warehouse: {leaked}")
+        raise SystemExit(f"TCE-RS participant proposal leaked into explorer tables: {leaked}")
 
 
 def _assert_cgu_host_refused() -> None:

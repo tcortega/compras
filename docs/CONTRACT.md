@@ -241,6 +241,41 @@ Tokens that look like CPF are masked or dropped.
 `methodologyVersion` is the pipeline version.
 `createdAt` timestamptz.
 
+### licitacao_participante (internal only)
+
+Participant proposal rows from TCE-SP and TCE-RS landing.
+UF is SP or RS.
+source is tce_sp or tce_rs.
+TCE-PR, TCE-PE, and TCE-RJ have no official public participant-proposal extract and are ignored.
+`participante` is a 14-digit CNPJ or the ingest CPF mask.
+Raw CPF is never stored.
+`itemLote` is the item or lote key when the source has one.
+`snapshotId` is the landing sha256 or the fixture stamp.
+No explorer route reads this table.
+
+### co_bid_edge (internal only)
+
+Undirected co-presence on one licitacao+item/lote.
+`kind` is `co_bid`.
+`leftCnpj` < `rightCnpj`.
+Stores both proposed values and the winner token when one of the pair won.
+A co-bid edge is not a finding.
+No explorer route reads this table.
+C# does not run this detector.
+
+### co_bid_screen (internal only)
+
+Internal CADE screens on SP/RS warehouse participants.
+Kinds are `bid_variance`, `skew`, `cover_bidding`, and `winner_rotation`.
+State starts at `detected`.
+`evidence` is JSON and always includes framing `indicio a verificar`.
+`methodologyVersion` is 0.2.
+Thresholds live in `detect/compras_detect/data/cade_screens.csv`.
+Those numbers are an internal heuristic, not a legal test.
+No CADE or TCU published numeric cutoff was found for these screens.
+No explorer route reads this table.
+No explorer DTO carries these kinds.
+
 The CATMAT/CATSER classifier is internal normalize.
 It fills only rows with no official catalog code.
 Assigned `knn` codes are not public alerts.
@@ -266,13 +301,13 @@ C# never writes landing.
 
 TCE-SP monthly LICITACOES CSVs land under `tce_sp_licitacao/date=`.
 That source is internal.
-Participant CNPJ and Valor da Proposta stay in landing parquet.
+Participant CNPJ and Valor da Proposta land in parquet and persist to `licitacao_participante`.
 The explorer does not read this source.
 Cubo SQL is not used.
 
 TCE-RS LicitaCon files land under `tce_rs_licitacon/date=`.
 That source is internal.
-Participant documents and proposal values stay in landing parquet.
+Participant documents and proposal values land in parquet and persist to `licitacao_participante`.
 The explorer does not read this source.
 Live CKAN is gated by `TCE_RS_FETCH`.
 
@@ -333,6 +368,7 @@ Staging triage UI lives at `/interno/triagem` and is not in the public shell nav
 No explorer route may return a flag field.
 No explorer route may return an exclusion reason.
 No explorer route may return adjacency or a shared-partner count.
+No explorer route may return a co-bid edge, CADE screen, bid variance, cover-bidding, or winner rotation.
 No explorer route may return spec columns or a knn quality token.
 Phase 0 precision is 9 percent, so public flags stay gated.
 

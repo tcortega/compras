@@ -22,6 +22,7 @@ from compras_ingest.incremental import (
 from compras_ingest.landing import LandingStore
 from compras_ingest.pipeline import (
     run_adjacency_and_write,
+    run_cobid_and_write,
     run_pncp_consulta_gaps,
     run_tier1_and_write_flags,
     warehouse_from_landing,
@@ -155,7 +156,7 @@ def cgu_ceis_cnep(context: AssetExecutionContext) -> dict:
 
 @asset(
     group_name="warehouse",
-    description="Read landed parquet, normalize items, write Postgres entities and ClickHouse facts. Python never calls C#.",
+    description="Read landed parquet, normalize items, write Postgres entities, TCE participants, and ClickHouse facts. Python never calls C#.",
 )
 def warehouse_entities(
     context: AssetExecutionContext,
@@ -169,8 +170,6 @@ def warehouse_entities(
     cgu_ceis_cnep: dict,
 ) -> dict:
     _ = ocds_crosscheck
-    _ = tce_sp_licitacao
-    _ = tce_rs_licitacon
     _ = cgu_ceis_cnep
     settings = _settings()
     store = LandingStore(settings)
@@ -178,7 +177,7 @@ def warehouse_entities(
         settings, store, compras_gov, catalogo_cnbs, receita_cnpj, pncp_consulta
     )
     context.log.info(
-        f"normalized={items.height} entities={summary['entities']} facts={summary['facts']} exclusions={summary.get('exclusions')} pool={summary.get('anomaly_pool_n')} items_key={summary['items_key']}"
+        f"normalized={items.height} entities={summary['entities']} facts={summary['facts']} exclusions={summary.get('exclusions')} participants={summary.get('participants')} tce_sp={tce_sp_licitacao.get('sha256')} tce_rs={tce_rs_licitacon.get('sha256')} pool={summary.get('anomaly_pool_n')} items_key={summary['items_key']}"
     )
     return summary
 
@@ -192,6 +191,21 @@ def search_index(context: AssetExecutionContext, warehouse_entities: dict) -> di
     summary = sync_search_index(_settings())
     context.log.info(f"search_index docs={summary['docs']} kinds=item,orgao,fornecedor public=True flags=False")
     return {**summary, "index": "compras", "public": True, "flags": False}
+
+
+@asset(
+    group_name="detect",
+    description="TCE-SP/RS co-bid edges and internal CADE screens. Not public. Not a finding.",
+)
+def cobid_graph(context: AssetExecutionContext, warehouse_entities: dict) -> dict:
+    settings = _settings()
+    _ = warehouse_entities
+    screens, edges_n, screens_n = run_cobid_and_write(settings)
+    kinds = sorted({str(v) for v in screens["kind"].to_list()}) if screens.height else []
+    context.log.info(
+        f"cobid_graph edges={edges_n} screens={screens_n} kinds={kinds} public=False"
+    )
+    return {"edges": edges_n, "screens": screens_n, "kinds": kinds, "public": False, "internal": True}
 
 
 @asset(
@@ -335,6 +349,7 @@ defs = Definitions(
         cgu_ceis_cnep,
         warehouse_entities,
         search_index,
+        cobid_graph,
         fornecedor_adjacency,
         tier1_flags,
         *REFETCH_ASSETS,
@@ -367,6 +382,7 @@ def required_asset_keys() -> set[str]:
         "cgu_ceis_cnep",
         "warehouse_entities",
         "search_index",
+        "cobid_graph",
         "fornecedor_adjacency",
         "tier1_flags",
         *required_refetch_asset_keys(),
@@ -414,6 +430,10 @@ def required_adjacency_parents() -> set[str]:
     return {"warehouse_entities"}
 
 
+def required_cobid_parents() -> set[str]:
+    return {"warehouse_entities"}
+
+
 def assert_asset_graph() -> list[str]:
     graph = defs.get_repository_def().asset_graph
     keys = [k.to_user_string() for k in graph.get_all_asset_keys()]
@@ -432,6 +452,7 @@ def assert_asset_graph() -> list[str]:
         ("search_index", required_search_parents()),
         ("tier1_flags", required_detect_parents()),
         ("fornecedor_adjacency", required_adjacency_parents()),
+        ("cobid_graph", required_cobid_parents()),
         (GAPS_ASSET_NAME, required_gaps_parents()),
     )
     for name, need in checks:

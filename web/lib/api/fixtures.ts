@@ -32,6 +32,8 @@ export const ids = {
   orgaoCruzeiroDoSul: '7c2e1f40-1200-4050-9a01-000000000024',
   orgaoSantana: '7c2e1f40-1600-4050-9a01-000000000025',
   orgaoRorainopolis: '7c2e1f40-1400-4050-9a01-000000000026',
+  orgaoMaringa: '7c2e1f40-4115-4050-9a01-000000000027',
+  orgaoTaubate: '7c2e1f40-3554-4050-9a01-000000000028',
   fornFarma: '8d3f2a51-3306-4050-9a02-000000000001',
   fornAlim: '8d3f2a51-3306-4050-9a02-000000000002',
   fornComb: '8d3f2a51-3306-4050-9a02-000000000003',
@@ -71,6 +73,8 @@ export const ids = {
   ctCruzeiroDoSul: '9e4a3b62-1200-4050-9a03-000000000030',
   ctSantana: '9e4a3b62-1600-4050-9a03-000000000031',
   ctRorainopolis: '9e4a3b62-1400-4050-9a03-000000000032',
+  ctMaringa: '9e4a3b62-4115-4050-9a03-000000000033',
+  ctTaubate: '9e4a3b62-3554-4050-9a03-000000000034',
 } as const
 
 function orgao(
@@ -358,6 +362,26 @@ export const orgaos: Orgao[] = [
     'RR',
     '1400472',
     'Rorainópolis',
+  ),
+  orgao(
+    ids.orgaoMaringa,
+    '76282656000106',
+    'Município de Maringá',
+    'executivo',
+    T2,
+    'PR',
+    '4115200',
+    'Maringá',
+  ),
+  orgao(
+    ids.orgaoTaubate,
+    '45176005000108',
+    'Município de Taubaté',
+    'executivo',
+    T2,
+    'SP',
+    '3554102',
+    'Taubaté',
   ),
 ]
 
@@ -816,6 +840,28 @@ export const contratacoes: Contratacao[] = [
     '2024-10-31T13:53:46.000Z',
     'compras.gov.br',
   ),
+  ct(
+    ids.ctMaringa,
+    '76282656000106-1-000691/2024',
+    ids.orgaoMaringa,
+    'pregao eletronico',
+    'Registro de preços para aquisição de MEDICAMENTOS necessários ao abastecimento da rede pública municipal, por solicitação da Secretaria Municipal de Saúde, visando o atendimento integral à saúde da população conforme previsto na lei nº 8080/1988, que rege o sistema único de saúde.',
+    2024,
+    5_373_878.65,
+    '2024-10-08T07:06:49.000Z',
+    'compras.gov.br',
+  ),
+  ct(
+    ids.ctTaubate,
+    '45176005000108-1-000706/2024',
+    ids.orgaoTaubate,
+    'inexigibilidade',
+    'AQUISIÇÃO DE ELETRODOS PARA ELETROENCEFALOGRAMA.',
+    2024,
+    8_250.0,
+    '2024-09-10T15:00:47.000Z',
+    'compras.gov.br',
+  ),
 ]
 
 function item(
@@ -907,4 +953,6 @@ export const items: Item[] = [
   item(48, ids.ctCruzeiroDoSul, ids.fornPapel, 'Grade niveladora', '463162', 1, 'Unidade', 'un', 26784.45, 'AC', '2024-Q3', T1),
   item(49, ids.ctSantana, ids.fornPapel, 'Prestação de serviços bancários', null, 1, 'UN', 'un', 1.0, 'AP', '2024-Q4', T2),
   item(50, ids.ctRorainopolis, ids.fornPapel, 'Ambulância', '621643', 3, 'Unidade', 'un', 324000.0, 'RR', '2024-Q4', T2),
+  item(51, ids.ctMaringa, ids.fornPapel, 'Enalapril maleato', '267652', 2505672, 'Comprimido', 'comprimido', 0.045, 'PR', '2024-Q4', T2),
+  item(52, ids.ctTaubate, ids.fornPapel, 'Mapeamento Cerebral com Eletroencefalograma AQUISIÇÃO DE ELETRODOS PARA ELETROENCEFALOGRAMA.', '7021', 1, 'UNIDADE', 'un', 8250.0, 'SP', '2024-Q3', T2),
 ]

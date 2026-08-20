@@ -49,6 +49,8 @@ PUBLISHED = {
     "1200203": ("cruzeiro do sul", "AC"),
     "1600600": ("municipio de santana", "AP"),
     "1400472": ("rorainopolis", "RR"),
+    "4115200": ("municipio de maringa", "PR"),
+    "3554102": ("municipio de taubate", "SP"),
 }
 
 
@@ -57,7 +59,7 @@ def main() -> int:
     deny_flags(orgaos, f"{API}/api/orgaos")
     deny_stub(json.dumps(orgaos, ensure_ascii=False), "api /api/orgaos")
     items_page = orgaos.get("items") or []
-    if len(items_page) < 23:
+    if len(items_page) < 25:
         raise SystemExit(f"api /api/orgaos returned {len(items_page)} rows, need the published slice")
     by_ibge = {str(row.get("municipioIbge") or ""): row for row in items_page}
     for ibge, (nome, uf) in PUBLISHED.items():
@@ -74,7 +76,7 @@ def main() -> int:
     orgao_cov = orgaos.get("coverage") or {}
     if orgao_cov.get("uf") not in (None, ""):
         raise SystemExit(f"mixed orgao list invented a UF: {orgao_cov}")
-    if not isinstance(orgao_cov.get("n"), int) or orgao_cov["n"] < 23:
+    if not isinstance(orgao_cov.get("n"), int) or orgao_cov["n"] < 25:
         raise SystemExit(f"api orgaos coverage.n missing the extra slice: {orgao_cov}")
     if not orgao_cov.get("methodologyVersion"):
         raise SystemExit(f"api orgaos coverage missing methodologyVersion: {orgao_cov}")
@@ -222,6 +224,17 @@ def main() -> int:
     if str((rorainopolis.get("coverage") or {}).get("uf") or "") != "RR":
         raise SystemExit(f"api UF=RR coverage lost slice UF: {rorainopolis.get('coverage')}")
 
+    maringa = get_json(f"{API}/api/orgaos?municipioIbge=4115200&skip=0&take=50")
+    deny_flags(maringa, f"{API}/api/orgaos?municipioIbge=4115200")
+    maringa_rows = maringa.get("items") or []
+    if len(maringa_rows) != 1 or str(maringa_rows[0].get("municipioIbge") or "") != "4115200":
+        raise SystemExit(f"api municipio filter 4115200 failed: {maringa_rows}")
+    taubate = get_json(f"{API}/api/orgaos?municipioIbge=3554102&skip=0&take=50")
+    deny_flags(taubate, f"{API}/api/orgaos?municipioIbge=3554102")
+    taubate_rows = taubate.get("items") or []
+    if len(taubate_rows) != 1 or str(taubate_rows[0].get("municipioIbge") or "") != "3554102":
+        raise SystemExit(f"api municipio filter 3554102 failed: {taubate_rows}")
+
     orgao = by_ibge["3306305"]
     oid = orgao["id"]
     got = get_json(f"{API}/api/orgaos/{oid}")
@@ -341,9 +354,13 @@ def main() -> int:
         raise SystemExit("web / missing Santana")
     if "rorainopolis" not in folded and "rorainópolis" not in folded:
         raise SystemExit("web / missing Rorainópolis")
+    if "maringa" not in folded and "maringá" not in folded:
+        raise SystemExit("web / missing Maringá")
+    if "taubate" not in folded and "taubaté" not in folded:
+        raise SystemExit("web / missing Taubaté")
     if "UF mista" not in home:
         raise SystemExit("web / missing honest mixed UF")
-    if "Vinte e três municípios" not in home:
+    if "Vinte e cinco municípios" not in home:
         raise SystemExit("web / missing short brand kicker")
     if "UF Brasil" in home or "total nacional" in folded:
         raise SystemExit("web / invented a national total")
@@ -397,6 +414,10 @@ def main() -> int:
         raise SystemExit("web /orgaos missing Santana")
     if "rorainopolis" not in orgaos_fold and "rorainópolis" not in orgaos_fold:
         raise SystemExit("web /orgaos missing Rorainópolis")
+    if "maringa" not in orgaos_fold and "maringá" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing Maringá")
+    if "taubate" not in orgaos_fold and "taubaté" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing Taubaté")
     if "UF mista" not in orgaos_html:
         raise SystemExit("web /orgaos missing honest mixed UF")
 
@@ -686,6 +707,34 @@ def main() -> int:
     if "UF RR" not in rr_html:
         raise SystemExit("web UF=RR missing coverage UF")
 
+    maringa_html = get_text(f"{WEB}/orgaos?municipioIbge=4115200")
+    assert_served_page(maringa_html, "web /orgaos?municipioIbge=4115200")
+    maringa_table = table_html(maringa_html)
+    if "municipio de maringa" not in maringa_table.casefold() and "município de maringá" not in maringa_table.casefold():
+        raise SystemExit("web /orgaos?municipioIbge=4115200 missing Maringá")
+    if "municipio de taubate" in maringa_table.casefold() or "município de taubaté" in maringa_table.casefold():
+        raise SystemExit("web municipio filter leaked Taubaté")
+    if "prefeitura municipal de volta redonda" in maringa_table.casefold():
+        raise SystemExit("web municipio filter leaked Volta Redonda")
+    if not re.search(r"n=1", maringa_html):
+        raise SystemExit("web Maringá filter missing n=1")
+    if "UF PR" not in maringa_html:
+        raise SystemExit("web Maringá filter missing UF PR")
+
+    taubate_html = get_text(f"{WEB}/orgaos?municipioIbge=3554102")
+    assert_served_page(taubate_html, "web /orgaos?municipioIbge=3554102")
+    taubate_table = table_html(taubate_html)
+    if "municipio de taubate" not in taubate_table.casefold() and "município de taubaté" not in taubate_table.casefold():
+        raise SystemExit("web /orgaos?municipioIbge=3554102 missing Taubaté")
+    if "municipio de maringa" in taubate_table.casefold() or "município de maringá" in taubate_table.casefold():
+        raise SystemExit("web municipio filter leaked Maringá")
+    if "prefeitura municipal de volta redonda" in taubate_table.casefold():
+        raise SystemExit("web municipio filter leaked Volta Redonda")
+    if not re.search(r"n=1", taubate_html):
+        raise SystemExit("web Taubaté filter missing n=1")
+    if "UF SP" not in taubate_html:
+        raise SystemExit("web Taubaté filter missing UF SP")
+
     orgao_html = get_text(f"{WEB}/orgaos/{oid}")
     assert_served_page(orgao_html, "web /orgaos/{id}")
     if STAT_HOMOLOGADO.search(orgao_html):
@@ -807,6 +856,10 @@ def main() -> int:
         raise SystemExit("web /cobertura missing Santana IBGE")
     if "1400472" not in cobertura:
         raise SystemExit("web /cobertura missing Rorainópolis IBGE")
+    if "4115200" not in cobertura:
+        raise SystemExit("web /cobertura missing Maringá IBGE")
+    if "3554102" not in cobertura:
+        raise SystemExit("web /cobertura missing Taubaté IBGE")
     if "não é um total nacional" not in cobertura:
         raise SystemExit("web /cobertura missing disclaimer")
     if "UF mista" not in cobertura:

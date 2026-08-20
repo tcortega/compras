@@ -113,6 +113,19 @@ CREATE INDEX IF NOT EXISTS flag_kind_idx ON flag (kind);
 CREATE INDEX IF NOT EXISTS item_exclusion_item_idx ON item_exclusion ("itemId");
 CREATE INDEX IF NOT EXISTS item_exclusion_reason_idx ON item_exclusion (reason);
 
+CREATE TABLE IF NOT EXISTS catalog_code (
+  codigo text NOT NULL,
+  kind text NOT NULL CHECK (kind IN ('catmat', 'catser')),
+  PRIMARY KEY (codigo, kind)
+);
+
+CREATE TABLE IF NOT EXISTS landing_source (
+  name text PRIMARY KEY,
+  "lastUpdate" timestamptz,
+  n int NOT NULL DEFAULT 0,
+  "snapshotId" text
+);
+
 ALTER TABLE item ADD COLUMN IF NOT EXISTS "valorPorUnidadeCanonica" numeric(18, 6);
 ALTER TABLE item ADD COLUMN IF NOT EXISTS "specConcentracao" text;
 ALTER TABLE item ADD COLUMN IF NOT EXISTS "specDosagem" text;

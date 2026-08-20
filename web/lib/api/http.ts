@@ -1,5 +1,6 @@
 import { fillCoverage, readCoverage } from '@/lib/coverage'
 import type {
+  CoberturaPayload,
   Contratacao,
   ExplorerClient,
   Fornecedor,
@@ -137,5 +138,38 @@ export function createHttpClient(baseUrl: string): ExplorerClient {
     async getItem(id) {
       return readPublishedEntity<Item>(await getJson<unknown>(`/api/items/${id}`), 'item', id, 'item')
     },
+    async getCobertura() {
+      return readCobertura(await getJson<unknown>('/api/cobertura', 60))
+    },
+  }
+}
+
+function readCobertura(raw: unknown): CoberturaPayload {
+  if (!raw || typeof raw !== 'object') {
+    throw new ApiError(502, 'API sem cobertura em /api/cobertura')
+  }
+  const o = raw as Record<string, unknown>
+  const municipiosRaw = o.municipios && typeof o.municipios === 'object' ? (o.municipios as Record<string, unknown>) : {}
+  const rowsRaw = o.rows && typeof o.rows === 'object' ? (o.rows as Record<string, unknown>) : {}
+  const municipios = Array.isArray(municipiosRaw.items) ? municipiosRaw.items : []
+  const perYear = Array.isArray(rowsRaw.perYear) ? rowsRaw.perYear : []
+  const sources = Array.isArray(o.sources) ? o.sources : []
+  const years = Array.isArray(o.years) ? o.years.filter((y): y is number => typeof y === 'number') : []
+  return {
+    municipios: {
+      n: typeof municipiosRaw.n === 'number' ? municipiosRaw.n : municipios.length,
+      items: municipios as CoberturaPayload['municipios']['items'],
+    },
+    years,
+    rows: {
+      compras: typeof rowsRaw.compras === 'number' ? rowsRaw.compras : 0,
+      items: typeof rowsRaw.items === 'number' ? rowsRaw.items : 0,
+      perYear: perYear as CoberturaPayload['rows']['perYear'],
+    },
+    catmatCoveragePercent: typeof o.catmatCoveragePercent === 'number' ? o.catmatCoveragePercent : 0,
+    nCoded: typeof o.nCoded === 'number' ? o.nCoded : 0,
+    nItems: typeof o.nItems === 'number' ? o.nItems : 0,
+    sources: sources as CoberturaPayload['sources'],
+    coverage: readCoverage(o.coverage),
   }
 }

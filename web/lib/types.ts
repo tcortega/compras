@@ -93,6 +93,35 @@ export type Item = {
   updatedAt: string
 }
 
+export type CoberturaMunicipio = {
+  nome: string
+  uf: string
+  ibge: string
+}
+
+export type CoberturaYearCount = {
+  year: number
+  compras: number
+  items: number
+}
+
+export type CoberturaSource = {
+  name: string
+  lastUpdate: string | null
+  n: number
+}
+
+export type CoberturaPayload = {
+  municipios: { n: number; items: CoberturaMunicipio[] }
+  years: number[]
+  rows: { compras: number; items: number; perYear: CoberturaYearCount[] }
+  catmatCoveragePercent: number
+  nCoded: number
+  nItems: number
+  sources: CoberturaSource[]
+  coverage: Coverage
+}
+
 export type ExplorerClient = {
   listOrgaos: (req: PageRequest) => Promise<SkipTakePage<Orgao>>
   getOrgao: (id: string) => Promise<Orgao>
@@ -102,6 +131,7 @@ export type ExplorerClient = {
   getContratacao: (id: string) => Promise<Contratacao>
   listItems: (req: PageRequest) => Promise<SkipTakePage<Item>>
   getItem: (id: string) => Promise<Item>
+  getCobertura: () => Promise<CoberturaPayload>
 }
 
 export function isPublished<T extends { suspended?: boolean }>(row: T): boolean {

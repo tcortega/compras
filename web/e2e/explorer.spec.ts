@@ -610,3 +610,39 @@ test('vazio, 404 e páginas estáticas mantêm cobertura e o banimento', async (
   await expect(page.getByRole('heading', { name: /Metodologia/ })).toBeVisible()
   await assertCoverageAndBan(page)
 })
+
+test('cobertura mostra o n de municípios ingeridos', async ({ page }) => {
+  await page.goto('/cobertura')
+  await expect(page.locator('.stat', { hasText: 'Municípios' })).toContainText(/\d/)
+})
+
+test('cobertura mostra um IBGE ingerido', async ({ page }) => {
+  await page.goto('/cobertura')
+  await expect(page.locator('table.data').getByText(/3306305|3303302|3506003/).first()).toBeVisible()
+})
+
+test('cobertura mostra os anos do recorte', async ({ page }) => {
+  await page.goto('/cobertura')
+  await expect(page.locator('.stat', { hasText: 'Anos' })).toContainText(/\d{4}/)
+})
+
+test('cobertura mostra o n de itens', async ({ page }) => {
+  await page.goto('/cobertura')
+  await expect(page.locator('.stat', { hasText: 'Itens' })).toContainText(/\d/)
+})
+
+test('cobertura mostra o percentual CATMAT com denominador', async ({ page }) => {
+  await page.goto('/cobertura')
+  const live = page.locator('.catmat-live')
+  await expect(live).toContainText(/%/)
+  await expect(live).toContainText(/de \d/)
+  await expect(live).toContainText(/itens/)
+  await expect(live).not.toHaveText(/81,75|81\.75/)
+})
+
+test('cobertura mostra atualização de fonte ou sem ingestão', async ({ page }) => {
+  await page.goto('/cobertura')
+  const row = page.locator('.source-row', { hasText: 'compras_gov' })
+  await expect(row).toBeVisible()
+  await expect(row).toHaveText(/sem ingestão|\d{2}\/\d{2}\/\d{4}/)
+})

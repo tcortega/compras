@@ -184,6 +184,68 @@ public sealed record ContratacaoDetail
 	public required IReadOnlyList<ItemRecord> Items { get; init; }
 }
 
+public sealed record CoberturaMunicipio
+{
+	public required string Nome { get; init; }
+
+	public required string Uf { get; init; }
+
+	public required string Ibge { get; init; }
+}
+
+public sealed record CoberturaMunicipios
+{
+	public required int N { get; init; }
+
+	public required IReadOnlyList<CoberturaMunicipio> Items { get; init; }
+}
+
+public sealed record CoberturaYearCount
+{
+	public required int Year { get; init; }
+
+	public required int Compras { get; init; }
+
+	public required int Items { get; init; }
+}
+
+public sealed record CoberturaRowCounts
+{
+	public required int Compras { get; init; }
+
+	public required int Items { get; init; }
+
+	public required IReadOnlyList<CoberturaYearCount> PerYear { get; init; }
+}
+
+public sealed record CoberturaSource
+{
+	public required string Name { get; init; }
+
+	public Instant? LastUpdate { get; init; }
+
+	public required int N { get; init; }
+}
+
+public sealed record CoberturaPayload
+{
+	public required CoberturaMunicipios Municipios { get; init; }
+
+	public required IReadOnlyList<int> Years { get; init; }
+
+	public required CoberturaRowCounts Rows { get; init; }
+
+	public required decimal CatmatCoveragePercent { get; init; }
+
+	public required int NCoded { get; init; }
+
+	public required int NItems { get; init; }
+
+	public required IReadOnlyList<CoberturaSource> Sources { get; init; }
+
+	public required Coverage Coverage { get; init; }
+}
+
 public sealed record ItemDetail
 {
 	public required ItemRecord Item { get; init; }

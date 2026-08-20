@@ -8,6 +8,7 @@ from compras_ingest.sources.compras_gov import land_compras_gov
 from compras_ingest.sources.ocds import land_ocds
 from compras_ingest.sources.pncp_consulta import land_pncp_consulta
 from compras_ingest.sources.receita_cnpj import cnpj_basicos_from_frame, land_receita_cnpj
+from compras_ingest.sources.tce_rs_licitacon import land_tce_rs_licitacon
 from compras_ingest.sources.tce_sp_licitacao import land_tce_sp_licitacao
 
 
@@ -73,6 +74,16 @@ def tce_sp_licitacao(context: AssetExecutionContext) -> dict:
 
 
 @asset(
+    group_name="tier_b",
+    description="TCE-RS LicitaCon participant proposals. Internal only. Caxias do Sul slice. Not public.",
+)
+def tce_rs_licitacon(context: AssetExecutionContext) -> dict:
+    ref, df = land_tce_rs_licitacon(_settings())
+    context.log.info(f"tce_rs_licitacon rows={df.height} sha={ref.sha256} public=False")
+    return {**ref.as_dict(), "internal": True, "explorer": False, "public": False}
+
+
+@asset(
     group_name="warehouse",
     description="Read landed parquet, normalize items, write Postgres entities and ClickHouse facts. Python never calls C#.",
 )
@@ -84,10 +95,12 @@ def warehouse_entities(
     ocds_crosscheck: dict,
     pncp_consulta: dict,
     tce_sp_licitacao: dict,
+    tce_rs_licitacon: dict,
 ) -> dict:
     _ = ocds_crosscheck
     _ = pncp_consulta
     _ = tce_sp_licitacao
+    _ = tce_rs_licitacon
     settings = _settings()
     store = LandingStore(settings)
     items, summary = warehouse_from_landing(settings, store, compras_gov, catalogo_cnbs, receita_cnpj)
@@ -122,6 +135,7 @@ defs = Definitions(
         ocds_crosscheck,
         pncp_consulta,
         tce_sp_licitacao,
+        tce_rs_licitacon,
         warehouse_entities,
         tier1_flags,
     ]
@@ -136,13 +150,22 @@ def required_asset_keys() -> set[str]:
         "ocds_crosscheck",
         "pncp_consulta",
         "tce_sp_licitacao",
+        "tce_rs_licitacon",
         "warehouse_entities",
         "tier1_flags",
     }
 
 
 def required_warehouse_parents() -> set[str]:
-    return {"compras_gov", "catalogo_cnbs", "receita_cnpj", "ocds_crosscheck", "pncp_consulta", "tce_sp_licitacao"}
+    return {
+        "compras_gov",
+        "catalogo_cnbs",
+        "receita_cnpj",
+        "ocds_crosscheck",
+        "pncp_consulta",
+        "tce_sp_licitacao",
+        "tce_rs_licitacon",
+    }
 
 
 def required_receita_parents() -> set[str]:

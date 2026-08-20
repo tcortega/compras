@@ -25,6 +25,8 @@ x-dagster-env: &dagster-env
   SANCTIONS_DIR: /app/ingest/fixtures/sanctions
   PNCP_CONSULTA_DIR: /app/ingest/fixtures/pncp_consulta
   TCE_SP_PATH: /app/ingest/fixtures/tce_sp_licitacao
+  TCE_RS_PATH: /app/ingest/fixtures/tce_rs_licitacon
+  TCE_RS_FETCH: "0"
 
 services:
   postgres:

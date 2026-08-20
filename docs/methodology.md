@@ -20,7 +20,8 @@ Esse percentual é um fato de qualidade dos dados, não uma acusação.
 O explorador da Fase 2 permite só busca, listagem e ficha.
 Não há alertas públicos, ranking nem pontuação.
 Os valores de proposta de participantes do TCE-SP ficam só no landing interno.
-O explorador não lê essa fonte.
+Os valores de proposta de participantes do TCE-RS LicitaCon ficam só no landing interno.
+O explorador não lê essas fontes.
 
 A precisão do método ingênuo de desvio de preço da Fase 0, neste recorte, é 9/100.
 Esse número é o portão do Tier 3 público.

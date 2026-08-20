@@ -135,6 +135,12 @@ Participant CNPJ and Valor da Proposta stay in landing parquet.
 The explorer does not read this source.
 Cubo SQL is not used.
 
+TCE-RS LicitaCon files land under `tce_rs_licitacon/date=`.
+That source is internal.
+Participant documents and proposal values stay in landing parquet.
+The explorer does not read this source.
+Live CKAN is gated by `TCE_RS_FETCH`.
+
 ## Explorer API
 
 Shared `PageRequest` / `SkipTake`.

@@ -17,6 +17,7 @@ from compras_ingest.official import (
     TCE_SP_LISTING_URL,
     TceSpOfficial,
     download_to,
+    fixture_tce_sp_official,
     http_client,
     resolve_tce_sp_licitacao,
 )
@@ -60,7 +61,11 @@ def land_tce_sp_licitacao(
     official: TceSpOfficial | None = None,
 ) -> tuple[LandingRef, pl.DataFrame]:
     store = store or LandingStore(settings)
-    official = official or resolve_tce_sp_licitacao(settings.tce_sp_year, settings.tce_sp_month)
+    if official is None:
+        if settings.tce_sp_fetch:
+            official = resolve_tce_sp_licitacao(settings.tce_sp_year, settings.tce_sp_month)
+        else:
+            official = fixture_tce_sp_official(settings.tce_sp_year, settings.tce_sp_month)
     _assert_official(official)
     municipio = settings.tce_sp_municipio or SLICE_MUNICIPIO
     if not fold(municipio):

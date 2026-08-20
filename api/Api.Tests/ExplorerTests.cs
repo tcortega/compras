@@ -95,7 +95,7 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 	private static readonly Coverage s_pageOrgaoRecord = new()
 	{
 		N = 0,
-		Uf = "ES",
+		Uf = "TO",
 		Quarter = SliceIds.Quarter,
 		MethodologyVersion = SliceIds.Methodology,
 	};
@@ -107,9 +107,9 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		RazaoSocial = "Paginacao Alfa",
 		Esfera = Esfera.Municipal,
 		Poder = "executivo",
-		Uf = "ES",
-		MunicipioIbge = "3205309",
-		MunicipioNome = "Vitoria",
+		Uf = "TO",
+		MunicipioIbge = "1721000",
+		MunicipioNome = "Palmas",
 		Coverage = s_pageOrgaoRecord,
 	};
 
@@ -120,9 +120,9 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		RazaoSocial = "Paginacao Beta",
 		Esfera = Esfera.Municipal,
 		Poder = "executivo",
-		Uf = "ES",
-		MunicipioIbge = "3205309",
-		MunicipioNome = "Vitoria",
+		Uf = "TO",
+		MunicipioIbge = "1721000",
+		MunicipioNome = "Palmas",
 		Coverage = s_pageOrgaoRecord,
 	};
 
@@ -318,12 +318,12 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		var orgaoCoverage = new Coverage
 		{
 			N = 2,
-			Uf = "ES",
+			Uf = "TO",
 			Quarter = SliceIds.Quarter,
 			MethodologyVersion = SliceIds.Methodology,
 		};
 		var firstOrgaos = await client.ListOrgaos(
-			uf: "ES",
+			uf: "TO",
 			quarter: SliceIds.Quarter,
 			take: 1);
 		Assert.Equal(new[] { s_pageOrgaoAlfa }, firstOrgaos.Items);
@@ -331,7 +331,7 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(2, firstOrgaos.Total);
 
 		var secondOrgaos = await client.ListOrgaos(
-			uf: "ES",
+			uf: "TO",
 			quarter: SliceIds.Quarter,
 			skip: 1,
 			take: 1);
@@ -716,6 +716,100 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		},
 	};
 
+	private static readonly Coverage s_anapolisOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "GO",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_anapolis = new()
+	{
+		Id = SliceIds.OrgaoAnapolis,
+		Cnpj = "01067479000146",
+		RazaoSocial = "Municipio de Anapolis",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "GO",
+		MunicipioIbge = "5201108",
+		MunicipioNome = "Anapolis",
+		Coverage = s_anapolisOrgaoCoverage,
+	};
+
+	private static readonly Coverage s_vilaVelhaOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "ES",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_vilaVelha = new()
+	{
+		Id = SliceIds.OrgaoVilaVelha,
+		Cnpj = "27165554000103",
+		RazaoSocial = "Municipio de Vila Velha",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "ES",
+		MunicipioIbge = "3205200",
+		MunicipioNome = "Vila Velha",
+		Coverage = s_vilaVelhaOrgaoCoverage,
+	};
+
+	private static readonly ItemRecord s_itemAnapolis = new()
+	{
+		Id = SliceIds.ItemAnapolis,
+		ContratacaoId = SliceIds.ContratacaoAnapolis,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Scanner",
+		Catmat = "611695",
+		Catser = null,
+		Quantidade = 8m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 1642.61m,
+		ValorTotal = 13140.88m,
+		Uf = "GO",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "GO",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
+	private static readonly ItemRecord s_itemVilaVelha = new()
+	{
+		Id = SliceIds.ItemVilaVelha,
+		ContratacaoId = SliceIds.ContratacaoVilaVelha,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Revelador radiologico",
+		Catmat = "405620",
+		Catser = null,
+		Quantidade = 420m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 7.48m,
+		ValorTotal = 3141.6m,
+		Uf = "ES",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "ES",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
 	[Fact]
 	public async Task FullCycle_BrowseMunicipioAndUf()
 	{
@@ -825,6 +919,32 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(new[] { s_caruaru }, caruaruPage.Items);
 		await ValidateOrgao(client, s_caruaru);
 
+		var anapolisPage = await client.ListOrgaos(municipioIbge: "5201108", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			anapolisPage.Coverage);
+		Assert.Equal(new[] { s_anapolis }, anapolisPage.Items);
+		await ValidateOrgao(client, s_anapolis);
+
+		var vilaVelhaPage = await client.ListOrgaos(uf: "ES", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "ES",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			vilaVelhaPage.Coverage);
+		Assert.Equal(new[] { s_vilaVelha }, vilaVelhaPage.Items);
+		await ValidateOrgao(client, s_vilaVelha);
+
 		var mixed = await client.ListOrgaos(quarter: SliceIds.Quarter);
 		Assert.Equal("", mixed.Coverage.Uf);
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3306305", StringComparison.Ordinal));
@@ -836,6 +956,8 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "4113700", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "2910800", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "2604106", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "5201108", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3205200", StringComparison.Ordinal));
 
 		var spItems = await client.ListItems(uf: "SP", quarter: SliceIds.Quarter);
 		Assert.Equal(
@@ -944,6 +1066,33 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 			OrgaoRazaoSocial = "Municipio de Feira de Santana",
 			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
 			ContratacaoPncpId = "14043574000151-1-000544/2024",
+		});
+		var esItems = await client.ListItems(uf: "ES", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "ES",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			esItems.Coverage);
+		Assert.Equal(new[] { s_itemVilaVelha }, esItems.Items);
+		await ValidateItem(client, new()
+		{
+			Item = s_itemVilaVelha,
+			OrgaoId = SliceIds.OrgaoVilaVelha,
+			OrgaoRazaoSocial = "Municipio de Vila Velha",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "27165554000103-1-000429/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemAnapolis,
+			OrgaoId = SliceIds.OrgaoAnapolis,
+			OrgaoRazaoSocial = "Municipio de Anapolis",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "01067479000146-1-000086/2024",
 		});
 
 		var empty = new Coverage

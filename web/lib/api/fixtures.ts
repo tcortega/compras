@@ -18,6 +18,8 @@ export const ids = {
   orgaoLondrina: '7c2e1f40-4113-4050-9a01-000000000010',
   orgaoFeira: '7c2e1f40-2910-4050-9a01-000000000011',
   orgaoCaruaru: '7c2e1f40-2604-4050-9a01-000000000012',
+  orgaoAnapolis: '7c2e1f40-5201-4050-9a01-000000000013',
+  orgaoVilaVelha: '7c2e1f40-3205-4050-9a01-000000000014',
   fornFarma: '8d3f2a51-3306-4050-9a02-000000000001',
   fornAlim: '8d3f2a51-3306-4050-9a02-000000000002',
   fornComb: '8d3f2a51-3306-4050-9a02-000000000003',
@@ -43,6 +45,8 @@ export const ids = {
   ctLondrina: '9e4a3b62-4113-4050-9a03-000000000016',
   ctFeira: '9e4a3b62-2910-4050-9a03-000000000017',
   ctCaruaru: '9e4a3b62-2604-4050-9a03-000000000018',
+  ctAnapolis: '9e4a3b62-5201-4050-9a03-000000000019',
+  ctVilaVelha: '9e4a3b62-3205-4050-9a03-000000000020',
 } as const
 
 function orgao(
@@ -190,6 +194,26 @@ export const orgaos: Orgao[] = [
     'PE',
     '2604106',
     'Caruaru',
+  ),
+  orgao(
+    ids.orgaoAnapolis,
+    '01067479000146',
+    'Município de Anápolis',
+    'executivo',
+    T2,
+    'GO',
+    '5201108',
+    'Anápolis',
+  ),
+  orgao(
+    ids.orgaoVilaVelha,
+    '27165554000103',
+    'Município de Vila Velha',
+    'executivo',
+    T2,
+    'ES',
+    '3205200',
+    'Vila Velha',
   ),
 ]
 
@@ -494,6 +518,28 @@ export const contratacoes: Contratacao[] = [
     '2024-09-25T07:08:04.000Z',
     'compras.gov.br',
   ),
+  ct(
+    ids.ctAnapolis,
+    '01067479000146-1-000086/2024',
+    ids.orgaoAnapolis,
+    'dispensa',
+    'Dispensa de Licitação para aquisição de SCANNERS DE MESA, para atender a Diretoria de Defesa do Consumidor conforme Solicitação de Compras nº 000278/2024 por meio de Dispensa de Licitação amparada no art. 75, inciso II da Lei 14.133/2021.  Em caso de divergência existente entre as especificações do objeto descritas no sistema compras net e as especificações técnicas constantes no Termo de Referência, prevalecerão estas últimas. ',
+    2024,
+    13_140.88,
+    '2024-10-23T15:24:06.000Z',
+    'compras.gov.br',
+  ),
+  ct(
+    ids.ctVilaVelha,
+    '27165554000103-1-000429/2024',
+    ids.orgaoVilaVelha,
+    'pregão eletrônico',
+    'REGISTRO DE PREÇOS PARA AQUISIÇÃO DE MATERIAL DE CONSUMO ODONTOLÓGICO (FIXADORES E REVELADORES PARA RADIOGRAFIAS), PARA MANUTENÇÃO DA OFERTA DE SERVIÇO PÚBLICO EM SAÚDE BUCAL DA SECRETARIA MUCIPAL DE SAÚDE DE VILA VELHa.',
+    2024,
+    5_610.0,
+    '2024-11-11T07:02:54.000Z',
+    'compras.gov.br',
+  ),
 ]
 
 function item(
@@ -571,4 +617,6 @@ export const items: Item[] = [
   item(34, ids.ctLondrina, ids.fornPapel, 'Clindamicina', '268436', 10000, 'cápsula', 'capsula', 1.0999, 'PR', '2024-Q1', T0),
   item(35, ids.ctFeira, ids.fornPapel, 'Água mineral natural', '445484', 2000, 'Copo 200,00 ML', 'l', 33.6, 'BA', '2024-Q4', T2),
   item(36, ids.ctCaruaru, ids.fornPapel, 'Placa sinalizadora', '383339', 375, 'Unidade', 'un', 79.0, 'PE', '2024-Q3', T1),
+  item(37, ids.ctAnapolis, ids.fornPapel, 'Scanner', '611695', 8, 'Unidade', 'un', 1642.61, 'GO', '2024-Q4', T2),
+  item(38, ids.ctVilaVelha, ids.fornPapel, 'Revelador Radiológico', '405620', 420, 'Frasco 475,00 ML', 'frasco', 7.48, 'ES', '2024-Q4', T2),
 ]

@@ -99,9 +99,9 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			RazaoSocial = "Paginacao Alfa",
 			Esfera = Api.Persistence.Entities.Esfera.Municipal,
 			Poder = "executivo",
-			Uf = "ES",
-			MunicipioIbge = "3205309",
-			MunicipioNome = "Vitoria",
+			Uf = "TO",
+			MunicipioIbge = "1721000",
+			MunicipioNome = "Palmas",
 		};
 		var pageBeta = new Orgao
 		{
@@ -110,9 +110,9 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			RazaoSocial = "Paginacao Beta",
 			Esfera = Api.Persistence.Entities.Esfera.Municipal,
 			Poder = "executivo",
-			Uf = "ES",
-			MunicipioIbge = "3205309",
-			MunicipioNome = "Vitoria",
+			Uf = "TO",
+			MunicipioIbge = "1721000",
+			MunicipioNome = "Palmas",
 		};
 		var niteroi = new Orgao
 		{
@@ -201,6 +201,28 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			Uf = "PE",
 			MunicipioIbge = "2604106",
 			MunicipioNome = "Caruaru",
+		};
+		var anapolis = new Orgao
+		{
+			Id = SliceIds.OrgaoAnapolis,
+			Cnpj = "01067479000146",
+			RazaoSocial = "Municipio de Anapolis",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "GO",
+			MunicipioIbge = "5201108",
+			MunicipioNome = "Anapolis",
+		};
+		var vilaVelha = new Orgao
+		{
+			Id = SliceIds.OrgaoVilaVelha,
+			Cnpj = "27165554000103",
+			RazaoSocial = "Municipio de Vila Velha",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "ES",
+			MunicipioIbge = "3205200",
+			MunicipioNome = "Vila Velha",
 		};
 		var fornecedor = new Fornecedor
 		{
@@ -378,6 +400,34 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
 		};
+		var contratacaoAnapolis = new Contratacao
+		{
+			Id = SliceIds.ContratacaoAnapolis,
+			PncpId = "01067479000146-1-000086/2024",
+			OrgaoId = SliceIds.OrgaoAnapolis,
+			Modalidade = "dispensa",
+			Objeto = "Dispensa de licitacao para aquisicao de scanners de mesa",
+			Ano = 2024,
+			ValorHomologado = 13140.88m,
+			PublicadoEm = Instant.FromUtc(2024, 10, 23, 15, 24),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoVilaVelha = new Contratacao
+		{
+			Id = SliceIds.ContratacaoVilaVelha,
+			PncpId = "27165554000103-1-000429/2024",
+			OrgaoId = SliceIds.OrgaoVilaVelha,
+			Modalidade = "pregao eletronico",
+			Objeto = "Registro de precos para aquisicao de material de consumo odontologico",
+			Ano = 2024,
+			ValorHomologado = 5610m,
+			PublicadoEm = Instant.FromUtc(2024, 11, 11, 7, 2),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
 		var itemNiteroi = new Item
 		{
 			Id = SliceIds.ItemNiteroi,
@@ -514,11 +564,45 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
 		};
+		var itemAnapolis = new Item
+		{
+			Id = SliceIds.ItemAnapolis,
+			ContratacaoId = SliceIds.ContratacaoAnapolis,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Scanner",
+			Catmat = "611695",
+			Quantidade = 8m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 1642.61m,
+			ValorTotal = 13140.88m,
+			Uf = "GO",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var itemVilaVelha = new Item
+		{
+			Id = SliceIds.ItemVilaVelha,
+			ContratacaoId = SliceIds.ContratacaoVilaVelha,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Revelador radiologico",
+			Catmat = "405620",
+			Quantidade = 420m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 7.48m,
+			ValorTotal = 3141.6m,
+			Uf = "ES",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
 
-		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville, uberlandia, londrina, feira, caruaru);
+		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville, uberlandia, londrina, feira, caruaru, anapolis, vilaVelha);
 		db.Fornecedores.AddRange(fornecedor, fornecedorExtra);
-		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina, contratacaoFeira, contratacaoCaruaru);
-		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina, itemFeira, itemCaruaru);
+		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina, contratacaoFeira, contratacaoCaruaru, contratacaoAnapolis, contratacaoVilaVelha);
+		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina, itemFeira, itemCaruaru, itemAnapolis, itemVilaVelha);
 	}
 
 	private static JsonSerializerOptions CreateJson()

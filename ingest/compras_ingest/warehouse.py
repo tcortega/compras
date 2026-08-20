@@ -426,6 +426,20 @@ def item_columns(settings: Settings) -> set[str]:
     return {str(row["column_name"]) for row in rows}
 
 
+def fetch_record_hashes(settings: Settings) -> set[str]:
+    ch = _ch(settings)
+    result = ch.query(
+        f"SELECT record_hash FROM {settings.clickhouse_database}.item_fact FINAL"
+    )
+    return {str(row[0]) for row in result.result_rows if row[0]}
+
+
+def fetch_fact_count(settings: Settings) -> int:
+    ch = _ch(settings)
+    result = ch.query(f"SELECT count() FROM {settings.clickhouse_database}.item_fact FINAL")
+    return int(result.result_rows[0][0]) if result.result_rows else 0
+
+
 def fetch_item_facts(settings: Settings) -> list[dict]:
     ch = _ch(settings)
     result = ch.query(

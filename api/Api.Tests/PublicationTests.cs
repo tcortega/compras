@@ -214,57 +214,32 @@ public sealed class PublicationTests(ComprasApiFixture fixture) : IClassFixture<
 			MethodologyVersion = SliceIds.Methodology,
 		};
 		var listed = await client.ListFlags(kind: "qty_unit_price_neq_total", state: FlagState.Detected);
-		Assert.Equal(
-			new FlagPage
-			{
-				Items = [expectedQty1, expectedQty2],
-				Coverage = qtyCoverage,
-				Total = 2,
-			},
-			listed);
+		Assert.Equal(qtyCoverage, listed.Coverage);
+		Assert.Equal(2, listed.Total);
+		Assert.Equal(new[] { expectedQty1, expectedQty2 }, listed.Items);
 
 		var listedSanction = await client.ListFlags(kind: "sanctioned_ceis_cnep", state: FlagState.Detected);
-		Assert.Equal(
-			new FlagPage
-			{
-				Items = [expectedSanction],
-				Coverage = qtyCoverage with { N = 1 },
-				Total = 1,
-			},
-			listedSanction);
+		Assert.Equal(qtyCoverage with { N = 1 }, listedSanction.Coverage);
+		Assert.Equal(1, listedSanction.Total);
+		Assert.Equal(new[] { expectedSanction }, listedSanction.Items);
 
 		var firstPage = await client.ListFlags(kind: "qty_unit_price_neq_total", take: 1);
-		Assert.Equal(
-			new FlagPage
-			{
-				Items = [expectedQty1],
-				Coverage = qtyCoverage,
-				Total = 2,
-			},
-			firstPage);
+		Assert.Equal(qtyCoverage, firstPage.Coverage);
+		Assert.Equal(2, firstPage.Total);
+		Assert.Equal(new[] { expectedQty1 }, firstPage.Items);
 
 		var secondPage = await client.ListFlags(kind: "qty_unit_price_neq_total", skip: 1, take: 1);
-		Assert.Equal(
-			new FlagPage
-			{
-				Items = [expectedQty2],
-				Coverage = qtyCoverage,
-				Total = 2,
-			},
-			secondPage);
+		Assert.Equal(qtyCoverage, secondPage.Coverage);
+		Assert.Equal(2, secondPage.Total);
+		Assert.Equal(new[] { expectedQty2 }, secondPage.Items);
 
 		var byItem = await client.ListFlags(
 			kind: "qty_unit_price_neq_total",
 			state: FlagState.Detected,
 			itemId: SliceIds.Item1);
-		Assert.Equal(
-			new FlagPage
-			{
-				Items = [expectedQty1],
-				Coverage = qtyCoverage with { N = 1 },
-				Total = 1,
-			},
-			byItem);
+		Assert.Equal(qtyCoverage with { N = 1 }, byItem.Coverage);
+		Assert.Equal(1, byItem.Total);
+		Assert.Equal(new[] { expectedQty1 }, byItem.Items);
 
 		var reviewed = await client.ReviewFlag(expectedQty1.Id);
 		expectedQty1 = expectedQty1 with { State = FlagState.InternalReview };
@@ -272,24 +247,14 @@ public sealed class PublicationTests(ComprasApiFixture fixture) : IClassFixture<
 		await ValidateFlag(client, expectedQty1);
 
 		var stillDetected = await client.ListFlags(kind: "qty_unit_price_neq_total", state: FlagState.Detected);
-		Assert.Equal(
-			new FlagPage
-			{
-				Items = [expectedQty2],
-				Coverage = qtyCoverage with { N = 1 },
-				Total = 1,
-			},
-			stillDetected);
+		Assert.Equal(qtyCoverage with { N = 1 }, stillDetected.Coverage);
+		Assert.Equal(1, stillDetected.Total);
+		Assert.Equal(new[] { expectedQty2 }, stillDetected.Items);
 
 		var inReview = await client.ListFlags(kind: "qty_unit_price_neq_total", state: FlagState.InternalReview);
-		Assert.Equal(
-			new FlagPage
-			{
-				Items = [expectedQty1],
-				Coverage = qtyCoverage with { N = 1 },
-				Total = 1,
-			},
-			inReview);
+		Assert.Equal(qtyCoverage with { N = 1 }, inReview.Coverage);
+		Assert.Equal(1, inReview.Total);
+		Assert.Equal(new[] { expectedQty1 }, inReview.Items);
 
 		var explorer = await client.GetItem(SliceIds.Item1);
 		Assert.Equal(

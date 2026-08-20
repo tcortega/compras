@@ -17,7 +17,7 @@ x-dagster-env: &dagster-env
   AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-landing-secret}
   AWS_DEFAULT_REGION: us-east-1
   LANDING_URI: s3://compras-landing
-  METHODOLOGY_VERSION: ${METHODOLOGY_VERSION:-phase1-0.1.0}
+  METHODOLOGY_VERSION: ${METHODOLOGY_VERSION:-0.2}
   COMPRAS_GOV_DIR: /app/ingest/fixtures/compras_gov
   COMPRAS_GOV_YEAR: "2024"
   COMPRAS_GOV_YEARS: "2024,2025,2026"
@@ -221,7 +221,7 @@ services:
       ConnectionStrings__Compras: Host=postgres;Port=5432;Database=${POSTGRES_DB:-compras};Username=${POSTGRES_USER:-compras};Password=${POSTGRES_PASSWORD:-compras}
       App__Host: 0.0.0.0
       App__Port: "5080"
-      App__MethodologyVersion: ${METHODOLOGY_VERSION:-phase1-0.1.0}
+      App__MethodologyVersion: ${METHODOLOGY_VERSION:-0.2}
       App__ApplyMigrations: "false"
     ports:
       - "5080:5080"

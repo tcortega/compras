@@ -9,7 +9,7 @@ public static class AppOptionsSetup
 		if (string.IsNullOrWhiteSpace(options.Host))
 			options.Host = environment.IsDevelopment() ? "127.0.0.1" : "0.0.0.0";
 		if (string.IsNullOrWhiteSpace(options.MethodologyVersion))
-			options.MethodologyVersion = "0.1";
+			options.MethodologyVersion = "0.2";
 
 		var connectionString = configuration.GetConnectionString("Compras");
 		if (string.IsNullOrWhiteSpace(connectionString))

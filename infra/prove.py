@@ -1715,16 +1715,28 @@ def main() -> int:
 
     metodologia = get_text(f"{WEB}/metodologia")
     assert_served_page(metodologia, "web /metodologia")
-    if "0.1" in metodologia and "phase1-0.1.0" not in metodologia:
-        raise SystemExit("web /metodologia assumed stub methodology 0.1")
+    if "0.2" not in metodologia:
+        raise SystemExit("web /metodologia missing methodology 0.2")
+    if "fracionamento" not in metodologia.lower():
+        raise SystemExit("web /metodologia missing fracionamento caveat")
+    if "dolo específico" not in metodologia and "dolo especifico" not in metodologia:
+        raise SystemExit("web /metodologia missing dolo específico caveat")
+    if "297/2009" not in metodologia:
+        raise SystemExit("web /metodologia missing TCU 297/2009")
+    if "1.793/2011" not in metodologia and "1793/2011" not in metodologia:
+        raise SystemExit("web /metodologia missing TCU 1.793/2011")
+    if "2.803/2016" not in metodologia and "2803/2016" not in metodologia:
+        raise SystemExit("web /metodologia missing TCU 2.803/2016")
+    if re.search(r"fraude|corrupto", metodologia, re.I):
+        raise SystemExit("web /metodologia leaked fraude/corrupto")
 
     flags = get_json(f"{API}/api/internal/flags?state=detected&skip=0&take=50")
     flag_coverage = flags.get("coverage") or {}
     flag_n = flag_coverage.get("n")
     if not isinstance(flag_n, int) or flag_n < 1:
         raise SystemExit(f"internal flags coverage.n missing or empty: {flag_coverage}")
-    if not str(flag_coverage.get("methodologyVersion") or ""):
-        raise SystemExit("internal flags coverage missing methodologyVersion")
+    if str(flag_coverage.get("methodologyVersion") or "") != "0.2":
+        raise SystemExit(f"internal flags coverage methodologyVersion is not 0.2: {flag_coverage}")
     flag_rows = flags.get("items") or []
     if not flag_rows:
         raise SystemExit("internal flags returned no rows")
@@ -1740,8 +1752,8 @@ def main() -> int:
             raise SystemExit("internal flag missing delta")
         if not row.get("snapshotId"):
             raise SystemExit("internal flag missing snapshotId")
-        if not row.get("methodologyVersion"):
-            raise SystemExit("internal flag missing methodologyVersion")
+        if str(row.get("methodologyVersion") or "") != "0.2":
+            raise SystemExit(f"internal flag methodologyVersion is not 0.2: {row.get('methodologyVersion')}")
     paged = get_json(f"{API}/api/internal/flags?state=detected&take=1")
     if len(paged.get("items") or []) != 1:
         raise SystemExit("internal flags take=1 did not page")

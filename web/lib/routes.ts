@@ -11,6 +11,8 @@ export const routes = {
   item: (id: string) => `/itens/${id}` as const,
   cobertura: '/cobertura',
   metodologia: '/metodologia',
+  triagem: '/interno/triagem',
+  triagemItem: (id: string) => `/interno/triagem/${id}` as const,
 } as const
 
 export const navPrimary = [

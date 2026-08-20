@@ -819,6 +819,66 @@ table.data a:hover {
   font-variant-numeric: tabular-nums;
 }
 
+.audit-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+}
+
+.audit-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) auto auto;
+  gap: 8px 16px;
+  align-items: baseline;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.audit-list li:last-child {
+  border-bottom: 0;
+}
+
+.audit-list .kicker {
+  margin: 0;
+}
+
+.triage-flash {
+  margin-top: 12px;
+}
+
+.triage-actions {
+  margin-top: 20px;
+}
+
+.triage-actions form {
+  margin: 0;
+}
+
+.triage-label-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn:disabled,
+.btn-ghost:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.btn:disabled:hover,
+.btn-ghost:disabled:hover {
+  background: var(--forest);
+  color: var(--forest-ink);
+}
+
+.btn-ghost:disabled:hover {
+  background: transparent;
+  color: var(--ink);
+}
+
 @media (max-width: 860px) {
   .wrap {
     width: min(var(--max), calc(100% - 32px));

@@ -8,7 +8,7 @@ namespace Api.Tests;
 public sealed class PublicationTests(ComprasApiFixture fixture) : IClassFixture<ComprasApiFixture>
 {
 	[Fact]
-	public async Task FullCycle_DetectReviewNotifyHoldPublishReplyResolve()
+	public async Task FullCycle_DetectReviewNotifyHoldPublishReplyRetract()
 	{
 		var client = fixture.GetClient();
 		var now = fixture.Clock.GetCurrentInstant();
@@ -18,6 +18,145 @@ public sealed class PublicationTests(ComprasApiFixture fixture) : IClassFixture<
 			ItemId = SliceIds.Item1,
 			Kind = "qty_mismatch",
 			Delta = "Orgao paid R$8.00/unit for CATMAT 123456 on 2024-03-10. Median across 2 comparable purchases in RJ, 2024-Q2: R$5.00. Source: PNCP 3306305-1-000001/2024.",
+			SourceUrl = "https://pncp.gov.br/app/editais/3306305/2024/1",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		});
+		Assert.NotNull(created.Content);
+		var expected = created.Content with
+		{
+			State = FlagState.Detected,
+			DetectedAt = now,
+			NotifiedAt = null,
+			PublishAfter = null,
+			PublishedAt = null,
+			ReplyText = null,
+			RepliedAt = null,
+			Suspended = false,
+			Framing = "indicio requiring verification",
+		};
+		Assert.Equal(expected, created.Content);
+		await ValidateFlag(client, expected);
+
+		var illegalJump = await client.PublishFlag(expected.Id);
+		Assert.Equal(HttpStatusCode.Conflict, illegalJump.StatusCode);
+		await ValidateFlag(client, expected);
+
+		var sqlJump = await Record.ExceptionAsync(() => fixture.UpdateFlagState(expected.Id, "published"));
+		Assert.NotNull(sqlJump);
+		await ValidateFlag(client, expected);
+
+		var reviewed = await client.ReviewFlag(expected.Id);
+		expected = expected with { State = FlagState.InternalReview };
+		Assert.Equal(expected, reviewed.Content);
+		await ValidateFlag(client, expected);
+
+		var notified = await client.NotifyFlag(expected.Id);
+		expected = expected with
+		{
+			State = FlagState.Notified,
+			NotifiedAt = now,
+			PublishAfter = now + Duration.FromDays(7),
+		};
+		Assert.Equal(expected, notified.Content);
+		await ValidateFlag(client, expected);
+
+		var early = await client.PublishFlag(expected.Id);
+		Assert.Equal(HttpStatusCode.Conflict, early.StatusCode);
+		await ValidateFlag(client, expected);
+
+		fixture.Clock.Advance(Duration.FromDays(7));
+		var publishedAt = now + Duration.FromDays(7);
+		var published = await client.PublishFlag(expected.Id);
+		expected = expected with
+		{
+			State = FlagState.Published,
+			PublishedAt = publishedAt,
+		};
+		Assert.Equal(expected, published.Content);
+		await ValidateFlag(client, expected);
+
+		var replied = await client.ReplyFlag(expected.Id, new()
+		{
+			ReplyText = "Unidade estava em caixa com 10 resmas.",
+		});
+		expected = expected with
+		{
+			ReplyText = "Unidade estava em caixa com 10 resmas.",
+			RepliedAt = publishedAt,
+		};
+		Assert.Equal(expected, replied.Content);
+		await ValidateFlag(client, expected);
+
+		var retracted = await client.RetractFlag(expected.Id);
+		expected = expected with { State = FlagState.Retracted };
+		Assert.Equal(expected, retracted.Content);
+		await ValidateFlag(client, expected);
+
+		var resolveFromRetracted = await client.ResolveFlag(expected.Id);
+		Assert.Equal(HttpStatusCode.Conflict, resolveFromRetracted.StatusCode);
+		await ValidateFlag(client, expected);
+
+		var audit = await fixture.ListFlagAudit(expected.Id);
+		Assert.Equal(5, audit.Count);
+		Assert.Equal(
+			[
+				new() { FromState = null, ToState = "detected" },
+				new() { FromState = "detected", ToState = "internal_review" },
+				new() { FromState = "internal_review", ToState = "notified" },
+				new() { FromState = "notified", ToState = "published" },
+				new() { FromState = "published", ToState = "retracted" },
+			],
+			audit);
+
+		var explorer = await client.GetItem(SliceIds.Item1);
+		Assert.Equal(
+			new ItemDetail
+			{
+				Item = new()
+				{
+					Id = SliceIds.Item1,
+					ContratacaoId = SliceIds.Contratacao,
+					FornecedorId = SliceIds.Fornecedor,
+					Descricao = "Resma papel A4",
+					Catmat = "123456",
+					Catser = null,
+					Quantidade = 100m,
+					UnidadeMedida = "UN",
+					UnidadeCanonica = "un",
+					ValorUnitario = 8m,
+					ValorTotal = 800m,
+					Uf = SliceIds.Uf,
+					Quarter = SliceIds.Quarter,
+					SnapshotId = SliceIds.Snapshot,
+					MethodologyVersion = SliceIds.Methodology,
+					Coverage = new()
+					{
+						N = 2,
+						Uf = SliceIds.Uf,
+						Quarter = SliceIds.Quarter,
+						MethodologyVersion = SliceIds.Methodology,
+					},
+				},
+				OrgaoId = SliceIds.Orgao,
+				OrgaoRazaoSocial = "Municipio de Volta Redonda",
+				FornecedorRazaoSocial = "Papelaria Central Ltda",
+				ContratacaoPncpId = "3306305-1-000001/2024",
+			},
+			explorer.Content);
+	}
+
+	[Fact]
+	public async Task FullCycle_DetectReviewNotifyHoldPublishResolve()
+	{
+		var client = fixture.GetClient();
+		var now = fixture.Clock.GetCurrentInstant();
+
+		var created = await client.CreateFlag(new()
+		{
+			ItemId = SliceIds.Item2,
+			Kind = "qty_mismatch",
+			Delta = "Orgao paid R$2.00/unit for CATMAT 123456 on 2024-03-10. Median across 2 comparable purchases in RJ, 2024-Q2: R$5.00. Source: PNCP 3306305-1-000001/2024.",
 			SourceUrl = "https://pncp.gov.br/app/editais/3306305/2024/1",
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
@@ -68,58 +207,25 @@ public sealed class PublicationTests(ComprasApiFixture fixture) : IClassFixture<
 		Assert.Equal(expected, published.Content);
 		await ValidateFlag(client, expected);
 
-		var replied = await client.ReplyFlag(expected.Id, new()
-		{
-			ReplyText = "Unidade estava em caixa com 10 resmas.",
-		});
-		expected = expected with
-		{
-			ReplyText = "Unidade estava em caixa com 10 resmas.",
-			RepliedAt = publishedAt,
-		};
-		Assert.Equal(expected, replied.Content);
-		await ValidateFlag(client, expected);
-
 		var resolved = await client.ResolveFlag(expected.Id);
 		expected = expected with { State = FlagState.Resolved };
 		Assert.Equal(expected, resolved.Content);
 		await ValidateFlag(client, expected);
 
-		var explorer = await client.GetItem(SliceIds.Item1);
+		var audit = await fixture.ListFlagAudit(expected.Id);
+		Assert.Equal(5, audit.Count);
 		Assert.Equal(
-			new ItemDetail
-			{
-				Item = new()
-				{
-					Id = SliceIds.Item1,
-					ContratacaoId = SliceIds.Contratacao,
-					FornecedorId = SliceIds.Fornecedor,
-					Descricao = "Resma papel A4",
-					Catmat = "123456",
-					Catser = null,
-					Quantidade = 100m,
-					UnidadeMedida = "UN",
-					UnidadeCanonica = "un",
-					ValorUnitario = 8m,
-					ValorTotal = 800m,
-					Uf = SliceIds.Uf,
-					Quarter = SliceIds.Quarter,
-					SnapshotId = SliceIds.Snapshot,
-					MethodologyVersion = SliceIds.Methodology,
-					Coverage = new()
-					{
-						N = 2,
-						Uf = SliceIds.Uf,
-						Quarter = SliceIds.Quarter,
-						MethodologyVersion = SliceIds.Methodology,
-					},
-				},
-				OrgaoId = SliceIds.Orgao,
-				OrgaoRazaoSocial = "Municipio de Volta Redonda",
-				FornecedorRazaoSocial = "Papelaria Central Ltda",
-				ContratacaoPncpId = "3306305-1-000001/2024",
-			},
-			explorer.Content);
+			[
+				new() { FromState = null, ToState = "detected" },
+				new() { FromState = "detected", ToState = "internal_review" },
+				new() { FromState = "internal_review", ToState = "notified" },
+				new() { FromState = "notified", ToState = "published" },
+				new() { FromState = "published", ToState = "resolved" },
+			],
+			audit);
+
+		var http = fixture.CreateHttpClient();
+		await AssertExplorerJsonHasNoFlagField(http, $"/api/items/{SliceIds.Item2}");
 	}
 
 	[Fact]

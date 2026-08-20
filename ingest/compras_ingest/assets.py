@@ -105,7 +105,7 @@ def warehouse_entities(
     store = LandingStore(settings)
     items, summary = warehouse_from_landing(settings, store, compras_gov, catalogo_cnbs, receita_cnpj)
     context.log.info(
-        f"normalized={items.height} entities={summary['entities']} facts={summary['facts']} items_key={summary['items_key']}"
+        f"normalized={items.height} entities={summary['entities']} facts={summary['facts']} exclusions={summary.get('exclusions')} pool={summary.get('anomaly_pool_n')} items_key={summary['items_key']}"
     )
     return summary
 

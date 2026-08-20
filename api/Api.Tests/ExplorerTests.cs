@@ -95,7 +95,7 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 	private static readonly Coverage s_pageOrgaoRecord = new()
 	{
 		N = 0,
-		Uf = "ES",
+		Uf = "TO",
 		Quarter = SliceIds.Quarter,
 		MethodologyVersion = SliceIds.Methodology,
 	};
@@ -107,9 +107,9 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		RazaoSocial = "Paginacao Alfa",
 		Esfera = Esfera.Municipal,
 		Poder = "executivo",
-		Uf = "ES",
-		MunicipioIbge = "3205309",
-		MunicipioNome = "Vitoria",
+		Uf = "TO",
+		MunicipioIbge = "1721000",
+		MunicipioNome = "Palmas",
 		Coverage = s_pageOrgaoRecord,
 	};
 
@@ -120,9 +120,9 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		RazaoSocial = "Paginacao Beta",
 		Esfera = Esfera.Municipal,
 		Poder = "executivo",
-		Uf = "ES",
-		MunicipioIbge = "3205309",
-		MunicipioNome = "Vitoria",
+		Uf = "TO",
+		MunicipioIbge = "1721000",
+		MunicipioNome = "Palmas",
 		Coverage = s_pageOrgaoRecord,
 	};
 
@@ -318,12 +318,12 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		var orgaoCoverage = new Coverage
 		{
 			N = 2,
-			Uf = "ES",
+			Uf = "TO",
 			Quarter = SliceIds.Quarter,
 			MethodologyVersion = SliceIds.Methodology,
 		};
 		var firstOrgaos = await client.ListOrgaos(
-			uf: "ES",
+			uf: "TO",
 			quarter: SliceIds.Quarter,
 			take: 1);
 		Assert.Equal(new[] { s_pageOrgaoAlfa }, firstOrgaos.Items);
@@ -331,7 +331,7 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(2, firstOrgaos.Total);
 
 		var secondOrgaos = await client.ListOrgaos(
-			uf: "ES",
+			uf: "TO",
 			quarter: SliceIds.Quarter,
 			skip: 1,
 			take: 1);

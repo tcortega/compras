@@ -99,9 +99,9 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			RazaoSocial = "Paginacao Alfa",
 			Esfera = Api.Persistence.Entities.Esfera.Municipal,
 			Poder = "executivo",
-			Uf = "ES",
-			MunicipioIbge = "3205309",
-			MunicipioNome = "Vitoria",
+			Uf = "TO",
+			MunicipioIbge = "1721000",
+			MunicipioNome = "Palmas",
 		};
 		var pageBeta = new Orgao
 		{
@@ -110,9 +110,9 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			RazaoSocial = "Paginacao Beta",
 			Esfera = Api.Persistence.Entities.Esfera.Municipal,
 			Poder = "executivo",
-			Uf = "ES",
-			MunicipioIbge = "3205309",
-			MunicipioNome = "Vitoria",
+			Uf = "TO",
+			MunicipioIbge = "1721000",
+			MunicipioNome = "Palmas",
 		};
 		var niteroi = new Orgao
 		{

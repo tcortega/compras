@@ -126,6 +126,36 @@ SANCTION_CNPJ_D = "00802002000102"
 SANCTION_CNPJ_E = "01042740000153"
 SANCTION_OVERLAP = frozenset({SANCTION_CNPJ_A, SANCTION_CNPJ_CNEP})
 SANCTION_CLEAN = frozenset({SANCTION_CNPJ_B, SANCTION_CNPJ_C, SANCTION_CNPJ_D, SANCTION_CNPJ_E})
+AGE_FLAG_KIND = "cnpj_age"
+AGE_INFO_KIND = "cnpj_age_info"
+AGE_YOUNG_CNPJ = "11222333000181"
+AGE_INFO_CNPJ = "55666777000193"
+AGE_OLD_CNPJ = "44555666000172"
+AGE_FUTURE_CNPJ = "66777888000104"
+AGE_NOOPEN_CNPJ = "77888999000115"
+AGE_NODATE_CNPJ = "88999000000126"
+AGE_YOUNG_IDS = frozenset(
+    {
+        "I-2024-000001",
+        "I-2024-000007",
+        "I-2024-000008",
+        "I-2024-000009",
+        "I-2024-000010",
+        "I-2024-000011",
+    }
+)
+AGE_INFO_IDS = frozenset({"I-2024-B2-INFO"})
+AGE_SILENT_IDS = frozenset(
+    {
+        "I-2024-000002",
+        "I-2024-000004",
+        "I-2024-000005",
+        "I-2024-000006",
+        "I-2024-B2-FUTURE",
+        "I-2024-B2-NOOPEN",
+        "I-2024-B2-NOAWARD",
+    }
+)
 TCE_RS_TABLES = {
     "LICITANTE",
     "PROPOSTA",
@@ -279,10 +309,15 @@ def main() -> int:
     stored = fetch_flags(settings, state="detected")
     kinds = {str(row["kind"]) for row in stored}
     _assert_sanction_flags(result.items, result.flags, stored)
+    _assert_cnpj_age_flags(result.items, result.flags, stored)
     if "qty_unit_price_neq_total" not in kinds:
         raise SystemExit("warehouse missing qty_unit_price_neq_total after write_flags")
     if "retroactive_edit" not in kinds:
         raise SystemExit("warehouse missing retroactive_edit after second landing")
+    if AGE_FLAG_KIND not in kinds:
+        raise SystemExit("warehouse missing cnpj_age after write_flags")
+    if AGE_INFO_KIND not in kinds:
+        raise SystemExit("warehouse missing cnpj_age_info after write_flags")
     for row in stored:
         if not row.get("itemId"):
             raise SystemExit("warehouse flag missing itemId")
@@ -1285,6 +1320,10 @@ def _assert_sanction_flags(items, flags, stored) -> None:
     kinds = {str(row["kind"]) for row in stored}
     if "sanctioned_ceis_cnep" not in kinds:
         raise SystemExit("warehouse missing sanctioned_ceis_cnep after write_flags")
+    if AGE_FLAG_KIND not in kinds:
+        raise SystemExit("warehouse missing cnpj_age after write_flags")
+    if AGE_INFO_KIND not in kinds:
+        raise SystemExit("warehouse missing cnpj_age_info after write_flags")
     id_to_cnpj = {}
     for row in items.iter_rows(named=True):
         iid = item_id(str(row.get("pncp_id") or ""), str(row.get("record_id") or ""))
@@ -1303,6 +1342,106 @@ def _assert_sanction_flags(items, flags, stored) -> None:
         raise SystemExit(f"warehouse sanction CNPJs {sorted(ware)} != planted overlap {sorted(SANCTION_OVERLAP)}")
     if ware & set(SANCTION_CLEAN):
         raise SystemExit(f"warehouse flagged non-overlap CNPJs {sorted(ware & set(SANCTION_CLEAN))}")
+
+
+def _assert_cnpj_age_flags(items, flags, stored) -> None:
+    by_rec = {}
+    for row in items.iter_rows(named=True):
+        rid = str(row.get("record_id") or "")
+        digits = "".join(c for c in str(row.get("fornecedor_cnpj") or "") if c.isdigit())
+        by_rec[rid] = {
+            "cnpj": digits,
+            "opened_on": str(row.get("opened_on") or ""),
+            "award_date": str(row.get("award_date") or ""),
+        }
+    for rid in AGE_YOUNG_IDS | AGE_INFO_IDS | AGE_SILENT_IDS:
+        if rid not in by_rec:
+            raise SystemExit(f"cnpj_age fixture missing normalized item {rid}")
+    if by_rec["I-2024-000001"]["cnpj"] != AGE_YOUNG_CNPJ:
+        raise SystemExit(f"young plant CNPJ drifted: {by_rec['I-2024-000001']['cnpj']}")
+    if by_rec["I-2024-B2-INFO"]["cnpj"] != AGE_INFO_CNPJ:
+        raise SystemExit(f"info plant CNPJ drifted: {by_rec['I-2024-B2-INFO']['cnpj']}")
+    if by_rec["I-2024-000002"]["cnpj"] != AGE_OLD_CNPJ:
+        raise SystemExit(f"old plant CNPJ drifted: {by_rec['I-2024-000002']['cnpj']}")
+    if by_rec["I-2024-B2-FUTURE"]["cnpj"] != AGE_FUTURE_CNPJ:
+        raise SystemExit(f"future plant CNPJ drifted: {by_rec['I-2024-B2-FUTURE']['cnpj']}")
+    if by_rec["I-2024-B2-NOOPEN"]["cnpj"] != AGE_NOOPEN_CNPJ:
+        raise SystemExit(f"missing opened_on plant CNPJ drifted: {by_rec['I-2024-B2-NOOPEN']['cnpj']}")
+    if by_rec["I-2024-B2-NOAWARD"]["cnpj"] != AGE_NODATE_CNPJ:
+        raise SystemExit(f"missing award plant CNPJ drifted: {by_rec['I-2024-B2-NOAWARD']['cnpj']}")
+    if by_rec["I-2024-B2-NOOPEN"]["opened_on"]:
+        raise SystemExit("missing opened_on plant has opened_on")
+    if by_rec["I-2024-B2-NOAWARD"]["award_date"]:
+        raise SystemExit("missing award plant has award_date")
+
+    got_flag: set[str] = set()
+    got_info: set[str] = set()
+    for row in flags.iter_rows(named=True):
+        kind = str(row.get("kind") or "")
+        rid = str(row.get("record_id") or "")
+        if kind not in {AGE_FLAG_KIND, AGE_INFO_KIND}:
+            continue
+        delta = str(row.get("delta") or "")
+        for token in ("opened_on=", "award_date=", "age_days=", "tier="):
+            if token not in delta:
+                raise SystemExit(f"{rid} {kind} delta missing {token}: {delta}")
+        if kind == AGE_FLAG_KIND:
+            if "tier=flag" not in delta:
+                raise SystemExit(f"{rid} cnpj_age delta missing tier=flag: {delta}")
+            if "tier=info" in delta:
+                raise SystemExit(f"{rid} cnpj_age delta has tier=info: {delta}")
+            got_flag.add(rid)
+        else:
+            if "tier=info" not in delta:
+                raise SystemExit(f"{rid} cnpj_age_info delta missing tier=info: {delta}")
+            if "tier=flag" in delta:
+                raise SystemExit(f"{rid} cnpj_age_info delta has tier=flag: {delta}")
+            got_info.add(rid)
+    if got_flag != set(AGE_YOUNG_IDS):
+        raise SystemExit(f"cnpj_age record_ids {sorted(got_flag)} != planted young {sorted(AGE_YOUNG_IDS)}")
+    if got_info != set(AGE_INFO_IDS):
+        raise SystemExit(f"cnpj_age_info record_ids {sorted(got_info)} != planted info {sorted(AGE_INFO_IDS)}")
+    leaked = (got_flag | got_info) & set(AGE_SILENT_IDS)
+    if leaked:
+        raise SystemExit(f"cnpj_age flagged silent plants {sorted(leaked)}")
+    if AGE_INFO_CNPJ in {by_rec[rid]["cnpj"] for rid in got_flag}:
+        raise SystemExit("info plant was also kind=cnpj_age")
+    if any(by_rec[rid]["cnpj"] == AGE_OLD_CNPJ for rid in got_flag | got_info):
+        raise SystemExit("old plant was flagged")
+    if any(by_rec[rid]["cnpj"] == AGE_FUTURE_CNPJ for rid in got_flag | got_info):
+        raise SystemExit("future plant was flagged")
+
+    id_to_rid = {
+        item_id(str(row.get("pncp_id") or ""), str(row.get("record_id") or "")): str(row.get("record_id") or "")
+        for row in items.iter_rows(named=True)
+    }
+    ware_flag: set[str] = set()
+    ware_info: set[str] = set()
+    for row in stored:
+        kind = str(row.get("kind") or "")
+        if kind not in {AGE_FLAG_KIND, AGE_INFO_KIND}:
+            continue
+        if str(row.get("state") or "") != "detected":
+            raise SystemExit(f"{kind} state is not detected: {row.get('state')}")
+        if row.get("publishedAt") not in (None, ""):
+            raise SystemExit(f"{kind} publishedAt is set: {row.get('publishedAt')}")
+        rid = id_to_rid.get(str(row.get("itemId") or ""))
+        if not rid:
+            raise SystemExit(f"{kind} itemId not in slice: {row.get('itemId')}")
+        delta = str(row.get("delta") or "")
+        for token in ("opened_on=", "award_date=", "age_days=", "tier="):
+            if token not in delta:
+                raise SystemExit(f"warehouse {rid} {kind} delta missing {token}: {delta}")
+        if kind == AGE_FLAG_KIND:
+            ware_flag.add(rid)
+        else:
+            ware_info.add(rid)
+    if ware_flag != set(AGE_YOUNG_IDS):
+        raise SystemExit(f"warehouse cnpj_age ids {sorted(ware_flag)} != planted young {sorted(AGE_YOUNG_IDS)}")
+    if ware_info != set(AGE_INFO_IDS):
+        raise SystemExit(f"warehouse cnpj_age_info ids {sorted(ware_info)} != planted info {sorted(AGE_INFO_IDS)}")
+    if ware_flag & set(AGE_SILENT_IDS) or ware_info & set(AGE_SILENT_IDS):
+        raise SystemExit("warehouse flagged a silent cnpj_age plant")
 
 
 def _flagged_cnpjs(items, flags) -> set[str]:

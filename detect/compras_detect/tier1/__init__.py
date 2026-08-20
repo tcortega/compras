@@ -12,6 +12,7 @@ from compras_detect.tier1.sanctioned import detect_sanctioned
 KIND_QTY = "qty_unit_price_neq_total"
 KIND_FRAC = "fracionamento"
 KIND_AGE = "cnpj_age"
+KIND_AGE_INFO = "cnpj_age_info"
 KIND_CNAE = "cnae_mismatch"
 KIND_SANCTION = "sanctioned_ceis_cnep"
 KIND_EDIT = "retroactive_edit"

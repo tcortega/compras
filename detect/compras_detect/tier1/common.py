@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+from datetime import date
+
 import polars as pl
+
+from compras_normalize.text import parse_date
 
 SCHEMA = {
     "record_id": pl.String,
@@ -31,3 +35,7 @@ def empty() -> pl.DataFrame:
 
 def to_frame(rows: list[dict]) -> pl.DataFrame:
     return pl.DataFrame(rows) if rows else empty()
+
+
+def award_date(row: dict) -> date | None:
+    return parse_date(row.get("award_date") or row.get("data_resultado") or row.get("publicado_em"))

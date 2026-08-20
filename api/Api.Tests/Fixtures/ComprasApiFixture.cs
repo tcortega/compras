@@ -13,6 +13,13 @@ using Refit;
 
 namespace Api.Tests.Fixtures;
 
+public sealed record FlagAuditRow
+{
+	public string? FromState { get; init; }
+
+	public string ToState { get; init; } = "";
+}
+
 public sealed class ComprasApiFixture : IAsyncLifetime
 {
 	public static readonly Instant Start = Instant.FromUtc(2024, 6, 15, 12, 0);
@@ -44,12 +51,43 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 		await db.SaveChangesAsync();
 	}
 
+	public async Task<T> WithDb<T>(Func<ApplicationDbContext, Task<T>> work)
+	{
+		using var scope = _factory.Services.CreateScope();
+		var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+		return await work(db);
+	}
+
+	public Task<int> UpdateFlagState(Guid flagId, string state) =>
+		WithDb(db => db.Database.ExecuteSqlRawAsync(
+			"""UPDATE flag SET state = {0} WHERE id = {1}""",
+			state,
+			flagId));
+
+	public Task<IReadOnlyList<FlagAuditRow>> ListFlagAudit(Guid flagId) =>
+		WithDb(async db =>
+		{
+			var rows = await db.Database
+				.SqlQueryRaw<FlagAuditRow>(
+					"""
+					SELECT "fromState" AS FromState, "toState" AS ToState
+					FROM flag_audit
+					WHERE "flagId" = {0}
+					ORDER BY at, id
+					""",
+					flagId)
+				.ToListAsync();
+			return (IReadOnlyList<FlagAuditRow>)rows;
+		});
+
 	public async Task InitializeAsync()
 	{
 		_ = _factory.Server;
 		using var scope = _factory.Services.CreateScope();
 		var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 		_ = await db.Database.EnsureCreatedAsync();
+		foreach (var sql in FlagStateMachineSqlite.s_statements)
+			_ = await db.Database.ExecuteSqlRawAsync(sql);
 		SeedSlice(db);
 		_ = await db.SaveChangesAsync();
 	}

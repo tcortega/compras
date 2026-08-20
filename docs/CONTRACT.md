@@ -127,6 +127,22 @@ All of these kinds stay `state=detected` and are not public alerts.
 
 Notify hold is 7 days: `publishAfter = notifiedAt + 7 days`.
 Replies store unedited.
+Legal state edges are enforced in Postgres.
+detected to internal_review.
+internal_review to notified.
+notified to published.
+published to resolved.
+published to retracted.
+No reverse.
+No other jump.
+Notify hold stays in C#.
+A legal INSERT or UPDATE writes `flag_audit`.
+Columns: flagId, fromState (null on create into detected), toState, at, actor `internal/staging`, optional reason/delta.
+
+### flag_audit (internal only)
+
+One row per successful transition, including create into detected.
+No explorer route reads this.
 
 ### catalog_code
 

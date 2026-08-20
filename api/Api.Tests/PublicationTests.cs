@@ -8,7 +8,7 @@ namespace Api.Tests;
 public sealed class PublicationTests(ComprasApiFixture fixture) : IClassFixture<ComprasApiFixture>
 {
 	[Fact]
-	public async Task FullCycle_DetectReviewNotifyHoldPublishReplyResolve()
+	public async Task FullCycle_DetectReviewNotifyHoldPublishReplyRetract()
 	{
 		var client = fixture.GetClient();
 		var now = fixture.Clock.GetCurrentInstant();
@@ -36,6 +36,14 @@ public sealed class PublicationTests(ComprasApiFixture fixture) : IClassFixture<
 			Framing = "indicio requiring verification",
 		};
 		Assert.Equal(expected, created.Content);
+		await ValidateFlag(client, expected);
+
+		var illegalJump = await client.PublishFlag(expected.Id);
+		Assert.Equal(HttpStatusCode.Conflict, illegalJump.StatusCode);
+		await ValidateFlag(client, expected);
+
+		var sqlJump = await Record.ExceptionAsync(() => fixture.UpdateFlagState(expected.Id, "published"));
+		Assert.NotNull(sqlJump);
 		await ValidateFlag(client, expected);
 
 		var reviewed = await client.ReviewFlag(expected.Id);
@@ -80,10 +88,26 @@ public sealed class PublicationTests(ComprasApiFixture fixture) : IClassFixture<
 		Assert.Equal(expected, replied.Content);
 		await ValidateFlag(client, expected);
 
-		var resolved = await client.ResolveFlag(expected.Id);
-		expected = expected with { State = FlagState.Resolved };
-		Assert.Equal(expected, resolved.Content);
+		var retracted = await client.RetractFlag(expected.Id);
+		expected = expected with { State = FlagState.Retracted };
+		Assert.Equal(expected, retracted.Content);
 		await ValidateFlag(client, expected);
+
+		var resolveFromRetracted = await client.ResolveFlag(expected.Id);
+		Assert.Equal(HttpStatusCode.Conflict, resolveFromRetracted.StatusCode);
+		await ValidateFlag(client, expected);
+
+		var audit = await fixture.ListFlagAudit(expected.Id);
+		Assert.Equal(5, audit.Count);
+		Assert.Equal(
+			[
+				new() { FromState = null, ToState = "detected" },
+				new() { FromState = "detected", ToState = "internal_review" },
+				new() { FromState = "internal_review", ToState = "notified" },
+				new() { FromState = "notified", ToState = "published" },
+				new() { FromState = "published", ToState = "retracted" },
+			],
+			audit);
 
 		var explorer = await client.GetItem(SliceIds.Item1);
 		Assert.Equal(

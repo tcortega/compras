@@ -6,7 +6,7 @@ import { copy, SLICE_LABEL } from '@/lib/copy'
 import { formatNumber } from '@/lib/format'
 import { routes } from '@/lib/routes'
 
-export const revalidate = 3600
+export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
   const [orgaos, fornecedores, contratacoes, items] = await Promise.all([

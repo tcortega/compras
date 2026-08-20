@@ -4,7 +4,7 @@ import { METHOD_VERSION } from '@/lib/copy'
 import { routes } from '@/lib/routes'
 import type { Metadata } from 'next'
 
-export const revalidate = 3600
+export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Metodologia' }
 
 export default async function MetodologiaPage() {

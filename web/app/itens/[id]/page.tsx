@@ -10,12 +10,11 @@ import { routes } from '@/lib/routes'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
-export const revalidate = 3600
+export const dynamic = 'force-dynamic'
 export const dynamicParams = true
 
 export async function generateStaticParams() {
-  const page = await api.listItems({ skip: 0, take: 100 })
-  return page.items.map((row) => ({ id: row.id }))
+  return []
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {

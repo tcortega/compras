@@ -56,8 +56,12 @@ var app = builder.Build();
 if (!app.Environment.IsEnvironment("Testing"))
 {
 	using var scope = app.Services.CreateScope();
-	var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-	db.Database.Migrate();
+	var options = scope.ServiceProvider.GetRequiredService<IOptions<AppOptions>>().Value;
+	if (options.ApplyMigrations)
+	{
+		var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+		db.Database.Migrate();
+	}
 }
 
 app.UseExceptionHandler();

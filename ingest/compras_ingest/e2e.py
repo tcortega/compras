@@ -247,6 +247,7 @@ def main() -> int:
         _assert_write_once(settings)
         _assert_data_error_suite(settings, result.items)
         _assert_a2(settings)
+        _assert_a3_labels()
     _assert_tce_sp_not_public(settings)
     _assert_tce_rs_not_public(settings)
     orgao = fetch_one_orgao(settings, ORGAO_CNPJ)
@@ -523,6 +524,16 @@ def _assert_a2(settings: Settings) -> None:
     }
     if second_got != got:
         raise SystemExit(f"a2 second pass drifted assignments: {second_got}")
+
+
+def _assert_a3_labels() -> None:
+    root = Path(__file__).resolve().parents[2]
+    labels = root / "labels"
+    if str(labels) not in sys.path:
+        sys.path.insert(0, str(labels))
+    import a3_sample
+
+    a3_sample.e2e_check(root)
 
 
 def _assert_units(settings, normalized) -> None:

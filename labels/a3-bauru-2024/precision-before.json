@@ -1,0 +1,12 @@
+{
+  "n": 100,
+  "n_real": 42,
+  "n_unit_error": 10,
+  "n_spec_difference": 24,
+  "n_data_error": 24,
+  "n_unresolved": 0,
+  "n_over_100": 0.42,
+  "precision_real": 0.42,
+  "source": "labels.csv label column on this A3 sample",
+  "note": "Phase 0 VR 2024 precision stays 9/100. CATMAT Phase 0 stays 81.75 percent."
+}

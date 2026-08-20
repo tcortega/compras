@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	<RootNamespace>Api.Client</RootNamespace>
+	<IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+	<PackageReference Include="NodaTime" />
+	<PackageReference Include="Refit" />
+  </ItemGroup>
+
+</Project>

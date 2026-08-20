@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+	<RootNamespace>Api</RootNamespace>
+	<AssemblyName>Api</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup Label="Usings">
+	<Using Include="Immediate.Apis.Shared" />
+	<Using Include="Immediate.Handlers.Shared" />
+	<Using Include="Immediate.Injections.Shared" />
+	<Using Include="Microsoft.EntityFrameworkCore" />
+	<Using Include="Api.Features.Shared" />
+	<Using Include="Api.Persistence" />
+	<Using Include="Api.Persistence.Entities" Alias="Entity" />
+	<Using Include="Microsoft.Extensions.Options" />
+	<Using Include="NodaTime" />
+  </ItemGroup>
+
+  <ItemGroup>
+	<PackageReference Include="ClickHouse.Client" />
+	<PackageReference Include="Immediate.Apis" />
+	<PackageReference Include="Immediate.Handlers" />
+	<PackageReference Include="Immediate.Injections" />
+	<PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+	  <PrivateAssets>all</PrivateAssets>
+	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	</PackageReference>
+	<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+	<PackageReference Include="NodaTime" />
+	<PackageReference Include="NodaTime.Serialization.SystemTextJson" />
+	<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+	<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" />
+	<PackageReference Include="Serilog.AspNetCore" />
+	<PackageReference Include="Serilog.Enrichers.Environment" />
+	<PackageReference Include="Serilog.Enrichers.Thread" />
+	<PackageReference Include="Serilog.Exceptions" />
+  </ItemGroup>
+
+</Project>

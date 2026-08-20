@@ -19,6 +19,7 @@ from compras_ingest.official import (
     USER_AGENT,
     assert_official_host,
     fixture_compras_gov_official,
+    resolve_compras_gov_incremental,
 )
 from compras_ingest.settings import Settings
 from compras_ingest.slice import keep_municipal_non_legislative, keep_slice_ibge
@@ -42,16 +43,18 @@ def load_compras_gov(settings: Settings, compra_path: Path | None = None, item_p
 def land_compras_gov(settings: Settings, store: LandingStore | None = None) -> tuple[LandingRef, pl.DataFrame]:
     store = store or LandingStore(settings)
     if settings.compras_gov_fetch:
-        parts = _fetch_year_frames(settings)
+        parts = _fetch_incremental_or_year_frames(settings, store)
     else:
         parts = _fixture_year_frames(settings)
     missing = [year for year in settings.compras_gov_years if year not in parts]
-    if missing:
+    if missing and not settings.compras_gov_fetch:
         raise RuntimeError(
             "compras.gov.br is missing years "
             + ",".join(str(year) for year in missing)
             + "; plant rows for already-known fixture orgaos or land the official anual files"
         )
+    if not parts:
+        raise RuntimeError("compras.gov.br produced no year partitions")
     frames: list[pl.DataFrame] = []
     last: LandingRef | None = None
     for year in sorted(parts):
@@ -74,31 +77,54 @@ def _fixture_year_frames(settings: Settings) -> dict[int, pl.DataFrame]:
     return _split_by_year(raw, settings.compras_gov_years)
 
 
-def _fetch_year_frames(settings: Settings) -> dict[int, pl.DataFrame]:
-    frames: list[pl.DataFrame] = []
+def _fetch_incremental_or_year_frames(settings: Settings, store: LandingStore) -> dict[int, pl.DataFrame]:
+    # Incremental: diario COMPRA+ITEM for trailing day if both exist, else mensal.
+    # Missing D1 years with no year= parquet still backfill from oficial anual.
+    day = settings.trailing_window_as_of or date.today()
+    official = resolve_compras_gov_incremental(day, settings.compras_gov_base.rstrip("/"))
+    parts = _stream_official_pair(settings, official)
+    existing = _landed_years(store)
+    missing = [year for year in settings.compras_gov_years if year not in parts and year not in existing]
+    for year in missing:
+        anual = fixture_compras_gov_official(year, settings.compras_gov_base.rstrip("/"))
+        extra = _stream_official_pair(settings, anual)
+        for key, frame in extra.items():
+            parts[key] = frame
+    return parts
+
+
+def _stream_official_pair(settings: Settings, official) -> dict[int, pl.DataFrame]:
     with TemporaryDirectory(prefix="compras-gov-fetch-") as tmp:
         tmp_path = Path(tmp)
-        for year in settings.compras_gov_years:
-            official = fixture_compras_gov_official(year, settings.compras_gov_base.rstrip("/"))
-            compra_f = tmp_path / f"compra-{year}.csv"
-            item_f = tmp_path / f"item-{year}.csv"
-            _stream_http_csv_filter(official.compra_url, compra_f, _keep_compra_row)
-            keep_ids = _collect_compra_ids(compra_f)
-            _stream_http_csv_filter(
-                official.item_url,
-                item_f,
-                lambda header, row, ids=keep_ids: _keep_item_row(header, row, ids),
-            )
-            compra = mask_frame(read_csv(compra_f))
-            item = mask_frame(read_csv(item_f))
-            joined = _join(compra, item)
-            if joined.height:
-                frames.append(joined)
-            compra_f.unlink(missing_ok=True)
-            item_f.unlink(missing_ok=True)
-    if not frames:
+        compra_f = tmp_path / f"compra-{official.cadence}-{official.year}.csv"
+        item_f = tmp_path / f"item-{official.cadence}-{official.year}.csv"
+        _stream_http_csv_filter(official.compra_url, compra_f, _keep_compra_row)
+        keep_ids = _collect_compra_ids(compra_f)
+        _stream_http_csv_filter(
+            official.item_url,
+            item_f,
+            lambda header, row, ids=keep_ids: _keep_item_row(header, row, ids),
+        )
+        compra = mask_frame(read_csv(compra_f))
+        item = mask_frame(read_csv(item_f))
+        joined = _join(compra, item)
+        compra_f.unlink(missing_ok=True)
+        item_f.unlink(missing_ok=True)
+    if not joined.height:
         return {}
-    return _split_by_year(pl.concat(frames, how="diagonal_relaxed"), settings.compras_gov_years)
+    return _split_by_year(joined, settings.compras_gov_years)
+
+
+def _landed_years(store: LandingStore) -> set[int]:
+    years: set[int] = set()
+    for key in store.year_partition_keys("compras_gov"):
+        for part in Path(key).parts:
+            if part.startswith("year="):
+                try:
+                    years.add(int(part.split("=", 1)[1]))
+                except ValueError:
+                    continue
+    return years
 
 
 def _resolve_paths(settings: Settings, compra_path: Path | None, item_path: Path | None) -> tuple[Path, Path]:

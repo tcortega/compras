@@ -1,5 +1,24 @@
 from dagster import AssetExecutionContext, Definitions, ScheduleDefinition, asset, define_asset_job
 
+from compras_ingest.incremental import (
+    DAILY_ASSET_KEYS,
+    DAILY_CGU_REASON,
+    DAILY_COMPRAS_GOV_REASON,
+    DAILY_CRON,
+    DAILY_JOB_NAME,
+    DAILY_OCDS_REASON,
+    DAILY_PNCP_REASON,
+    DAILY_SCHEDULE_NAME,
+    DAILY_TCE_RS_REASON,
+    MONTHLY_ASSET_KEYS,
+    MONTHLY_CATALOGO_REASON,
+    MONTHLY_CRON,
+    MONTHLY_JOB_NAME,
+    MONTHLY_RECEITA_REASON,
+    MONTHLY_SCHEDULE_NAME,
+    MONTHLY_TCE_SP_REASON,
+    SCHEDULE_TZ as INCREMENTAL_TZ,
+)
 from compras_ingest.landing import LandingStore
 from compras_ingest.pipeline import (
     run_adjacency_and_write,
@@ -258,6 +277,39 @@ pncp_consulta_gaps_schedule = ScheduleDefinition(
     execution_timezone=GAPS_SCHEDULE_TZ,
 )
 
+incremental_land_daily_job = define_asset_job(
+    name=DAILY_JOB_NAME,
+    selection=list(DAILY_ASSET_KEYS),
+    description=(
+        f"Daily incremental land. compras_gov: {DAILY_COMPRAS_GOV_REASON}. "
+        f"ocds: {DAILY_OCDS_REASON}. pncp_consulta: {DAILY_PNCP_REASON}. "
+        f"tce_rs: {DAILY_TCE_RS_REASON}. cgu: {DAILY_CGU_REASON}."
+    ),
+)
+
+incremental_land_monthly_job = define_asset_job(
+    name=MONTHLY_JOB_NAME,
+    selection=list(MONTHLY_ASSET_KEYS),
+    description=(
+        f"Monthly incremental land. catalogo_cnbs: {MONTHLY_CATALOGO_REASON}. "
+        f"receita_cnpj: {MONTHLY_RECEITA_REASON}. tce_sp: {MONTHLY_TCE_SP_REASON}."
+    ),
+)
+
+incremental_land_daily_schedule = ScheduleDefinition(
+    name=DAILY_SCHEDULE_NAME,
+    job=incremental_land_daily_job,
+    cron_schedule=DAILY_CRON,
+    execution_timezone=INCREMENTAL_TZ,
+)
+
+incremental_land_monthly_schedule = ScheduleDefinition(
+    name=MONTHLY_SCHEDULE_NAME,
+    job=incremental_land_monthly_job,
+    cron_schedule=MONTHLY_CRON,
+    execution_timezone=INCREMENTAL_TZ,
+)
+
 defs = Definitions(
     assets=[
         catalogo_cnbs,
@@ -274,8 +326,18 @@ defs = Definitions(
         tier1_flags,
         *REFETCH_ASSETS,
     ],
-    jobs=[trailing_window_refetch_job, pncp_consulta_gaps_job],
-    schedules=[trailing_window_refetch_schedule, pncp_consulta_gaps_schedule],
+    jobs=[
+        trailing_window_refetch_job,
+        pncp_consulta_gaps_job,
+        incremental_land_daily_job,
+        incremental_land_monthly_job,
+    ],
+    schedules=[
+        trailing_window_refetch_schedule,
+        pncp_consulta_gaps_schedule,
+        incremental_land_daily_schedule,
+        incremental_land_monthly_schedule,
+    ],
 )
 
 
@@ -361,6 +423,7 @@ def assert_asset_graph() -> list[str]:
             raise RuntimeError(f"{name} must not rematerialize upstream {have}")
     assert_refetch_schedule()
     assert_gaps_schedule()
+    assert_incremental_schedules()
     return keys
 
 
@@ -379,7 +442,9 @@ def assert_refetch_schedule() -> None:
     job = defs.resolve_job_def(JOB_NAME)
     selected = _job_asset_keys(job)
     need = required_refetch_asset_keys()
-    if selected and not need.issubset(selected):
+    if not selected:
+        raise RuntimeError(f"{JOB_NAME} has no asset selection")
+    if not need.issubset(selected):
         raise RuntimeError(f"{JOB_NAME} missing refetch assets {need - selected}")
 
 
@@ -403,9 +468,56 @@ def assert_gaps_schedule() -> None:
         raise RuntimeError(f"{GAPS_JOB_NAME} missing {GAPS_ASSET_NAME}")
 
 
+def assert_incremental_schedules() -> None:
+    _assert_one_incremental_schedule(
+        DAILY_SCHEDULE_NAME,
+        DAILY_JOB_NAME,
+        DAILY_CRON,
+        INCREMENTAL_TZ,
+        set(DAILY_ASSET_KEYS),
+    )
+    _assert_one_incremental_schedule(
+        MONTHLY_SCHEDULE_NAME,
+        MONTHLY_JOB_NAME,
+        MONTHLY_CRON,
+        INCREMENTAL_TZ,
+        set(MONTHLY_ASSET_KEYS),
+    )
+
+
+def _assert_one_incremental_schedule(
+    schedule_name: str,
+    job_name: str,
+    cron: str,
+    tz: str,
+    need: set[str],
+) -> None:
+    schedules = list(defs.schedules or [])
+    found = next((s for s in schedules if s.name == schedule_name), None)
+    if found is None:
+        raise RuntimeError(f"dagster defs missing schedule {schedule_name}")
+    if not found.cron_schedule:
+        raise RuntimeError(f"{schedule_name} missing cron")
+    if found.cron_schedule != cron:
+        raise RuntimeError(f"{schedule_name} cron {found.cron_schedule} != {cron}")
+    if found.execution_timezone != tz:
+        raise RuntimeError(f"{schedule_name} tz is {found.execution_timezone} not {tz}")
+    target = found.job_name or getattr(found.job, "name", "")
+    if target != job_name:
+        raise RuntimeError(f"{schedule_name} does not target {job_name}: {target}")
+    job = defs.resolve_job_def(job_name)
+    selected = _job_asset_keys(job)
+    if not selected:
+        raise RuntimeError(f"{job_name} has no asset selection")
+    if not need.issubset(selected):
+        raise RuntimeError(f"{job_name} missing land assets {need - selected}")
+
+
 def _job_asset_keys(job) -> set[str]:
     layer = getattr(job, "asset_layer", None)
-    keys = getattr(layer, "asset_keys", None) if layer is not None else None
+    if layer is None:
+        return set()
+    keys = getattr(layer, "selected_asset_keys", None) or getattr(layer, "executable_asset_keys", None) or getattr(layer, "asset_keys", None)
     if keys:
         return {k.to_user_string() for k in keys}
     return set()

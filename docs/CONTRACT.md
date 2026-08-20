@@ -255,9 +255,11 @@ No explorer route reads this table.
 
 ### co_bid_edge (internal only)
 
-Undirected co-presence on one licitacao+item/lote.
+Undirected CNPJ-CNPJ co-presence on one licitacao+item/lote.
 `kind` is `co_bid`.
-`leftCnpj` < `rightCnpj`.
+Both sides are 14-digit CNPJs.
+CPF and masked CPF stay on `licitacao_participante` and never become an edge.
+`leftCnpj` < `rightCnpj` under `COLLATE "C"`.
 Stores both proposed values and the winner token when one of the pair won.
 A co-bid edge is not a finding.
 No explorer route reads this table.

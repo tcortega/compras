@@ -548,10 +548,13 @@ def write_cobid_edges(settings: Settings, edges: pl.DataFrame) -> int:
     for row in edges.iter_rows(named=True):
         left = str(row.get("leftCnpj") or "")
         right = str(row.get("rightCnpj") or "")
-        if not left or not right or left == right:
+        if not is_cnpj(left) or not is_cnpj(right) or left == right:
             continue
+        left_prop = parse_decimal(row.get("leftProposta"))
+        right_prop = parse_decimal(row.get("rightProposta"))
         if left > right:
             left, right = right, left
+            left_prop, right_prop = right_prop, left_prop
         payload.append(
             {
                 "kind": str(row.get("kind") or "co_bid"),
@@ -559,8 +562,8 @@ def write_cobid_edges(settings: Settings, edges: pl.DataFrame) -> int:
                 "rightCnpj": right,
                 "licitacaoId": str(row.get("licitacaoId") or ""),
                 "itemLote": str(row.get("itemLote") or ""),
-                "leftProposta": parse_decimal(row.get("leftProposta")),
-                "rightProposta": parse_decimal(row.get("rightProposta")),
+                "leftProposta": left_prop,
+                "rightProposta": right_prop,
                 "winner": str(row.get("winner") or ""),
                 "snapshotId": str(row.get("snapshot_id") or row.get("snapshotId") or ""),
                 "methodologyVersion": str(

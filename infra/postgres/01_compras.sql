@@ -199,8 +199,12 @@ CREATE TABLE IF NOT EXISTS co_bid_edge (
   "methodologyVersion" text NOT NULL,
   "createdAt" timestamptz NOT NULL,
   PRIMARY KEY (kind, "leftCnpj", "rightCnpj", "licitacaoId", "itemLote"),
-  CHECK ("leftCnpj" < "rightCnpj")
+  CONSTRAINT co_bid_edge_left_lt_right CHECK ("leftCnpj" < "rightCnpj" COLLATE "C")
 );
+
+ALTER TABLE co_bid_edge DROP CONSTRAINT IF EXISTS co_bid_edge_check;
+ALTER TABLE co_bid_edge DROP CONSTRAINT IF EXISTS co_bid_edge_left_lt_right;
+ALTER TABLE co_bid_edge ADD CONSTRAINT co_bid_edge_left_lt_right CHECK ("leftCnpj" < "rightCnpj" COLLATE "C");
 
 CREATE INDEX IF NOT EXISTS co_bid_edge_lic_idx ON co_bid_edge ("licitacaoId");
 CREATE INDEX IF NOT EXISTS co_bid_edge_left_idx ON co_bid_edge ("leftCnpj");

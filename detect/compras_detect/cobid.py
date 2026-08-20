@@ -228,25 +228,26 @@ def build_cobid_edges(
     snapshot_id: str,
     methodology_version: str,
 ) -> pl.DataFrame:
-    """Undirected co_bid edges. Not a finding."""
+    """Undirected CNPJ-CNPJ co_bid edges. CPF and masked CPF never become an edge."""
     groups: dict[tuple[str, str], list[dict]] = defaultdict(list)
     for row in _as_rows(participants):
         lid = str(row.get("licitacaoId") or "")
         item = str(row.get("itemLote") or "")
         token = str(row.get("participante") or "")
-        if not lid or not token:
+        if not lid or not is_cnpj(token):
             continue
         groups[(lid, item)].append(row)
     out: list[dict] = []
     seen: set[tuple[str, str, str, str]] = set()
     for (lid, item), members in groups.items():
         ordered = sorted(members, key=lambda r: str(r.get("participante") or ""))
-        for i, left in enumerate(ordered):
-            for right in ordered[i + 1 :]:
-                a = str(left.get("participante") or "")
-                b = str(right.get("participante") or "")
-                if not a or not b or a == b:
+        for i, left_row in enumerate(ordered):
+            for right_row in ordered[i + 1 :]:
+                a = str(left_row.get("participante") or "")
+                b = str(right_row.get("participante") or "")
+                if not is_cnpj(a) or not is_cnpj(b) or a == b:
                     continue
+                left, right = left_row, right_row
                 if a > b:
                     left, right = right, left
                     a, b = b, a

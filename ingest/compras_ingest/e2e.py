@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 import tempfile
 from dataclasses import replace
@@ -21,6 +22,12 @@ from compras_detect.cobid import (
 )
 from compras_detect.data_error import anomaly_pool, detect_data_errors
 from compras_detect.tier1 import run_tier1
+from compras_detect.tier1.cnae_mismatch import (
+    ALLOW_PATH as CNAE_ALLOW_PATH,
+    KIND as CNAE_KIND,
+    OFFICIAL_HOSTS as CNAE_OFFICIAL_HOSTS,
+    load_allowlist,
+)
 from compras_detect.tier1.fracionamento import (
     KIND_CLUSTER as FRAC_CLUSTER_KIND,
     KIND_OVER as FRAC_OVER_KIND,
@@ -239,6 +246,19 @@ FRAC_DELTA_TOKENS = (
 EDIT_KIND = "retroactive_edit"
 EDIT_FLAG_IDS = frozenset({"I-2024-B4-PRICE", "I-2024-B4-QTY", "I-2024-B4-SUPPLIER"})
 EDIT_ABSENT_IDS = frozenset({"I-2024-B4-DESC", "I-2024-B4-SAME", "I-2024-B4-PREPUB"})
+CNAE_HIT_IDS = frozenset({"I-2024-B5-HIT-FOOD", "I-2024-B5-HIT-HOME", "I-2024-B5-HIT-OUT"})
+CNAE_CLEAN_IDS = frozenset(
+    {
+        "I-2024-B5-CLEAN-PRI",
+        "I-2024-B5-CLEAN-SEC",
+        "I-2024-B5-CLEAN-UNMAP",
+        "I-2024-B5-CLEAN-NOCNAE",
+        "I-2024-B5-CLEAN-NOCAT",
+        "I-2024-B5-CLEAN-SERV",
+    }
+)
+CNAE_DELTA_TOKENS = ("class=", "cnae=", "secondary=", "allowed=", "table=")
+CNAE_BANNED_DELTA = re.compile(r"fraude|corrupto|roubo|acus", re.I)
 OFFICIAL_HOST_NEEDLES = (
     "compras.gov.br",
     "pncp.gov.br",
@@ -364,6 +384,7 @@ def main() -> int:
     settings = Settings.from_env()
     _check_defs()
     _assert_fracionamento_table()
+    _assert_cnae_allowlist()
     with _official_hosts_blocked():
         official = _assert_official_urls(settings)
         _assert_compras_gov_official_urls(settings)
@@ -421,6 +442,7 @@ def main() -> int:
     _assert_sanction_flags(result.items, result.flags, stored)
     _assert_cnpj_age_flags(result.items, result.flags, stored)
     _assert_fracionamento_flags(result.items, flags, stored)
+    _assert_cnae_mismatch_flags(result.items, flags, stored)
     _assert_retroactive_edit_flags(result.items, flags, stored, hashes_before_edit, store)
     _assert_receita_adjacency(settings)
     _assert_fornecedor_receita_facts(settings)
@@ -437,6 +459,8 @@ def main() -> int:
         raise SystemExit("warehouse missing fracionamento after write_flags")
     if FRAC_CLUSTER_KIND not in kinds:
         raise SystemExit("warehouse missing fracionamento_cluster after write_flags")
+    if CNAE_KIND not in kinds:
+        raise SystemExit("warehouse missing cnae_mismatch after write_flags")
     for row in stored:
         if not row.get("itemId"):
             raise SystemExit("warehouse flag missing itemId")
@@ -2199,6 +2223,110 @@ def _frac_amounts():
         "t24": t24,
         "t25": t25,
     }
+
+
+def _load_cnae_mismatch_expected() -> dict:
+    here = Path(__file__).resolve()
+    for parent in here.parents:
+        cand = parent / "detect" / "fixtures" / "cnae_mismatch" / "expected.json"
+        if cand.is_file():
+            return json.loads(cand.read_text(encoding="utf-8"))
+    raise SystemExit("cnae_mismatch expected.json missing")
+
+
+def _assert_cnae_allowlist() -> None:
+    from urllib.parse import urlparse
+
+    table = load_allowlist()
+    if "8920" not in table or "7510" not in table:
+        raise SystemExit(f"cnae allow-list missing planted classes: {sorted(table)}")
+    if "9999" in table:
+        raise SystemExit("unmapped plant class 9999 is in the allow-list")
+    text = Path(CNAE_ALLOW_PATH).read_text(encoding="utf-8")
+    for url in ("https://catalogo.compras.gov.br/", "https://concla.ibge.gov.br/busca-online-cnae.html"):
+        if url not in text:
+            raise SystemExit(f"cnae allow-list missing official url {url}")
+        host = (urlparse(url).hostname or "").lower()
+        if not any(host == h or host.endswith("." + h) for h in CNAE_OFFICIAL_HOSTS):
+            raise SystemExit(f"cnae allow-list url host is not official: {url}")
+    detect_root = Path(CNAE_ALLOW_PATH).resolve().parents[1]
+    for path in detect_root.rglob("*.py"):
+        blob = path.read_text(encoding="utf-8")
+        if "http://" in blob or "https://" in blob:
+            if "compras.gov.br" not in blob and "concla.ibge.gov.br" not in blob and "gov.br" not in blob:
+                raise SystemExit(f"detector python has unofficial url: {path}")
+
+
+def _assert_cnae_mismatch_flags(items, flags, stored) -> None:
+    expected = _load_cnae_mismatch_expected()
+    want = set(expected["flag"])
+    absent = set(expected["absent"])
+    if want != set(CNAE_HIT_IDS) or absent != set(CNAE_CLEAN_IDS):
+        raise SystemExit("cnae_mismatch expected.json drifted from planted ids")
+    planted = want | absent
+    if len(planted) != 9:
+        raise SystemExit(f"cnae_mismatch planted coverage denominator {len(planted)} != 9")
+    by_rec = {str(row.get("record_id") or ""): row for row in items.iter_rows(named=True)}
+    missing_items = planted - set(by_rec)
+    if missing_items:
+        raise SystemExit(f"cnae_mismatch plants missing from normalized items: {sorted(missing_items)}")
+    if str(by_rec["I-2024-B5-HIT-FOOD"].get("cnae") or "")[:2] not in {"64", "65", "66"}:
+        raise SystemExit("HIT food plant is not finance CNAE 64/65/66")
+    if str(by_rec["I-2024-B5-HIT-HOME"].get("cnae") or "")[:2] not in {"97", "98"}:
+        raise SystemExit("HIT home plant is not domestic CNAE 97/98")
+    if str(by_rec["I-2024-B5-CLEAN-PRI"].get("cnae") or "")[:2] != "10":
+        raise SystemExit("CLEAN primary plant is not food CNAE 10")
+    if "1061901" not in str(by_rec["I-2024-B5-CLEAN-SEC"].get("cnae_secundaria") or ""):
+        raise SystemExit("CLEAN secondary plant missing saving CNAE")
+    if str(by_rec["I-2024-B5-CLEAN-NOCNAE"].get("cnae") or "").strip():
+        raise SystemExit("CLEAN missing CNAE plant has a CNAE")
+    if str(by_rec["I-2024-B5-CLEAN-NOCAT"].get("catmat") or "").strip():
+        raise SystemExit("CLEAN missing CATMAT plant has catmat")
+    if str(by_rec["I-2024-B5-CLEAN-SERV"].get("material_ou_servico") or "").upper()[:1] != "S":
+        raise SystemExit("CLEAN service plant is not tipo S")
+
+    got: set[str] = set()
+    for row in flags.iter_rows(named=True):
+        if str(row.get("kind") or "") != CNAE_KIND:
+            continue
+        rid = str(row.get("record_id") or "")
+        delta = str(row.get("delta") or "")
+        for token in CNAE_DELTA_TOKENS:
+            if token not in delta:
+                raise SystemExit(f"{rid} cnae_mismatch delta missing {token}: {delta}")
+        if CNAE_BANNED_DELTA.search(delta):
+            raise SystemExit(f"{rid} cnae_mismatch delta is accusatory: {delta}")
+        got.add(rid)
+    extra = got - want
+    missing = want - got
+    leaked = got & absent
+    if extra or missing or leaked:
+        raise SystemExit(
+            f"cnae_mismatch record_ids extra={sorted(extra)} missing={sorted(missing)} leaked={sorted(leaked)}"
+        )
+    if got != want:
+        raise SystemExit(f"cnae_mismatch record_ids {sorted(got)} != planted hits {sorted(want)}")
+
+    id_to_rid = {
+        item_id(str(row.get("pncp_id") or ""), str(row.get("record_id") or "")): str(row.get("record_id") or "")
+        for row in items.iter_rows(named=True)
+    }
+    ware: set[str] = set()
+    for row in stored:
+        if str(row.get("kind") or "") != CNAE_KIND:
+            continue
+        if str(row.get("state") or "") != "detected":
+            raise SystemExit(f"cnae_mismatch state is not detected: {row.get('state')}")
+        if row.get("publishedAt") not in (None, ""):
+            raise SystemExit(f"cnae_mismatch publishedAt is set: {row.get('publishedAt')}")
+        rid = id_to_rid.get(str(row.get("itemId") or ""))
+        if not rid:
+            raise SystemExit(f"cnae_mismatch itemId not in slice: {row.get('itemId')}")
+        ware.add(rid)
+    if ware != want:
+        raise SystemExit(f"warehouse cnae_mismatch ids {sorted(ware)} != planted hits {sorted(want)}")
+    if ware & absent:
+        raise SystemExit(f"warehouse flagged a silent cnae_mismatch plant {sorted(ware & absent)}")
 
 
 def _assert_fracionamento_table() -> None:

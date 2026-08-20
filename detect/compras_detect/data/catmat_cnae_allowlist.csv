@@ -1,0 +1,12 @@
+version;codigo_classe;classe_nome;allowed_prefixes;catmat_source;cnae_source
+1;8905;CARNES AVES E PEIXES;10;https://catalogo.compras.gov.br/;https://concla.ibge.gov.br/busca-online-cnae.html
+1;8910;LATICINIOS E OVOS;10;https://catalogo.compras.gov.br/;https://concla.ibge.gov.br/busca-online-cnae.html
+1;8915;FRUTAS HORTALICAS E LEGUMES;10;https://catalogo.compras.gov.br/;https://concla.ibge.gov.br/busca-online-cnae.html
+1;8920;CEREAIS E PRODUTOS DE CEREAIS;10,10619,46320;https://catalogo.compras.gov.br/;https://concla.ibge.gov.br/busca-online-cnae.html
+1;8925;ACUCAR CONFEITOS MEL E PRODUTOS DE CACAU;10;https://catalogo.compras.gov.br/;https://concla.ibge.gov.br/busca-online-cnae.html
+1;8945;OLEOS E GORDURAS COMESTIVEIS;10;https://catalogo.compras.gov.br/;https://concla.ibge.gov.br/busca-online-cnae.html
+1;8955;CAFE CHA E CHOCOLATE;10;https://catalogo.compras.gov.br/;https://concla.ibge.gov.br/busca-online-cnae.html
+1;6505;DROGAS E MEDICAMENTOS;21,21106,46443,47717;https://catalogo.compras.gov.br/;https://concla.ibge.gov.br/busca-online-cnae.html
+1;7510;UTENSILIOS DE ESCRITORIO;17,46478,47610;https://catalogo.compras.gov.br/;https://concla.ibge.gov.br/busca-online-cnae.html
+1;7520;INSTRUMENTOS DE ESCRITORIO E DISPOSITIVOS;17,46478,47610;https://catalogo.compras.gov.br/;https://concla.ibge.gov.br/busca-online-cnae.html
+1;7530;PAPEIS PARA ESCRITORIO E FORMULARIOS;17,17214,46478,47610;https://catalogo.compras.gov.br/;https://concla.ibge.gov.br/busca-online-cnae.html

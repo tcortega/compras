@@ -1,6 +1,7 @@
 import { expect, type Page } from '@playwright/test'
 
 export const banned = /fraude|corrupto|roubo|\bflag\b|ranking|adjacenc|shared_qsa|shared_partner/i
+export const bannedKinds = /cnae_mismatch/
 export const againstCompose = Boolean(process.env.PLAYWRIGHT_BASE_URL)
 
 export async function assertCoverageAndBan(page: Page) {
@@ -11,6 +12,7 @@ export async function assertCoverageAndBan(page: Page) {
   await expect(page.getByText(/trimestre|trim\./i).first()).toBeVisible()
   await expect(page.getByText(/metodologia/i).first()).toBeVisible()
   await expect(page.locator('body')).not.toHaveText(banned)
+  await expect(page.locator('body')).not.toHaveText(bannedKinds)
 }
 
 export async function firstTableName(page: Page, path: string): Promise<string> {

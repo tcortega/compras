@@ -1,2 +1,31 @@
 # compras
-Brazilian public-procurement transparency platform
+
+Brazilian public-procurement transparency platform.
+
+Coverage is incomplete.
+Every aggregate must show its coverage denominator (n comparables, UF, quarter).
+This product does not claim national completeness.
+
+Municipalities under 20,000 inhabitants have until 31 March 2027 to publish to PNCP.
+Genuine national municipal coverage is not achievable before roughly 2027-2028.
+
+See [PROJECT.md](docs/PROJECT.md) and [BUILD_SPEC.md](docs/BUILD_SPEC.md).
+
+Phase 0 is the hard start.
+Do not build public flags until the precision number exists in `/labels`.
+Nothing accusatory ships before 25 October 2026.
+
+Layout:
+
+- `/ingest` Python Dagster assets
+- `/normalize` CATMAT and unit canonicalization
+- `/detect` tier1 / tier2 / tier3
+- `/api` C# ASP.NET Core
+- `/web` Next.js
+- `/infra` compose and terraform
+- `/docs` methodology and specs
+- `/labels` hand-labeled ground truth
+
+Python never calls C#.
+C# never runs a detector.
+The warehouse is the only contract between them.

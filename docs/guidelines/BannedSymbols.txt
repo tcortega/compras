@@ -1,0 +1,7 @@
+// BCL date/time. Use NodaTime. See csharp.md.
+T:System.DateTime;Use NodaTime Instant or LocalDateTime
+T:System.DateTimeOffset;Use NodaTime Instant
+T:System.DateOnly;Use NodaTime LocalDate
+T:System.TimeOnly;Use NodaTime LocalTime
+T:System.TimeZoneInfo;Use NodaTime DateTimeZone
+T:System.TimeProvider;Use NodaTime IClock

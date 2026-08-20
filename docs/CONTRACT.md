@@ -381,7 +381,10 @@ That list is not linked from the explorer.
 Staging triage UI lives at `/interno/triagem` and is not in the public shell nav.
 Staging coverage counts live at `/interno/cobertura` and are not in the public shell nav.
 Staging review UI lives at `/interno/rotulos` and is not in the public shell nav.
-That page reads `GET /api/internal/flags` and shows n per detector kind.
+`/interno/rotulos` may show up to three peer purchases from `labels/adjudication/peers/<slug>-peers.json`.
+A missing peer file or missing `packet_row_id` stays as "sem pares neste recorte".
+That loader never opens `keys-do-not-give-to-human` files.
+The coverage page reads `GET /api/internal/flags` and shows n per detector kind.
 The warehouse has no daily grain table, so the page shows last-run day from `detectedAt`.
 If distinct detection days exist, it shows n per kind per day.
 Coverage denominator stays on that aggregate.

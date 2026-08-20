@@ -4,7 +4,7 @@ import { FieldList } from '@/components/FieldList'
 import { Money } from '@/components/Money'
 import { LABEL_RUBRIC, type LabelRubric } from '@/lib/flags'
 import { formatDecimal } from '@/lib/format'
-import { rotulosCopy, type BlindItem, type RotulosView } from '@/lib/rotulos'
+import { ROTULOS_PEER_LIMIT, rotulosCopy, type BlindItem, type RotulosView } from '@/lib/rotulos'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 function sourceLinks(item: BlindItem) {
@@ -159,6 +159,40 @@ export function RotulosApp({ initial }: { initial: RotulosView }) {
               ))}
             </nav>
           ) : null}
+          <section className="rotulos-peers" aria-labelledby="rotulos-peers-heading">
+            <h2 id="rotulos-peers-heading">{rotulosCopy.peers}</h2>
+            {view.peers.length === 0 ? (
+              <p className="rotulos-peers-empty">{rotulosCopy.noPeers}</p>
+            ) : (
+              <>
+                {view.medianUnitPrice ? (
+                  <p className="rotulos-peers-median">
+                    <span>{rotulosCopy.peerMedian}</span>
+                    <Money value={view.medianUnitPrice} />
+                  </p>
+                ) : null}
+                <ul className="rotulos-peers-list">
+                  {view.peers.slice(0, ROTULOS_PEER_LIMIT).map((peer, index) => (
+                    <li key={`${peer.descricao}-${index}`}>
+                      <p className="rotulos-peer-desc">{peer.descricao}</p>
+                      <dl className="rotulos-peer-meta">
+                        <div>
+                          <dt>{rotulosCopy.unit}</dt>
+                          <dd>{peer.unidadeMedida}</dd>
+                        </div>
+                        <div>
+                          <dt>{rotulosCopy.peerPrice}</dt>
+                          <dd>
+                            <Money value={peer.valorUnitario} />
+                          </dd>
+                        </div>
+                      </dl>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </section>
           <div className="rotulos-prompt">
             <p className="lede">{rotulosCopy.lede}</p>
             <p className="rotulos-howto">{rotulosCopy.howto}</p>

@@ -11,6 +11,8 @@ export type RotulosPacketSlug = (typeof ROTULOS_PACKETS)[number]['slug']
 
 export const KEY_FILE_MARK = 'keys-do-not-give-to-human'
 
+export const ROTULOS_PEER_LIMIT = 3
+
 export const AGREEMENT_HEADER =
   'packet_row_id,packet,city,ibge,year,id_compra_item,ID_contratacao_PNCP,numero_item,human_label,notes,labeled_at'
 
@@ -61,6 +63,17 @@ export type BlindItem = {
   officialItemUrl: string
 }
 
+export type PeerPurchase = {
+  descricao: string
+  unidadeMedida: string
+  valorUnitario: string
+}
+
+export type PeerGroup = {
+  medianUnitPrice: string
+  peers: PeerPurchase[]
+}
+
 export type HumanLabelRow = {
   packetRowId: string
   packet: RotulosPacketSlug
@@ -82,6 +95,8 @@ export type RotulosView = {
   item: BlindItem | null
   existingLabel: LabelRubric | null
   existingNotes: string
+  medianUnitPrice: string
+  peers: PeerPurchase[]
 }
 
 export const rotulosCopy = {
@@ -109,6 +124,10 @@ export const rotulosCopy = {
   officialCompra: 'Compra oficial',
   officialItem: 'Item oficial',
   sources: 'Fontes',
+  peers: 'Outras compras usadas na comparação',
+  noPeers: 'sem pares neste recorte',
+  peerMedian: 'Mediana do grupo',
+  peerPrice: 'Unitário',
   hints: {
     real: 'Mesmo produto, mesmo pacote, e o preço oficial bate com a linha. Eles de fato pagaram isso.',
     'unit error':
@@ -127,6 +146,10 @@ export function isPacketSlug(raw: string): raw is RotulosPacketSlug {
   return ROTULOS_PACKETS.some((row) => row.slug === raw)
 }
 
+export function emptyPeerGroup(): PeerGroup {
+  return { medianUnitPrice: '', peers: [] }
+}
+
 export function emptyRotulosView(): RotulosView {
   return {
     total: 0,
@@ -135,5 +158,6 @@ export function emptyRotulosView(): RotulosView {
     item: null,
     existingLabel: null,
     existingNotes: '',
+    ...emptyPeerGroup(),
   }
 }

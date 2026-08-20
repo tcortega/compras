@@ -5,13 +5,17 @@ import type { LabelRubric } from '@/lib/flags'
 import { ApiError } from '@/lib/types'
 import {
   AGREEMENT_HEADER,
+  emptyPeerGroup,
   emptyRotulosView,
   isPacketSlug,
   isRubric,
   KEY_FILE_MARK,
   ROTULOS_PACKETS,
+  ROTULOS_PEER_LIMIT,
   type BlindItem,
   type HumanLabelRow,
+  type PeerGroup,
+  type PeerPurchase,
   type RotulosPacketSlug,
   type RotulosView,
 } from '@/lib/rotulos'
@@ -33,28 +37,46 @@ export function comprasDataDir(): string | null {
   return path.resolve(raw)
 }
 
-function assertSafeDataFile(root: string, file: string): string {
-  const base = file.split(/[/\\]/).pop() ?? ''
-  if (!base || base !== file || base.includes('..') || base.toLowerCase().includes(KEY_FILE_MARK)) {
-    throw new Error('arquivo de pacote recusado')
-  }
-  const resolved = path.resolve(root, 'labels', 'adjudication', base)
-  const allowedRoot = path.resolve(root, 'labels', 'adjudication')
+function assertInside(allowedRoot: string, resolved: string, message: string): string {
   const rel = path.relative(allowedRoot, resolved)
-  if (rel.startsWith('..') || path.isAbsolute(rel)) {
-    throw new Error('arquivo de pacote recusado')
+  if (rel.startsWith('..') || path.isAbsolute(rel) || resolved.toLowerCase().includes(KEY_FILE_MARK)) {
+    throw new Error(message)
   }
   return resolved
 }
 
-function agreementPath(root: string, slug: RotulosPacketSlug): string {
-  const resolved = path.resolve(root, 'labels', 'adjudication', 'agreement', `${slug}-human.csv`)
-  const allowedRoot = path.resolve(root, 'labels', 'adjudication', 'agreement')
-  const rel = path.relative(allowedRoot, resolved)
-  if (rel.startsWith('..') || path.isAbsolute(rel)) {
-    throw new Error('arquivo de acordo recusado')
+function assertSafeBase(file: string, message: string): string {
+  const base = file.split(/[/\\]/).pop() ?? ''
+  if (!base || base !== file || base.includes('..') || base.toLowerCase().includes(KEY_FILE_MARK)) {
+    throw new Error(message)
   }
-  return resolved
+  return base
+}
+
+function assertSafeDataFile(root: string, file: string): string {
+  const base = assertSafeBase(file, 'arquivo de pacote recusado')
+  return assertInside(
+    path.resolve(root, 'labels', 'adjudication'),
+    path.resolve(root, 'labels', 'adjudication', base),
+    'arquivo de pacote recusado',
+  )
+}
+
+function agreementPath(root: string, slug: RotulosPacketSlug): string {
+  return assertInside(
+    path.resolve(root, 'labels', 'adjudication', 'agreement'),
+    path.resolve(root, 'labels', 'adjudication', 'agreement', `${slug}-human.csv`),
+    'arquivo de acordo recusado',
+  )
+}
+
+function peersPath(root: string, slug: RotulosPacketSlug): string {
+  const file = assertSafeBase(`${slug}-peers.json`, 'arquivo de pares recusado')
+  return assertInside(
+    path.resolve(root, 'labels', 'adjudication', 'peers'),
+    path.resolve(root, 'labels', 'adjudication', 'peers', file),
+    'arquivo de pares recusado',
+  )
 }
 
 function toItem(packet: RotulosPacketSlug, headers: string[], row: string[]): BlindItem | null {
@@ -153,11 +175,54 @@ export async function loadHumanLabels(): Promise<Map<string, HumanLabelRow>> {
   return out
 }
 
-function viewAt(
+function parsePeerPurchase(raw: unknown): PeerPurchase | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null
+  const row = raw as Record<string, unknown>
+  const descricao = typeof row.descricao === 'string' ? row.descricao.trim() : ''
+  const unidadeMedida = typeof row.unidade_medida === 'string' ? row.unidade_medida.trim() : ''
+  const valorUnitario = typeof row.valor_unitario === 'string' ? row.valor_unitario.trim() : ''
+  if (!descricao && !unidadeMedida && !valorUnitario) return null
+  return { descricao, unidadeMedida, valorUnitario }
+}
+
+function parsePeerGroup(raw: unknown): PeerGroup {
+  const empty = emptyPeerGroup()
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return empty
+  const rec = raw as Record<string, unknown>
+  if (!Array.isArray(rec.peers)) return empty
+  const peers: PeerPurchase[] = []
+  for (const row of rec.peers) {
+    const peer = parsePeerPurchase(row)
+    if (!peer) continue
+    peers.push(peer)
+    if (peers.length >= ROTULOS_PEER_LIMIT) break
+  }
+  if (peers.length === 0) return empty
+  const medianUnitPrice = typeof rec.median_unit_price === 'string' ? rec.median_unit_price.trim() : ''
+  return { medianUnitPrice, peers }
+}
+
+async function loadPeerGroup(packet: RotulosPacketSlug, packetRowId: string): Promise<PeerGroup> {
+  const empty = emptyPeerGroup()
+  const root = comprasDataDir()
+  if (!root) return empty
+  try {
+    const file = peersPath(root, packet)
+    const parsed = JSON.parse(await readFile(file, 'utf8')) as unknown
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return empty
+    const rec = parsed as Record<string, unknown>
+    if (!Object.hasOwn(rec, packetRowId)) return empty
+    return parsePeerGroup(rec[packetRowId])
+  } catch {
+    return empty
+  }
+}
+
+async function viewAt(
   items: BlindItem[],
   labels: Map<string, HumanLabelRow>,
   index: number,
-): RotulosView {
+): Promise<RotulosView> {
   const item = items[index]
   if (!item) {
     return {
@@ -167,9 +232,11 @@ function viewAt(
       item: null,
       existingLabel: null,
       existingNotes: '',
+      ...emptyPeerGroup(),
     }
   }
   const existing = labels.get(item.packetRowId)
+  const peers = await loadPeerGroup(item.packet, item.packetRowId)
   return {
     total: items.length,
     position: index + 1,
@@ -177,6 +244,7 @@ function viewAt(
     item,
     existingLabel: existing?.humanLabel ?? null,
     existingNotes: existing?.notes ?? '',
+    ...peers,
   }
 }
 

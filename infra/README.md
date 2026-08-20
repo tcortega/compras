@@ -12,7 +12,7 @@ docker compose up --build --wait
 
 That command starts Postgres 16, ClickHouse, MinIO, Meilisearch, Dagster, the warehouse seed, the C# API, and the Next.js explorer.
 
-The seed runs the existing Python ingest/normalize into Postgres and ClickHouse using the in-repo 2024 fixture: Volta Redonda RJ 3306305, Niterói RJ 3303302, Bauru SP 3506003, Caxias do Sul RS 4305108, Joinville SC 4209102, Uberlândia MG 3170206, Londrina PR 4113700, Feira de Santana BA 2910800, and Caruaru PE 2604106.
+The seed runs the existing Python ingest/normalize into Postgres and ClickHouse using the in-repo 2024 fixture: Volta Redonda RJ 3306305, Niterói RJ 3303302, Bauru SP 3506003, Caxias do Sul RS 4305108, Joinville SC 4209102, Uberlândia MG 3170206, Londrina PR 4113700, Feira de Santana BA 2910800, Caruaru PE 2604106, Anápolis GO 5201108, and Vila Velha ES 3205200.
 
 Python never calls C#.
 C# never runs a detector.
@@ -30,7 +30,7 @@ C# never runs a detector.
 
 The explorer talks to the compose API at `http://api:5080`, not the in-process stub.
 
-A browser on the explorer home must show the published slice with `n`, UF (RJ, SP, RS, SC, MG, PR, BA, PE, or UF mista when mixed), trimestre, and metodologia.
+A browser on the explorer home must show the published slice with `n`, UF (RJ, SP, RS, SC, MG, PR, BA, PE, GO, ES, or UF mista when mixed), trimestre, and metodologia.
 Mixed UF coverage leaves uf empty.
 It is not a national total.
 

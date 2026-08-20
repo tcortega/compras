@@ -1,7 +1,7 @@
 import { expect, type Page } from '@playwright/test'
 
 export const banned = /fraude|corrupto|roubo|\bflag\b|ranking|adjacenc|shared_qsa|shared_partner/i
-export const bannedKinds = /cnae_mismatch|sanctioned_ceis_cnep|cnpj_age|fracionamento|retroactive_edit|qty_unit_price_neq_total/
+export const bannedKinds = /cnae_mismatch|sanctioned_ceis_cnep|cnpj_age|fracionamento|retroactive_edit|qty_unit_price_neq_total|excluded_no_award|decimal_shift|qty_eq_1_collapse|catalog_magnitude/
 export const againstCompose = Boolean(process.env.PLAYWRIGHT_BASE_URL)
 
 export async function assertCoverageAndBan(page: Page) {

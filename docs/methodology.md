@@ -67,7 +67,10 @@ O texto de um sinal, se existir, é só um indício que pede verificação.
 
 `qty_unit_price_neq_total` marca o item quando quantidade vezes preço unitário diverge do total além de 0,02 ou 0,2%.
 O mesmo critério vira exclusão `item_exclusion` e tira o item do pool de anomalia de preço.
-Outras exclusões de qualidade são `decimal_shift`, `qty_eq_1_collapse`, `zero_or_negative`, `duplicate_row` e `catalog_magnitude`.
+Outras exclusões de qualidade são `decimal_shift`, `qty_eq_1_collapse`, `zero_or_negative`, `duplicate_row`, `catalog_magnitude` e `excluded_no_award`.
+`excluded_no_award` tira do pool o item sem homologação positiva, o item com resultados HTTP 204, e o item com situação Fracassado, Deserto, Anulado, Revogado, Cancelado, ou Em andamento sem award.
+O pool de anomalia pontua só `valor_unitario_resultado` / `valorUnitarioHomologado`.
+Ele não pontua a estimativa do CSV.
 Exclusão não é alerta público.
 O item permanece no explorador.
 

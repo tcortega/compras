@@ -1,7 +1,6 @@
 import { DataTable } from '@/components/DataTable'
 import { EntityHeader } from '@/components/EntityHeader'
 import { FieldList } from '@/components/FieldList'
-import { Money } from '@/components/Money'
 import { Shell } from '@/components/Shell'
 import { SourceLine } from '@/components/SourceLine'
 import { Stat } from '@/components/Stat'
@@ -40,10 +39,6 @@ export default async function OrgaoPage({ params }: { params: Promise<{ id: stri
     api.listContratacoes({ skip: 0, take: 8, orgaoId: id }),
     api.listItems({ skip: 0, take: 8, orgaoId: id }),
   ])
-  const homologado = cts.items
-    .map((c) => c.valorHomologado)
-    .filter((v): v is number => v != null)
-    .reduce<number | null>((sum, v) => (sum == null ? v : sum + v), null)
 
   return (
     <Shell coverage={its.coverage} current={routes.orgaos}>
@@ -61,7 +56,6 @@ export default async function OrgaoPage({ params }: { params: Promise<{ id: stri
       />
       <div className="stats">
         <Stat label="Contratações" value={formatNumber(cts.total)} coverage={cts.coverage} />
-        <Stat label="Homologado" value={<Money value={homologado} />} coverage={cts.coverage} />
         <Stat label="Itens" value={formatNumber(its.total)} coverage={its.coverage} />
       </div>
       <SourceLine methodologyVersion={METHOD_VERSION} />

@@ -1,4 +1,4 @@
-import { Shell } from '@/components/Shell'
+import { SliceShell } from '@/components/SliceShell'
 import { loadCobertura } from '@/lib/api'
 import { copy } from '@/lib/copy'
 import { coverageText } from '@/lib/coverage'
@@ -17,7 +17,7 @@ export default async function CoberturaPage() {
   const payload = await loadCobertura()
   const yearsLabel = payload.years.length ? payload.years.join(', ') : copy.noValue
   return (
-    <Shell coverage={payload.coverage}>
+    <SliceShell coverage={payload.coverage} years={payload.years}>
       <p className="kicker">Denominador</p>
       <h1>Cobertura incompleta</h1>
       <p className="lede">
@@ -136,6 +136,6 @@ export default async function CoberturaPage() {
         <p>Cobertura municipal nacional não é alcançável antes de cerca de 2027-2028. Nenhum agregado nesta interface afirma o contrário.</p>
         <p>Todo total na tela mostra n, UF, trimestre e a versão da metodologia. Se o trimestre varia no recorte, o chip diz vários trimestres.</p>
       </div>
-    </Shell>
+    </SliceShell>
   )
 }

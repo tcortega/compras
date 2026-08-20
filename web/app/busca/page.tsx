@@ -1,6 +1,6 @@
 import { DataTable } from '@/components/DataTable'
 import { SearchForm } from '@/components/SearchForm'
-import { Shell } from '@/components/Shell'
+import { SliceShell } from '@/components/SliceShell'
 import { api } from '@/lib/api'
 import { pageRequestFromSearch } from '@/lib/paging'
 import { routes } from '@/lib/routes'
@@ -32,7 +32,7 @@ export default async function BuscaPage({ searchParams }: { searchParams: Promis
       ])
 
   return (
-    <Shell coverage={items.coverage}>
+    <SliceShell coverage={items.coverage}>
       <p className="kicker">Busca</p>
       <h1>{q ? `Resultados para “${q}”` : 'Buscar no recorte'}</h1>
       <p className="lede">
@@ -74,6 +74,6 @@ export default async function BuscaPage({ searchParams }: { searchParams: Promis
           </section>
         </>
       )}
-    </Shell>
+    </SliceShell>
   )
 }

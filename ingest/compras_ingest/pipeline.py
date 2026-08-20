@@ -98,22 +98,31 @@ def warehouse_from_landing(
 ) -> tuple[pl.DataFrame, dict]:
     """Normalize landed parquet, write warehouse rows, persist data-error exclusions. Does not land or run B-track detectors."""
     apply_schema(settings)
-    raw = store.read_parquet(_require_key(compras, "compras_gov"))
+    year_keys = _compras_gov_keys(store, compras)
     catalog_df = store.read_parquet(_require_key(catalog, "catalogo_cnbs"))
     catalog_model = load_catalog([catalog_df])
     units = load_unit_table()
     cnpj_df = _read_optional_landing(store, receita)
     snapshot_id = str(compras.get("sha256") or "")
+    item_frames: list[pl.DataFrame] = []
+    for key in year_keys:
+        raw = store.read_parquet(key)
+        sha = Path(key).stem
+        if not snapshot_id:
+            snapshot_id = sha
+        item_frames.append(
+            normalize_frame(
+                raw,
+                catalog_model,
+                units,
+                cnpj_df,
+                sha,
+                settings.methodology_version,
+            )
+        )
     if not snapshot_id:
         raise ValueError("compras_gov landing missing sha256")
-    items = normalize_frame(
-        raw,
-        catalog_model,
-        units,
-        cnpj_df,
-        snapshot_id,
-        settings.methodology_version,
-    )
+    items = pl.concat(item_frames, how="diagonal_relaxed") if item_frames else pl.DataFrame()
     entity_counts = write_entities(settings, items)
     fact_rows = write_facts(settings, items)
     catalog_rows = write_catalog(settings, catalog_df)
@@ -196,6 +205,13 @@ def run_tier1_and_write_flags(
     landing_records = _collect_landing_records(store, "compras_gov")
     flags = run_tier1(items, landing_records=landing_records, sanctions=sanctions)
     return flags, write_flags(settings, flags, items)
+
+
+def _compras_gov_keys(store: LandingStore, compras: dict) -> list[str]:
+    year_keys = store.year_partition_keys("compras_gov")
+    if year_keys:
+        return year_keys
+    return [_require_key(compras, "compras_gov")]
 
 
 def _require_key(ref: dict | None, name: str) -> str:

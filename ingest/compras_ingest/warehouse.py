@@ -403,6 +403,12 @@ def fetch_contratacao(settings: Settings, pncp_id: str) -> dict | None:
         return conn.execute('SELECT * FROM contratacao WHERE "pncpId" = %s', (pncp_id,)).fetchone()
 
 
+def fetch_contratacao_anos(settings: Settings) -> list[int]:
+    with psycopg.connect(settings.postgres_dsn, row_factory=dict_row) as conn:
+        rows = conn.execute("SELECT DISTINCT ano FROM contratacao ORDER BY ano").fetchall()
+    return [int(row["ano"]) for row in rows if row.get("ano") is not None]
+
+
 def fetch_all_items(settings: Settings) -> list[dict]:
     with psycopg.connect(settings.postgres_dsn, row_factory=dict_row) as conn:
         return list(conn.execute("SELECT * FROM item ORDER BY descricao, id").fetchall())

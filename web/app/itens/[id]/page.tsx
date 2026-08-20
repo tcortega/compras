@@ -1,7 +1,7 @@
 import { EntityHeader } from '@/components/EntityHeader'
 import { FieldList } from '@/components/FieldList'
 import { Money } from '@/components/Money'
-import { Shell } from '@/components/Shell'
+import { SliceShell } from '@/components/SliceShell'
 import { SourceLine } from '@/components/SourceLine'
 import { Stat } from '@/components/Stat'
 import { api, safeDetail } from '@/lib/api'
@@ -48,7 +48,7 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
   const orgao = ct ? await safeDetail(() => api.getOrgao(ct.orgaoId)) : null
 
   return (
-    <Shell coverage={peers.coverage} current={routes.itens}>
+    <SliceShell coverage={peers.coverage} current={routes.itens}>
       <EntityHeader kicker={`Item · ${row.uf} · ${formatQuarter(row.quarter)}`} title={row.descricao} />
       <FieldList
         fields={[
@@ -108,6 +108,6 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
         snapshotId={row.snapshotId}
         methodologyVersion={row.methodologyVersion}
       />
-    </Shell>
+    </SliceShell>
   )
 }

@@ -1,6 +1,7 @@
 import { cache } from 'react'
 import { createHttpClient } from '@/lib/api/http'
 import { stubClient } from '@/lib/api/stub'
+import { SLICE_YEAR, SLICE_YEAR_CANDIDATES } from '@/lib/copy'
 import { fillCoverage, overlaySlice } from '@/lib/coverage'
 import type { CoberturaPayload, Coverage, ExplorerClient, SkipTakePage } from '@/lib/types'
 
@@ -26,6 +27,25 @@ export const loadSliceCoverage = cache(async (): Promise<Coverage> => {
 })
 
 export const loadCobertura = cache(async (): Promise<CoberturaPayload> => getClient().getCobertura())
+
+export const loadSliceYears = cache(async (): Promise<number[]> => {
+  try {
+    const payload = await loadCobertura()
+    if (payload.years.length) return payload.years
+  } catch {
+    // fall through to contratacao probes
+  }
+  try {
+    const found: number[] = []
+    for (const ano of SLICE_YEAR_CANDIDATES) {
+      const page = await getClient().listContratacoes({ skip: 0, take: 1, ano })
+      if (page.total > 0) found.push(ano)
+    }
+    return found.length ? found : [SLICE_YEAR]
+  } catch {
+    return [SLICE_YEAR]
+  }
+})
 
 async function withSlice<T>(page: SkipTakePage<T>): Promise<SkipTakePage<T>> {
   const slice = await loadSliceCoverage()

@@ -1292,6 +1292,48 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Coverage = s_santaMariaOrgaoCoverage,
 	};
 
+	private static readonly Coverage s_montesClarosOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "MG",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_montesClaros = new()
+	{
+		Id = SliceIds.OrgaoMontesClaros,
+		Cnpj = "22678874000135",
+		RazaoSocial = "Municipio de Montes Claros",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "MG",
+		MunicipioIbge = "3143302",
+		MunicipioNome = "Montes Claros",
+		Coverage = s_montesClarosOrgaoCoverage,
+	};
+
+	private static readonly Coverage s_governadorValadaresOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "MG",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_governadorValadares = new()
+	{
+		Id = SliceIds.OrgaoGovernadorValadares,
+		Cnpj = "20622890000180",
+		RazaoSocial = "Municipio de Governador Valadares",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "MG",
+		MunicipioIbge = "3127701",
+		MunicipioNome = "Governador Valadares",
+		Coverage = s_governadorValadaresOrgaoCoverage,
+	};
+
 	private static readonly ItemRecord s_itemDourados = new()
 	{
 		Id = SliceIds.ItemDourados,
@@ -1651,6 +1693,58 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		{
 			N = 1,
 			Uf = "RS",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
+	private static readonly ItemRecord s_itemMontesClaros = new()
+	{
+		Id = SliceIds.ItemMontesClaros,
+		ContratacaoId = SliceIds.ContratacaoMontesClaros,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Manutencao prevencao combate incendio",
+		Catmat = "21822",
+		Catser = null,
+		Quantidade = 1m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 330811.34m,
+		ValorTotal = 330811.34m,
+		Uf = "MG",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "MG",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
+	private static readonly ItemRecord s_itemGovernadorValadares = new()
+	{
+		Id = SliceIds.ItemGovernadorValadares,
+		ContratacaoId = SliceIds.ContratacaoGovernadorValadares,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Cartao controle acesso",
+		Catmat = "618284",
+		Catser = null,
+		Quantidade = 30000m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 1.45m,
+		ValorTotal = 43500m,
+		Uf = "MG",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "MG",
 			Quarter = SliceIds.Quarter,
 			MethodologyVersion = SliceIds.Methodology,
 		},
@@ -2025,6 +2119,32 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(new[] { s_santaMaria }, santaMariaPage.Items);
 		await ValidateOrgao(client, s_santaMaria);
 
+		var montesClarosPage = await client.ListOrgaos(municipioIbge: "3143302", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			montesClarosPage.Coverage);
+		Assert.Equal(new[] { s_montesClaros }, montesClarosPage.Items);
+		await ValidateOrgao(client, s_montesClaros);
+
+		var governadorValadaresPage = await client.ListOrgaos(municipioIbge: "3127701", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			governadorValadaresPage.Coverage);
+		Assert.Equal(new[] { s_governadorValadares }, governadorValadaresPage.Items);
+		await ValidateOrgao(client, s_governadorValadares);
+
 		var mixed = await client.ListOrgaos(quarter: SliceIds.Quarter);
 		Assert.Equal("", mixed.Coverage.Uf);
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3306305", StringComparison.Ordinal));
@@ -2056,6 +2176,8 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3136702", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "4108304", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "4316907", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3143302", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3127701", StringComparison.Ordinal));
 
 		var spItems = await client.ListItems(uf: "SP", quarter: SliceIds.Quarter);
 		Assert.Equal(
@@ -2401,6 +2523,22 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 			OrgaoRazaoSocial = "Municipio de Santa Maria",
 			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
 			ContratacaoPncpId = "88488366000100-1-000435/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemMontesClaros,
+			OrgaoId = SliceIds.OrgaoMontesClaros,
+			OrgaoRazaoSocial = "Municipio de Montes Claros",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "22678874000135-1-000430/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemGovernadorValadares,
+			OrgaoId = SliceIds.OrgaoGovernadorValadares,
+			OrgaoRazaoSocial = "Municipio de Governador Valadares",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "20622890000180-1-000098/2024",
 		});
 
 		var empty = new Coverage

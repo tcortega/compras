@@ -96,6 +96,10 @@ public static class SliceIds
 
 	public static readonly Guid OrgaoAriquemes = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa40");
 
+	public static readonly Guid OrgaoColatina = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa41");
+
+	public static readonly Guid OrgaoCastanhal = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa42");
+
 	public static readonly Guid ContratacaoNiteroi = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1");
 
 	public static readonly Guid ContratacaoBauru = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2");
@@ -172,6 +176,10 @@ public static class SliceIds
 
 	public static readonly Guid ContratacaoAriquemes = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb38");
 
+	public static readonly Guid ContratacaoColatina = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb39");
+
+	public static readonly Guid ContratacaoCastanhal = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb40");
+
 	public static readonly Guid ItemNiteroi = Guid.Parse("cccccccc-cccc-cccc-cccc-ccccccccccc1");
 
 	public static readonly Guid ItemBauru = Guid.Parse("cccccccc-cccc-cccc-cccc-ccccccccccc2");
@@ -247,6 +255,10 @@ public static class SliceIds
 	public static readonly Guid ItemCrato = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccc37");
 
 	public static readonly Guid ItemAriquemes = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccc38");
+
+	public static readonly Guid ItemColatina = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccc39");
+
+	public static readonly Guid ItemCastanhal = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccc40");
 
 	public static readonly Guid FornecedorExtra = Guid.Parse("dddddddd-dddd-dddd-dddd-ddddddddddd1");
 

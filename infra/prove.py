@@ -65,6 +65,8 @@ PUBLISHED = {
     "2613701": ("municipio de sao lourenco da mata", "PE"),
     "2304202": ("municipio de crato", "CE"),
     "1100023": ("municipio de ariquemes", "RO"),
+    "3201506": ("municipio de colatina", "ES"),
+    "1502400": ("municipio de castanhal", "PA"),
 }
 
 
@@ -73,7 +75,7 @@ def main() -> int:
     deny_flags(orgaos, f"{API}/api/orgaos")
     deny_stub(json.dumps(orgaos, ensure_ascii=False), "api /api/orgaos")
     items_page = orgaos.get("items") or []
-    if len(items_page) < 39:
+    if len(items_page) < 41:
         raise SystemExit(f"api /api/orgaos returned {len(items_page)} rows, need the published slice")
     by_ibge = {str(row.get("municipioIbge") or ""): row for row in items_page}
     for ibge, (nome, uf) in PUBLISHED.items():
@@ -90,7 +92,7 @@ def main() -> int:
     orgao_cov = orgaos.get("coverage") or {}
     if orgao_cov.get("uf") not in (None, ""):
         raise SystemExit(f"mixed orgao list invented a UF: {orgao_cov}")
-    if not isinstance(orgao_cov.get("n"), int) or orgao_cov["n"] < 39:
+    if not isinstance(orgao_cov.get("n"), int) or orgao_cov["n"] < 41:
         raise SystemExit(f"api orgaos coverage.n missing the extra slice: {orgao_cov}")
     if not orgao_cov.get("methodologyVersion"):
         raise SystemExit(f"api orgaos coverage missing methodologyVersion: {orgao_cov}")
@@ -159,6 +161,9 @@ def main() -> int:
         raise SystemExit(f"api UF=ES filter failed: {vila_velha_rows}")
     if str((vila_velha.get("coverage") or {}).get("uf") or "") != "ES":
         raise SystemExit(f"api UF=ES coverage lost slice UF: {vila_velha.get('coverage')}")
+    es_ibges = {str(row.get("municipioIbge") or "") for row in vila_velha_rows}
+    if "3205200" not in es_ibges or "3201506" not in es_ibges:
+        raise SystemExit(f"api UF=ES missing Vila Velha or Colatina: {vila_velha_rows}")
 
     campina = get_json(f"{API}/api/orgaos?municipioIbge=2504009&skip=0&take=50")
     deny_flags(campina, f"{API}/api/orgaos?municipioIbge=2504009")
@@ -201,6 +206,9 @@ def main() -> int:
         raise SystemExit(f"api UF=PA filter failed: {maraba_rows}")
     if str((maraba.get("coverage") or {}).get("uf") or "") != "PA":
         raise SystemExit(f"api UF=PA coverage lost slice UF: {maraba.get('coverage')}")
+    pa_ibges = {str(row.get("municipioIbge") or "") for row in maraba_rows}
+    if "1504208" not in pa_ibges or "1506807" not in pa_ibges or "1502400" not in pa_ibges:
+        raise SystemExit(f"api UF=PA missing Marabá, Santarém or Castanhal: {maraba_rows}")
 
     varzea = get_json(f"{API}/api/orgaos?municipioIbge=5108402&skip=0&take=50")
     deny_flags(varzea, f"{API}/api/orgaos?municipioIbge=5108402")
@@ -324,6 +332,16 @@ def main() -> int:
     ariquemes_rows = ariquemes.get("items") or []
     if len(ariquemes_rows) != 1 or str(ariquemes_rows[0].get("municipioIbge") or "") != "1100023":
         raise SystemExit(f"api municipio filter 1100023 failed: {ariquemes_rows}")
+    colatina = get_json(f"{API}/api/orgaos?municipioIbge=3201506&skip=0&take=50")
+    deny_flags(colatina, f"{API}/api/orgaos?municipioIbge=3201506")
+    colatina_rows = colatina.get("items") or []
+    if len(colatina_rows) != 1 or str(colatina_rows[0].get("municipioIbge") or "") != "3201506":
+        raise SystemExit(f"api municipio filter 3201506 failed: {colatina_rows}")
+    castanhal = get_json(f"{API}/api/orgaos?municipioIbge=1502400&skip=0&take=50")
+    deny_flags(castanhal, f"{API}/api/orgaos?municipioIbge=1502400")
+    castanhal_rows = castanhal.get("items") or []
+    if len(castanhal_rows) != 1 or str(castanhal_rows[0].get("municipioIbge") or "") != "1502400":
+        raise SystemExit(f"api municipio filter 1502400 failed: {castanhal_rows}")
 
     orgao = by_ibge["3306305"]
     oid = orgao["id"]
@@ -476,9 +494,13 @@ def main() -> int:
         raise SystemExit("web / missing Crato")
     if "ariquemes" not in folded:
         raise SystemExit("web / missing Ariquemes")
+    if "colatina" not in folded:
+        raise SystemExit("web / missing Colatina")
+    if "castanhal" not in folded:
+        raise SystemExit("web / missing Castanhal")
     if "UF mista" not in home:
         raise SystemExit("web / missing honest mixed UF")
-    if "Trinta e nove municípios" not in home:
+    if "Quarenta e um municípios" not in home:
         raise SystemExit("web / missing short brand kicker")
     if "UF Brasil" in home or "total nacional" in folded:
         raise SystemExit("web / invented a national total")
@@ -564,6 +586,10 @@ def main() -> int:
         raise SystemExit("web /orgaos missing Crato")
     if "ariquemes" not in orgaos_fold:
         raise SystemExit("web /orgaos missing Ariquemes")
+    if "colatina" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing Colatina")
+    if "castanhal" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing Castanhal")
     if "UF mista" not in orgaos_html:
         raise SystemExit("web /orgaos missing honest mixed UF")
 
@@ -696,6 +722,8 @@ def main() -> int:
     es_table = table_html(es_html)
     if "vila velha" not in es_table.casefold():
         raise SystemExit("web /orgaos?uf=ES missing Vila Velha")
+    if "colatina" not in es_table.casefold():
+        raise SystemExit("web /orgaos?uf=ES missing Colatina")
     if "municipio de anapolis" in es_table.casefold() or "município de anápolis" in es_table.casefold():
         raise SystemExit("web UF=ES filter leaked Anápolis")
     if "prefeitura municipal de volta redonda" in es_table.casefold():
@@ -778,6 +806,8 @@ def main() -> int:
         raise SystemExit("web /orgaos?uf=PA missing Marabá")
     if "santarem" not in pa_table.casefold() and "santarém" not in pa_table.casefold():
         raise SystemExit("web /orgaos?uf=PA missing Santarém")
+    if "castanhal" not in pa_table.casefold():
+        raise SystemExit("web /orgaos?uf=PA missing Castanhal")
     if "fundacao de servicos de saude de dourados" in pa_table.casefold() or "fundação de serviços de saúde de dourados" in pa_table.casefold() or "municipio de dourados" in pa_table.casefold() or "município de dourados" in pa_table.casefold():
         raise SystemExit("web UF=PA filter leaked Dourados")
     if "prefeitura municipal de volta redonda" in pa_table.casefold():
@@ -1089,6 +1119,34 @@ def main() -> int:
     if "UF RO" not in ariquemes_html:
         raise SystemExit("web Ariquemes filter missing UF RO")
 
+    colatina_html = get_text(f"{WEB}/orgaos?municipioIbge=3201506")
+    assert_served_page(colatina_html, "web /orgaos?municipioIbge=3201506")
+    colatina_table = table_html(colatina_html)
+    if "municipio de colatina" not in colatina_table.casefold() and "município de colatina" not in colatina_table.casefold():
+        raise SystemExit("web /orgaos?municipioIbge=3201506 missing Colatina")
+    if "municipio de castanhal" in colatina_table.casefold() or "município de castanhal" in colatina_table.casefold():
+        raise SystemExit("web municipio filter leaked Castanhal")
+    if "prefeitura municipal de volta redonda" in colatina_table.casefold():
+        raise SystemExit("web municipio filter leaked Volta Redonda")
+    if not re.search(r"n=1", colatina_html):
+        raise SystemExit("web Colatina filter missing n=1")
+    if "UF ES" not in colatina_html:
+        raise SystemExit("web Colatina filter missing UF ES")
+
+    castanhal_html = get_text(f"{WEB}/orgaos?municipioIbge=1502400")
+    assert_served_page(castanhal_html, "web /orgaos?municipioIbge=1502400")
+    castanhal_table = table_html(castanhal_html)
+    if "municipio de castanhal" not in castanhal_table.casefold() and "município de castanhal" not in castanhal_table.casefold():
+        raise SystemExit("web /orgaos?municipioIbge=1502400 missing Castanhal")
+    if "municipio de colatina" in castanhal_table.casefold() or "município de colatina" in castanhal_table.casefold():
+        raise SystemExit("web municipio filter leaked Colatina")
+    if "prefeitura municipal de volta redonda" in castanhal_table.casefold():
+        raise SystemExit("web municipio filter leaked Volta Redonda")
+    if not re.search(r"n=1", castanhal_html):
+        raise SystemExit("web Castanhal filter missing n=1")
+    if "UF PA" not in castanhal_html:
+        raise SystemExit("web Castanhal filter missing UF PA")
+
     orgao_html = get_text(f"{WEB}/orgaos/{oid}")
     assert_served_page(orgao_html, "web /orgaos/{id}")
     if STAT_HOMOLOGADO.search(orgao_html):
@@ -1242,6 +1300,10 @@ def main() -> int:
         raise SystemExit("web /cobertura missing Crato IBGE")
     if "1100023" not in cobertura:
         raise SystemExit("web /cobertura missing Ariquemes IBGE")
+    if "3201506" not in cobertura:
+        raise SystemExit("web /cobertura missing Colatina IBGE")
+    if "1502400" not in cobertura:
+        raise SystemExit("web /cobertura missing Castanhal IBGE")
     if "não é um total nacional" not in cobertura:
         raise SystemExit("web /cobertura missing disclaimer")
     if "UF mista" not in cobertura:

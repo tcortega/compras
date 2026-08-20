@@ -56,20 +56,12 @@ def main() -> int:
 
 
 def _check_defs() -> None:
-    from compras_ingest.definitions import defs
+    from compras_ingest.assets import assert_asset_graph
 
-    keys = [k.to_user_string() for k in defs.get_repository_def().asset_graph.get_all_asset_keys()]
-    expected = {
-        "catalogo_cnbs",
-        "receita_cnpj",
-        "compras_gov",
-        "ocds_crosscheck",
-        "warehouse_entities",
-        "tier1_flags",
-    }
-    missing = expected - set(keys)
-    if missing:
-        raise SystemExit(f"dagster defs missing {missing}")
+    try:
+        assert_asset_graph()
+    except RuntimeError as exc:
+        raise SystemExit(str(exc)) from exc
 
 
 def _assert_landing(settings: Settings, sha256: str) -> None:

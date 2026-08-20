@@ -28,6 +28,8 @@ export const ids = {
   orgaoMaraba: '7c2e1f40-1504-4050-9a01-000000000020',
   orgaoVarzeaGrande: '7c2e1f40-5108-4050-9a01-000000000021',
   orgaoJiParana: '7c2e1f40-1100-4050-9a01-000000000022',
+  orgaoParnamirim: '7c2e1f40-2403-4050-9a01-000000000023',
+  orgaoCruzeiroDoSul: '7c2e1f40-1200-4050-9a01-000000000024',
   fornFarma: '8d3f2a51-3306-4050-9a02-000000000001',
   fornAlim: '8d3f2a51-3306-4050-9a02-000000000002',
   fornComb: '8d3f2a51-3306-4050-9a02-000000000003',
@@ -63,6 +65,8 @@ export const ids = {
   ctMaraba: '9e4a3b62-1504-4050-9a03-000000000026',
   ctVarzeaGrande: '9e4a3b62-5108-4050-9a03-000000000027',
   ctJiParana: '9e4a3b62-1100-4050-9a03-000000000028',
+  ctParnamirim: '9e4a3b62-2403-4050-9a03-000000000029',
+  ctCruzeiroDoSul: '9e4a3b62-1200-4050-9a03-000000000030',
 } as const
 
 function orgao(
@@ -310,6 +314,26 @@ export const orgaos: Orgao[] = [
     'RO',
     '1100122',
     'Ji-Paraná',
+  ),
+  orgao(
+    ids.orgaoParnamirim,
+    '08170862000174',
+    'Município de Parnamirim',
+    'executivo',
+    T2,
+    'RN',
+    '2403251',
+    'Parnamirim',
+  ),
+  orgao(
+    ids.orgaoCruzeiroDoSul,
+    '04012548000102',
+    'Município de Cruzeiro do Sul',
+    'executivo',
+    T2,
+    'AC',
+    '1200203',
+    'Cruzeiro do Sul',
   ),
 ]
 
@@ -724,6 +748,28 @@ export const contratacoes: Contratacao[] = [
     '2024-10-18T09:52:16.000Z',
     'compras.gov.br',
   ),
+  ct(
+    ids.ctParnamirim,
+    '08170862000174-1-000034/2024',
+    ids.orgaoParnamirim,
+    'pregao eletronico',
+    'Aquisição de veículo automotor, para atender às necessidades da Secretaria Municipal de Assistência Social de Parnamirim/RN – SEMAS.',
+    2024,
+    78_500.0,
+    '2024-09-20T07:07:18.000Z',
+    'compras.gov.br',
+  ),
+  ct(
+    ids.ctCruzeiroDoSul,
+    '04012548000102-1-000033/2024',
+    ids.orgaoCruzeiroDoSul,
+    'pregao eletronico',
+    'Aquisição de maquinas e equipamentos agrícolas',
+    2024,
+    371_798.45,
+    '2024-07-19T07:14:02.000Z',
+    'compras.gov.br',
+  ),
 ]
 
 function item(
@@ -811,4 +857,6 @@ export const items: Item[] = [
   item(44, ids.ctMaraba, ids.fornPapel, 'Fogão Gás', '425200', 4, 'Unidade', 'un', 849.99, 'PA', '2024-Q4', T2),
   item(45, ids.ctVarzeaGrande, ids.fornPapel, 'Microcomputador', '606229', 2, 'Unidade', 'un', 26021.0, 'MT', '2024-Q4', T2),
   item(46, ids.ctJiParana, ids.fornPapel, 'Assinatura de banco de imagens', '30130', 1, 'Unidade', 'un', 38540.0, 'RO', '2024-Q4', T2),
+  item(47, ids.ctParnamirim, ids.fornPapel, 'Automóvel', '430273', 1, 'Unidade', 'un', 78500.0, 'RN', '2024-Q3', T2),
+  item(48, ids.ctCruzeiroDoSul, ids.fornPapel, 'Grade niveladora', '463162', 1, 'Unidade', 'un', 26784.45, 'AC', '2024-Q3', T1),
 ]

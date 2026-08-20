@@ -44,6 +44,8 @@ export const ids = {
   orgaoLages: '7c2e1f40-4203-4050-9a01-000000000036',
   orgaoSantarem: '7c2e1f40-1506-4050-9a01-000000000037',
   orgaoRioVerde: '7c2e1f40-5218-4050-9a01-000000000038',
+  orgaoPauloAfonso: '7c2e1f40-2924-4050-9a01-000000000039',
+  orgaoSaoLourenco: '7c2e1f40-2613-4050-9a01-000000000040',
   fornFarma: '8d3f2a51-3306-4050-9a02-000000000001',
   fornAlim: '8d3f2a51-3306-4050-9a02-000000000002',
   fornComb: '8d3f2a51-3306-4050-9a02-000000000003',
@@ -95,6 +97,8 @@ export const ids = {
   ctLages: '9e4a3b62-4203-4050-9a03-000000000042',
   ctSantarem: '9e4a3b62-1506-4050-9a03-000000000043',
   ctRioVerde: '9e4a3b62-5218-4050-9a03-000000000044',
+  ctPauloAfonso: '9e4a3b62-2924-4050-9a03-000000000045',
+  ctSaoLourenco: '9e4a3b62-2613-4050-9a03-000000000046',
 } as const
 
 function orgao(
@@ -502,6 +506,26 @@ export const orgaos: Orgao[] = [
     'GO',
     '5218805',
     'Rio Verde',
+  ),
+  orgao(
+    ids.orgaoPauloAfonso,
+    '14217327000124',
+    'Município de Paulo Afonso',
+    'executivo',
+    T2,
+    'BA',
+    '2924009',
+    'Paulo Afonso',
+  ),
+  orgao(
+    ids.orgaoSaoLourenco,
+    '11251832000105',
+    'Município de São Lourenço da Mata',
+    'executivo',
+    T2,
+    'PE',
+    '2613701',
+    'São Lourenço da Mata',
   ),
 ]
 
@@ -1092,6 +1116,28 @@ export const contratacoes: Contratacao[] = [
     '2024-11-06T17:03:48.000Z',
     'compras.gov.br',
   ),
+  ct(
+    ids.ctPauloAfonso,
+    '14217327000124-1-000121/2024',
+    ids.orgaoPauloAfonso,
+    'pregao eletronico',
+    'Aquisição de café em pó e açúcar para as necessidades da secretaria de educação.',
+    2024,
+    8_840.0,
+    '2024-10-17T07:07:05.000Z',
+    'compras.gov.br',
+  ),
+  ct(
+    ids.ctSaoLourenco,
+    '11251832000105-1-000065/2024',
+    ids.orgaoSaoLourenco,
+    'pregao eletronico',
+    'Aquisição de Ventiladores Tipo Parede, para atender as necessidades da Secretaria de Educação do Município de São Lourenço da Mata - PE.',
+    2024,
+    97_000.0,
+    '2024-10-15T07:09:11.000Z',
+    'compras.gov.br',
+  ),
 ]
 
 function item(
@@ -1195,4 +1241,6 @@ export const items: Item[] = [
   item(60, ids.ctLages, ids.fornPapel, 'Sacola', '229690', 30, 'Unidade', 'un', 97.0, 'SC', '2024-Q3', T2),
   item(61, ids.ctSantarem, ids.fornPapel, 'Obras Civis Públicas ( Construção )', '5622', 1, 'UN', 'un', 326424.56, 'PA', '2024-Q3', T2),
   item(62, ids.ctRioVerde, ids.fornPapel, 'Lâmpada refletora', '485659', 10, 'Unidade', 'un', 45.0, 'GO', '2024-Q4', T2),
+  item(63, ids.ctPauloAfonso, ids.fornPapel, 'Açúcar', '603269', 2000, 'Embalagem 1,00 KG', 'unknown', 4.42, 'BA', '2024-Q4', T2),
+  item(64, ids.ctSaoLourenco, ids.fornPapel, 'Ventilador', '461897', 375, 'Unidade', 'un', 194.0, 'PE', '2024-Q4', T2),
 ]

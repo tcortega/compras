@@ -42,6 +42,8 @@ SLICES = (
     ("82777301000190", "4209300", "SC", "Lages"),
     ("05182233000761", "1506807", "PA", "Santarém"),
     ("02056729000105", "5218805", "GO", "Rio Verde"),
+    ("14217327000124", "2924009", "BA", "Paulo Afonso"),
+    ("11251832000105", "2613701", "PE", "São Lourenço da Mata"),
 )
 
 
@@ -61,7 +63,7 @@ def main() -> int:
         seen_ibge.add(ibge)
         seen_uf.add(uf)
         print(f"orgao={orgao['cnpj']} ibge={orgao['municipioIbge']} uf={orgao['uf']}")
-    if len(seen_ibge) < 35:
+    if len(seen_ibge) < 37:
         raise SystemExit(f"warehouse missing published IBGE codes: {sorted(seen_ibge)}")
     if seen_uf != {"RJ", "SP", "RS", "SC", "MG", "PR", "BA", "PE", "GO", "ES", "PB", "CE", "MA", "AL", "MS", "PA", "MT", "RO", "RN", "AC", "AP", "RR"}:
         raise SystemExit(f"warehouse UF set is not RJ+SP+RS+SC+MG+PR+BA+PE+GO+ES+PB+CE+MA+AL+MS+PA+MT+RO+RN+AC+AP+RR: {sorted(seen_uf)}")
@@ -102,13 +104,15 @@ def main() -> int:
         ("4209300", "SC"),
         ("1506807", "PA"),
         ("5218805", "GO"),
+        ("2924009", "BA"),
+        ("2613701", "PE"),
     }:
         raise SystemExit(f"warehouse orgao set is not the published slice: {sorted(landed)}")
     counts = fetch_counts(settings)
     if counts["item"] < 1:
         raise SystemExit("warehouse has no items")
-    if counts["orgao"] < 35:
-        raise SystemExit(f"warehouse orgao count {counts['orgao']} < 35")
+    if counts["orgao"] < 37:
+        raise SystemExit(f"warehouse orgao count {counts['orgao']} < 37")
     print("seed ok")
     print(f"entities={result.entity_counts} facts={result.fact_rows} flags={result.flag_rows}")
     print(f"counts={counts}")

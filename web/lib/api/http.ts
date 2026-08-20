@@ -1,4 +1,4 @@
-import { readCoverage } from '@/lib/coverage'
+import { fillCoverage, readCoverage } from '@/lib/coverage'
 import type {
   Contratacao,
   ExplorerClient,
@@ -11,6 +11,22 @@ import type {
 import { ApiError, ApiNotFoundError, isPublished } from '@/lib/types'
 
 const ENTITY_REVALIDATE = 3600
+
+const STUB_MARKERS = [
+  '7c2e1f40-3306-4050',
+  '8d3f2a51-3306-4050',
+  '9e4a3b62-3306-4050',
+  'ae5b4c73-3306-4050',
+  'sha256:dev-slice-vr-2024',
+]
+
+function assertNotStubPayload(payload: unknown, path: string): void {
+  const blob = JSON.stringify(payload)
+  const hit = STUB_MARKERS.find((marker) => blob.includes(marker))
+  if (hit) {
+    throw new ApiError(502, `API devolveu recorte stub em ${path}`)
+  }
+}
 
 function queryOf(req: PageRequest): string {
   const params = new URLSearchParams()
@@ -34,7 +50,7 @@ function publishedPage<T extends { suspended?: boolean }>(
 ): SkipTakePage<T> {
   const o = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {}
   const items = (Array.isArray(o.items) ? (o.items as T[]) : []).filter(isPublished)
-  const coverage = readCoverage(o.coverage)
+  const coverage = fillCoverage(readCoverage(o.coverage), items)
   const total = typeof o.total === 'number' ? o.total : coverage.n
   return {
     items,
@@ -45,18 +61,18 @@ function publishedPage<T extends { suspended?: boolean }>(
   }
 }
 
-function unwrapEntity<T extends { suspended?: boolean }>(
+function readPublishedEntity<T extends { suspended?: boolean }>(
   raw: unknown,
-  nestedKey: string,
   resource: string,
   id: string,
+  wrapperKey?: 'contratacao' | 'item',
 ): T {
   if (!raw || typeof raw !== 'object') {
     throw new ApiError(502, `API sem entidade em /api/${resource}/${id}`)
   }
   const o = raw as Record<string, unknown>
-  const nested = o[nestedKey]
-  const row = (nested && typeof nested === 'object' && !Array.isArray(nested) ? nested : raw) as T
+  const wrapped = wrapperKey ? o[wrapperKey] : undefined
+  const row = (wrapped && typeof wrapped === 'object' && !Array.isArray(wrapped) ? wrapped : raw) as T
   if (!isPublished(row)) throw new ApiNotFoundError(resource, id)
   return row
 }
@@ -77,7 +93,9 @@ export function createHttpClient(baseUrl: string): ExplorerClient {
     if (!res.ok) {
       throw new ApiError(res.status, `API ${res.status} em ${path}`)
     }
-    return (await res.json()) as T
+    const payload = (await res.json()) as T
+    assertNotStubPayload(payload, path)
+    return payload
   }
 
   return {
@@ -86,16 +104,15 @@ export function createHttpClient(baseUrl: string): ExplorerClient {
       return publishedPage<Orgao>(raw, req.skip, req.take)
     },
     async getOrgao(id) {
-      return unwrapEntity<Orgao>(await getJson<unknown>(`/api/orgaos/${id}`), 'orgao', 'orgao', id)
+      return readPublishedEntity<Orgao>(await getJson<unknown>(`/api/orgaos/${id}`), 'orgao', id)
     },
     async listFornecedores(req) {
       const raw = await getJson<unknown>(`/api/fornecedores?${queryOf(req)}`, 60)
       return publishedPage<Fornecedor>(raw, req.skip, req.take)
     },
     async getFornecedor(id) {
-      return unwrapEntity<Fornecedor>(
+      return readPublishedEntity<Fornecedor>(
         await getJson<unknown>(`/api/fornecedores/${id}`),
-        'fornecedor',
         'fornecedor',
         id,
       )
@@ -105,11 +122,11 @@ export function createHttpClient(baseUrl: string): ExplorerClient {
       return publishedPage<Contratacao>(raw, req.skip, req.take)
     },
     async getContratacao(id) {
-      return unwrapEntity<Contratacao>(
+      return readPublishedEntity<Contratacao>(
         await getJson<unknown>(`/api/contratacoes/${id}`),
         'contratacao',
-        'contratacao',
         id,
+        'contratacao',
       )
     },
     async listItems(req) {
@@ -117,7 +134,7 @@ export function createHttpClient(baseUrl: string): ExplorerClient {
       return publishedPage<Item>(raw, req.skip, req.take)
     },
     async getItem(id) {
-      return unwrapEntity<Item>(await getJson<unknown>(`/api/items/${id}`), 'item', 'item', id)
+      return readPublishedEntity<Item>(await getJson<unknown>(`/api/items/${id}`), 'item', id, 'item')
     },
   }
 }

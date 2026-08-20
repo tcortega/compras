@@ -18,7 +18,9 @@ O cliente tipado fala só com o contrato de `docs/CONTRACT.md`:
 - `GET /api/items` e `GET /api/items/{id}`
 
 Listas usam `PageRequest` com `skip` e `take`.
-Páginas de entidade usam ISR (`revalidate = 3600`) e `generateStaticParams`.
+Páginas de entidade renderizam sob demanda.
+No compose isso lê a API C#.
+Fora do compose, `API_BASE_URL=stub` lê o recorte em processo.
 
 ## Rodar
 
@@ -29,7 +31,9 @@ npm run dev
 ```
 
 `API_BASE_URL=stub` (padrão) usa o recorte em processo: Volta Redonda, RJ, 2024.
-Aponte `API_BASE_URL` para a API C# quando ela existir, por exemplo `http://localhost:5080`.
+O compose em `/infra` aponta `API_BASE_URL` para `http://api:5080` e publica o explorador em http://127.0.0.1:3100.
+Fora do compose, aponte `API_BASE_URL` para a API C#, por exemplo `http://127.0.0.1:5080`.
+Se `API_BASE_URL` aponta para a API, o cliente HTTP é obrigatório e o stub não pode responder.
 
 ```bash
 npm run build

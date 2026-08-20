@@ -26,7 +26,7 @@ export default async function ContratacoesPage({ searchParams }: { searchParams:
         q={req.q}
         extra={
           <>
-            <label className="field">
+            <label className="field field-ano">
               <span>Ano</span>
               <input name="ano" inputMode="numeric" defaultValue={req.ano ? String(req.ano) : ''} />
             </label>

@@ -1,11 +1,11 @@
-import { METHOD_VERSION } from '@/lib/copy'
+import { METHOD_VERSION, SLICE_UF } from '@/lib/copy'
 import type { Coverage, Item } from '@/lib/types'
 import { formatQuarter } from '@/lib/format'
 
 export function emptyCoverage(): Coverage {
   return {
     n: 0,
-    uf: null,
+    uf: SLICE_UF,
     quarter: null,
     methodologyVersion: METHOD_VERSION,
   }
@@ -38,11 +38,25 @@ export function readCoverage(raw: unknown): Coverage {
   }
 }
 
+export function fillCoverage(coverage: Coverage, rows: readonly unknown[]): Coverage {
+  if (coverage.uf) return coverage
+  const ufs = [
+    ...new Set(
+      rows.flatMap((row) => {
+        if (!row || typeof row !== 'object' || !('uf' in row)) return []
+        const uf = (row as { uf?: unknown }).uf
+        return typeof uf === 'string' && uf ? [uf] : []
+      }),
+    ),
+  ]
+  return { ...coverage, uf: ufs.length === 1 ? (ufs[0] ?? null) : coverage.uf }
+}
+
 export function coverageParts(c: Coverage): { n: string; geo: string; when: string; method: string } {
   return {
     n: `n=${c.n}`,
-    geo: c.n === 0 ? 'filtro sem registros' : c.uf ? `UF ${c.uf}` : 'UF mista',
-    when: c.n === 0 ? 'neste recorte' : c.quarter ? formatQuarter(c.quarter) : 'vários trimestres',
+    geo: c.uf ? `UF ${c.uf}` : c.n === 0 ? 'filtro sem registros' : 'UF mista',
+    when: c.quarter ? formatQuarter(c.quarter) : 'vários trimestres',
     method: `metodologia ${c.methodologyVersion}`,
   }
 }

@@ -1,6 +1,6 @@
 export const SITE_NAME = 'Compras'
 export const SITE_TAG = 'Explorador de compras públicas'
-export const METHOD_VERSION = '0.1.0'
+export const METHOD_VERSION = '0.1'
 export const SLICE_LABEL = 'Volta Redonda, RJ · 2024'
 export const SLICE_UF = 'RJ'
 export const SLICE_YEAR = 2024

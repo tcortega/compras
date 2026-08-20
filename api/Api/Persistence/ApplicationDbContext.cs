@@ -26,6 +26,9 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
 		configurationBuilder.Properties<LocalDate?>().HaveConversion<NullableLocalDateTextConverter>();
 	}
 
-	protected override void OnModelCreating(ModelBuilder modelBuilder) =>
+	protected override void OnModelCreating(ModelBuilder modelBuilder)
+	{
 		modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+		WarehouseColumns.Apply(modelBuilder);
+	}
 }

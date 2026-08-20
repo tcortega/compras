@@ -48,12 +48,15 @@ function liveItems(): Item[] {
 function page<T>(rows: T[], req: PageRequest, coverageItems: Item[]): SkipTakePage<T> {
   const skip = req.skip
   const take = req.take
+  const coverage = { ...coverageFromItems(coverageItems), n: rows.length }
+  if (!coverage.uf) coverage.uf = req.uf ?? coverage.uf
+  if (!coverage.quarter) coverage.quarter = req.quarter ?? coverage.quarter
   return {
     items: rows.slice(skip, skip + take),
     total: rows.length,
     skip,
     take,
-    coverage: coverageFromItems(coverageItems),
+    coverage,
   }
 }
 

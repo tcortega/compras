@@ -27,7 +27,7 @@ from compras_detect.tier1.fracionamento import (
     THRESH_PATH,
     load_thresholds,
 )
-from compras_ingest.cpf import assert_no_raw_cpf, mask_cpf
+from compras_ingest.cpf import assert_no_raw_cpf, is_cnpj, mask_cpf
 from compras_ingest.landing import LandingStore
 from compras_ingest.ids import sha256_bytes
 from compras_ingest.official import (
@@ -1267,13 +1267,24 @@ def _assert_cobid_suite(settings: Settings) -> None:
     if not cover_pair:
         raise SystemExit("missing COVER co_bid edges")
     for row in edges:
+        left = str(row.get("leftCnpj") or "")
+        right = str(row.get("rightCnpj") or "")
         if str(row.get("kind") or "") != "co_bid":
             raise SystemExit(f"co_bid edge kind is not co_bid: {row.get('kind')}")
-        if str(row.get("leftCnpj") or "") >= str(row.get("rightCnpj") or ""):
+        if not is_cnpj(left) or not is_cnpj(right):
+            raise SystemExit(f"co_bid edge is not CNPJ-CNPJ: {left} {right}")
+        if left >= right:
             raise SystemExit("co_bid pair is not stored leftCnpj < rightCnpj")
         if expected["other_uf"] in str(row.get("licitacaoId") or ""):
             raise SystemExit("OTHER-UF produced a co_bid edge")
+        if str(row.get("licitacaoId") or "") == expected["cpf_licitacao"]:
+            raise SystemExit("CPFONLY produced a co_bid edge")
+        if "***" in left or "***" in right:
+            raise SystemExit(f"co_bid edge stored masked CPF: {left} {right}")
         assert_no_raw_cpf([str(v) for v in row.values() if v is not None])
+        for raw in forbidden:
+            if raw and raw in " ".join([left, right]):
+                raise SystemExit(f"co_bid edge stored raw CPF {raw}")
 
 
 def _load_retroactive_edit_expected() -> dict:

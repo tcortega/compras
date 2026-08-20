@@ -6,11 +6,13 @@ import {
   listStoredAudit,
   listStoredFlags,
 } from '@/lib/api/flag-store'
-import { fillCoverage, readCoverage } from '@/lib/coverage'
+import { emptyCoverage, fillCoverage, readCoverage } from '@/lib/coverage'
 import {
   FLAG_FRAMING,
   isFlagState,
+  summarizeFlagCounts,
   type CreateFlagBody,
+  type DetectorKindCount,
   type FlagAction,
   type FlagAuditRecord,
   type FlagPage,
@@ -18,7 +20,7 @@ import {
   type FlagRecord,
 } from '@/lib/flags'
 import { METHOD_VERSION } from '@/lib/copy'
-import { ApiError, ApiNotFoundError } from '@/lib/types'
+import { ApiError, ApiNotFoundError, type Coverage } from '@/lib/types'
 
 function usesStubApi(): boolean {
   const base = (process.env.API_BASE_URL ?? 'stub').trim()
@@ -224,4 +226,29 @@ export async function listQueue(req: {
   const page = await listFlags(req)
   const rows = await enrichFlags(page.items)
   return { ...page, rows }
+}
+
+const FLAG_PAGE_TAKE = 100
+
+export async function listFlagCounts(): Promise<{
+  rows: DetectorKindCount[]
+  coverage: Coverage
+  total: number
+}> {
+  const first = await listFlags({ skip: 0, take: FLAG_PAGE_TAKE })
+  const items = [...first.items]
+  let skip = FLAG_PAGE_TAKE
+  while (items.length < first.total) {
+    const page = await listFlags({ skip, take: FLAG_PAGE_TAKE })
+    if (page.items.length === 0) break
+    items.push(...page.items)
+    skip += FLAG_PAGE_TAKE
+  }
+  const coverage = {
+    ...emptyCoverage(),
+    ...first.coverage,
+    n: first.total,
+    uf: null,
+  }
+  return { rows: summarizeFlagCounts(items), coverage, total: first.total }
 }

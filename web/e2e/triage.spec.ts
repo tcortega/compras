@@ -34,6 +34,8 @@ test('triagem interna caminha detectado, revisão e notificação sem publicar',
   await page.goto('/')
   await expect(page.locator('nav[aria-label="Seções"] a[href="/interno/triagem"]')).toHaveCount(0)
   await expect(page.locator('nav[aria-label="Rodapé"] a[href="/interno/triagem"]')).toHaveCount(0)
+  await expect(page.locator('nav[aria-label="Seções"] a[href="/interno/cobertura"]')).toHaveCount(0)
+  await expect(page.locator('nav[aria-label="Rodapé"] a[href="/interno/cobertura"]')).toHaveCount(0)
   await expect(page.locator('body')).not.toHaveText(bannedPublic)
 
   await page.goto('/interno/triagem?kind=triage_synthetic&state=detected')

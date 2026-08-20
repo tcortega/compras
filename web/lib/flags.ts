@@ -108,6 +108,70 @@ export function actionsFor(state: FlagState): FlagAction[] {
   return []
 }
 
+export const DETECTOR_KINDS = [
+  'sanctioned_ceis_cnep',
+  'cnpj_age',
+  'cnpj_age_info',
+  'fracionamento',
+  'fracionamento_cluster',
+  'retroactive_edit',
+  'cnae_mismatch',
+] as const
+
+export type DetectorKindCount = {
+  id: string
+  kind: string
+  n: number
+  day: string | null
+}
+
+function detectedDay(iso: string): string | null {
+  const match = /^(\d{4}-\d{2}-\d{2})/.exec(iso)
+  return match?.[1] ?? null
+}
+
+export function summarizeFlagCounts(flags: FlagRecord[]): DetectorKindCount[] {
+  const buckets = new Map<string, { kind: string; day: string | null; n: number }>()
+  for (const flag of flags) {
+    const day = detectedDay(flag.detectedAt)
+    const key = `${flag.kind}\t${day ?? ''}`
+    const cur = buckets.get(key)
+    if (cur) cur.n += 1
+    else buckets.set(key, { kind: flag.kind, day, n: 1 })
+  }
+  const days = new Set(
+    [...buckets.values()].flatMap((row) => (row.day ? [row.day] : [])),
+  )
+  const byDay = days.size > 1
+  const rows: DetectorKindCount[] = []
+  const seen = new Set<string>()
+  if (byDay) {
+    for (const row of buckets.values()) {
+      const id = row.day ? `${row.kind}:${row.day}` : row.kind
+      rows.push({ id, kind: row.kind, n: row.n, day: row.day })
+      seen.add(row.kind)
+    }
+  } else {
+    const last = new Map<string, DetectorKindCount>()
+    for (const row of buckets.values()) {
+      const cur = last.get(row.kind)
+      if (!cur) last.set(row.kind, { id: row.kind, kind: row.kind, n: row.n, day: row.day })
+      else {
+        cur.n += row.n
+        if (row.day && (!cur.day || row.day > cur.day)) cur.day = row.day
+      }
+    }
+    for (const row of last.values()) {
+      rows.push(row)
+      seen.add(row.kind)
+    }
+  }
+  for (const kind of DETECTOR_KINDS) {
+    if (!seen.has(kind)) rows.push({ id: kind, kind, n: 0, day: null })
+  }
+  return rows.sort((a, b) => a.kind.localeCompare(b.kind, 'pt-BR') || (a.day ?? '').localeCompare(b.day ?? ''))
+}
+
 export const triageCopy = {
   kicker: 'Fila interna',
   title: 'Triagem de indícios',
@@ -125,4 +189,14 @@ export const triageCopy = {
   timestamps: 'Marcas de tempo',
   labels: 'Rótulo da rubrica',
   notes: 'Notas',
+} as const
+
+export const coberturaInternaCopy = {
+  kicker: 'Recorte interno',
+  title: 'Cobertura interna',
+  lede: 'Contagens por detector no warehouse. Esta rota não é pública e não publica alertas no explorador.',
+  kinds: 'Contagens por detector',
+  day: 'Dia da última rodada',
+  emptyDay: 'sem rodada',
+  framing: 'Indício a verificar',
 } as const

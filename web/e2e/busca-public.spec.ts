@@ -7,6 +7,8 @@ test('busca pública sem campos de sinal, homologado ou triagem no nav', async (
   await expect(page.locator('.stats .kicker', { hasText: 'Homologado' })).toHaveCount(0)
   await expect(page.locator('nav[aria-label="Seções"] a[href="/interno/triagem"]')).toHaveCount(0)
   await expect(page.locator('nav[aria-label="Rodapé"] a[href="/interno/triagem"]')).toHaveCount(0)
+  await expect(page.locator('nav[aria-label="Seções"] a[href="/interno/cobertura"]')).toHaveCount(0)
+  await expect(page.locator('nav[aria-label="Rodapé"] a[href="/interno/cobertura"]')).toHaveCount(0)
   await expect(page.locator('body')).not.toHaveText(/fraude|corrupto|ranking|adjacenc|shared_qsa/i)
 
   await page.goto('/orgaos')
@@ -14,4 +16,5 @@ test('busca pública sem campos de sinal, homologado ou triagem no nav', async (
   await page.goto('/fornecedores')
   await expect(page.locator('.stats .kicker', { hasText: 'Homologado' })).toHaveCount(0)
   await expect(page.locator('nav[aria-label="Seções"] a[href="/interno/triagem"]')).toHaveCount(0)
+  await expect(page.locator('nav[aria-label="Seções"] a[href="/interno/cobertura"]')).toHaveCount(0)
 })

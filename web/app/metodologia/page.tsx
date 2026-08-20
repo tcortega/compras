@@ -1,4 +1,4 @@
-import { Shell } from '@/components/Shell'
+import { SliceShell } from '@/components/SliceShell'
 import { loadSliceCoverage } from '@/lib/api'
 import { routes } from '@/lib/routes'
 import type { Metadata } from 'next'
@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: 'Metodologia' }
 export default async function MetodologiaPage() {
   const coverage = await loadSliceCoverage()
   return (
-    <Shell coverage={coverage}>
+    <SliceShell coverage={coverage}>
       <p className="kicker">Versão {coverage.methodologyVersion}</p>
       <h1>Metodologia do explorador</h1>
       <div className="prose">
@@ -23,6 +23,6 @@ export default async function MetodologiaPage() {
           A cobertura do recorte está em <a href={routes.cobertura}>Cobertura</a>.
         </p>
       </div>
-    </Shell>
+    </SliceShell>
   )
 }

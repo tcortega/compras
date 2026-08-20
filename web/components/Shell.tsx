@@ -1,5 +1,5 @@
 import { CoverageBar } from '@/components/CoverageBar'
-import { copy, SITE_NAME, SITE_TAG, SLICE_BRAND, SLICE_LABEL } from '@/lib/copy'
+import { copy, SITE_NAME, SITE_TAG, sliceBrand, sliceLabel } from '@/lib/copy'
 import { navPrimary, routes } from '@/lib/routes'
 import type { Coverage } from '@/lib/types'
 import type { ReactNode } from 'react'
@@ -8,10 +8,12 @@ export function Shell({
   children,
   coverage,
   current,
+  years,
 }: {
   children: ReactNode
   coverage?: Coverage
   current?: string
+  years?: readonly number[]
 }) {
   return (
     <>
@@ -21,7 +23,7 @@ export function Shell({
       <header className="masthead">
         <div className="wrap masthead-inner">
           <a className="brand" href={routes.home}>
-            <span className="brand-kicker">{SLICE_BRAND}</span>
+            <span className="brand-kicker">{sliceBrand(years)}</span>
             <span className="brand-name">{SITE_NAME}</span>
             <span className="brand-tag">{SITE_TAG}</span>
           </a>
@@ -45,7 +47,7 @@ export function Shell({
       <footer className="footer">
         <div className="wrap footer-inner">
           <p>
-            {copy.coverageIncomplete} Recorte publicado: {SLICE_LABEL}.
+            {copy.coverageIncomplete} Recorte publicado: {sliceLabel(years)}.
           </p>
           <nav aria-label="Rodapé">
             <a href={routes.cobertura}>Cobertura</a>

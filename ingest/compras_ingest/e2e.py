@@ -24,6 +24,8 @@ from compras_ingest.official import (
     CGU_CEIS_LISTING_URL,
     CGU_CNEP_LISTING_URL,
     CGU_HOSTS,
+    COMPRAS_GOV_HOSTS,
+    COMPRAS_GOV_INDEX,
     OCDS_OCP_REGISTRY_URL,
     OFFICIAL_HOSTS,
     PNCP_API_BASE,
@@ -45,6 +47,7 @@ from compras_ingest.official import (
     assert_official_host,
     ckan_zip_from_package,
     fixture_cgu_ceis_cnep_official,
+    fixture_compras_gov_official,
     fixture_ocds_official,
     fixture_pncp_official,
     fixture_receita_official,
@@ -85,6 +88,7 @@ from compras_ingest.warehouse import (
     fetch_all_items,
     fetch_catalog_codes,
     fetch_contratacao,
+    fetch_contratacao_anos,
     fetch_exclusions,
     fetch_flags,
     fetch_item_facts,
@@ -330,9 +334,11 @@ def main() -> int:
     _assert_fracionamento_table()
     with _official_hosts_blocked():
         official = _assert_official_urls(settings)
+        _assert_compras_gov_official_urls(settings)
         _assert_pncp_spacing_and_resume(settings)
         result = run_compras_slice(settings)
         _assert_landing(settings, result.landing.sha256)
+        _assert_compras_gov_years(settings)
         _assert_tier_a_landing(settings, result.ocds_report)
         _assert_tce_sp_landing(settings)
         _assert_tce_rs_landing(settings)
@@ -1117,6 +1123,40 @@ def _assert_landing(settings: Settings, sha256: str) -> None:
         raise SystemExit(f"landing not partitioned by date: {hashed[0]}")
     if len(sha256) != 64:
         raise SystemExit("content hash is not sha256")
+
+
+def _assert_compras_gov_official_urls(settings: Settings) -> None:
+    for year in settings.compras_gov_years:
+        official = fixture_compras_gov_official(year, settings.compras_gov_base.rstrip("/"))
+        if official.index_url != COMPRAS_GOV_INDEX:
+            raise SystemExit(f"Compras.gov index is not official: {official.index_url}")
+        if official.cadence != "anual":
+            raise SystemExit(f"Compras.gov {year} cadence is not anual: {official.cadence}")
+        if f"/anual/{year}/comprasGOV-anual-VW_FT_PNCP_COMPRA-{year}.csv" not in official.compra_url:
+            raise SystemExit(f"COMPRA URL is not the official anual file: {official.compra_url}")
+        if f"/anual/{year}/comprasGOV-anual-VW_FT_PNCP_COMPRA_ITEM-{year}.csv" not in official.item_url:
+            raise SystemExit(f"ITEM URL is not the official anual file: {official.item_url}")
+        if "COMPRA_ITEM" in official.compra_url.rsplit("/", 1)[-1]:
+            raise SystemExit(f"COMPRA URL pointed at ITEM: {official.compra_url}")
+        assert_official_host(official.compra_url, COMPRAS_GOV_HOSTS)
+        assert_official_host(official.item_url, COMPRAS_GOV_HOSTS)
+
+
+def _assert_compras_gov_years(settings: Settings) -> None:
+    store = LandingStore(settings)
+    year_keys = store.year_partition_keys("compras_gov")
+    if not year_keys:
+        raise SystemExit("compras_gov landing has no year= partitions")
+    for year in (2024, 2025, 2026):
+        found = [k for k in year_keys if f"year={year}" in k]
+        if not found:
+            raise SystemExit(f"compras_gov missing year={year} parquet")
+        if not any("date=" in k for k in found):
+            raise SystemExit(f"compras_gov year={year} is not also partitioned by date")
+    anos = set(fetch_contratacao_anos(settings))
+    missing = {2024, 2025, 2026} - anos
+    if missing:
+        raise SystemExit(f"warehouse contratacao missing years {sorted(missing)}: {sorted(anos)}")
 
 
 def _assert_tier_a_landing(settings: Settings, ocds_report: dict) -> None:

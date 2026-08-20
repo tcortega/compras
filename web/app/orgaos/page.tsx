@@ -1,7 +1,7 @@
 import { DataTable } from '@/components/DataTable'
 import { ListFilters } from '@/components/ListFilters'
 import { Pager } from '@/components/Pager'
-import { Shell } from '@/components/Shell'
+import { SliceShell } from '@/components/SliceShell'
 import { api } from '@/lib/api'
 import { pageRequestFromSearch } from '@/lib/paging'
 import { routes } from '@/lib/routes'
@@ -17,7 +17,7 @@ export default async function OrgaosPage({ searchParams }: { searchParams: Promi
   const page = await api.listOrgaos(req)
 
   return (
-    <Shell coverage={page.coverage} current={routes.orgaos}>
+    <SliceShell coverage={page.coverage} current={routes.orgaos}>
       <p className="kicker">Coleção</p>
       <h1>Órgãos</h1>
       <p className="lede">Compradores do recorte publicado. Atribuição institucional, sem classificação de órgãos ou fornecedores.</p>
@@ -58,6 +58,6 @@ export default async function OrgaosPage({ searchParams }: { searchParams: Promi
         coverage={page.coverage}
         footer={<Pager base={routes.orgaos} req={req} total={page.total} />}
       />
-    </Shell>
+    </SliceShell>
   )
 }

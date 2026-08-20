@@ -2,7 +2,7 @@ import { DataTable } from '@/components/DataTable'
 import { EntityHeader } from '@/components/EntityHeader'
 import { FieldList } from '@/components/FieldList'
 import { Money } from '@/components/Money'
-import { Shell } from '@/components/Shell'
+import { SliceShell } from '@/components/SliceShell'
 import { SourceLine } from '@/components/SourceLine'
 import { Stat } from '@/components/Stat'
 import { api, safeDetail } from '@/lib/api'
@@ -40,7 +40,7 @@ export default async function ContratacaoPage({ params }: { params: Promise<{ id
   ])
 
   return (
-    <Shell coverage={its.coverage} current={routes.contratacoes}>
+    <SliceShell coverage={its.coverage} current={routes.contratacoes}>
       <EntityHeader kicker={`Contratação · ${row.modalidade} · ${row.ano}`} title={row.objeto} />
       <FieldList
         fields={[
@@ -73,6 +73,6 @@ export default async function ContratacaoPage({ params }: { params: Promise<{ id
         </div>
         <DataTable rows={its.items} columns={itemColumns} coverage={its.coverage} />
       </section>
-    </Shell>
+    </SliceShell>
   )
 }

@@ -34,19 +34,27 @@ class LandingStore:
         if self._kind == "s3":
             self._s3 = _s3_client(settings)
 
-    def write_parquet(self, source: str, partition_date: str, df: pl.DataFrame) -> LandingRef:
+    def write_parquet(
+        self,
+        source: str,
+        partition_date: str,
+        df: pl.DataFrame,
+        year: int | None = None,
+    ) -> LandingRef:
         buf = io.BytesIO()
         df.write_parquet(buf, compression="zstd")
         payload = buf.getvalue()
         digest = sha256_bytes(payload)
-        key = f"{source}/date={partition_date}/{digest}.parquet"
-        manifest_key = f"{source}/date={partition_date}/{digest}.manifest.json"
+        prefix = f"{source}/year={year}/date={partition_date}" if year is not None else f"{source}/date={partition_date}"
+        key = f"{prefix}/{digest}.parquet"
+        manifest_key = f"{prefix}/{digest}.manifest.json"
         if not self.head(key):
             self.put(key, payload)
         if not self.head(manifest_key):
             manifest = {
                 "source": source,
                 "partition_date": partition_date,
+                "year": year,
                 "sha256": digest,
                 "rows": df.height,
                 "columns": df.columns,
@@ -106,6 +114,15 @@ class LandingStore:
         assert self._s3 is not None
         resp = self._s3.get_object(Bucket=self._root, Key=key)
         return resp["Body"].read()
+
+    def year_partition_keys(self, source: str) -> list[str]:
+        keys: list[str] = []
+        for key in self.list_parquet(source):
+            if not key.endswith(".parquet"):
+                continue
+            if any(part.startswith("year=") for part in Path(key).parts):
+                keys.append(key)
+        return sorted(keys)
 
     def list_parquet(self, source: str) -> list[str]:
         prefix = f"{source}/"

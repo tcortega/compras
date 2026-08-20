@@ -441,8 +441,9 @@ def main() -> int:
         if ibge not in ibges:
             raise SystemExit(f"api /api/cobertura missing IBGE {ibge}")
     years = cobertura_api.get("years") or []
-    if 2024 not in years:
-        raise SystemExit(f"api /api/cobertura missing year 2024: {years}")
+    missing_years = {2024, 2025, 2026} - {int(y) for y in years if y is not None}
+    if missing_years:
+        raise SystemExit(f"api /api/cobertura missing years {sorted(missing_years)}: {years}")
     rows = cobertura_api.get("rows") or {}
     if not isinstance(rows.get("items"), int) or rows["items"] < 1:
         raise SystemExit(f"api /api/cobertura rows.items missing: {rows}")
@@ -529,6 +530,11 @@ def main() -> int:
     contratacoes = get_json(f"{API}/api/contratacoes?skip=0&take=50")
     deny_flags(contratacoes, f"{API}/api/contratacoes")
     deny_stub(json.dumps(contratacoes, ensure_ascii=False), "api /api/contratacoes")
+    for ano in (2025, 2026):
+        year_page = get_json(f"{API}/api/contratacoes?ano={ano}&skip=0&take=1")
+        deny_flags(year_page, f"{API}/api/contratacoes?ano={ano}")
+        if int(year_page.get("total") or 0) < 1:
+            raise SystemExit(f"api /api/contratacoes?ano={ano} returned no rows")
     contratacao_rows = contratacoes.get("items") or []
     if not contratacao_rows:
         raise SystemExit("api /api/contratacoes returned no rows")
@@ -664,6 +670,8 @@ def main() -> int:
         raise SystemExit("web / missing honest mixed UF")
     if "Cinquenta e nove municípios" not in home:
         raise SystemExit("web / missing short brand kicker")
+    if "2024-2026 YTD" not in home:
+        raise SystemExit("web / missing 2024-2026 YTD")
     if "UF Brasil" in home or "total nacional" in folded:
         raise SystemExit("web / invented a national total")
 
@@ -1702,6 +1710,8 @@ def main() -> int:
         raise SystemExit("web /cobertura missing landing source name")
     if "sem ingestão" not in cobertura and not re.search(r"\d{2}/\d{2}/\d{4}", cobertura):
         raise SystemExit("web /cobertura missing source freshness")
+    if "2024-2026 YTD" not in cobertura:
+        raise SystemExit("web /cobertura missing 2024-2026 YTD")
 
     metodologia = get_text(f"{WEB}/metodologia")
     assert_served_page(metodologia, "web /metodologia")

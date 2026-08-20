@@ -33,6 +33,9 @@ PNCP_MODALIDADES_PATH = "/v1/modalidades"
 OCDS_HOSTS = frozenset({"data.open-contracting.org", "fastly.data.open-contracting.org"})
 RFB_HOSTS = frozenset({"arquivos.receitafederal.gov.br"})
 PNCP_HOSTS = frozenset({"pncp.gov.br"})
+# BUILD_SPEC Tier A source 1. Index listed 2026-08-20.
+COMPRAS_GOV_INDEX = "https://repositorio.dados.gov.br/seges/comprasgov/"
+COMPRAS_GOV_HOSTS = frozenset({"repositorio.dados.gov.br"})
 # BUILD_SPEC Tier B source 6. Listing verified 2026-08-20. Cubo SQL is not this extract.
 TCE_SP_LISTING_URL = "https://transparencia.tce.sp.gov.br/conjunto-de-dados"
 TCE_SP_HOSTS = frozenset({"transparencia.tce.sp.gov.br"})
@@ -51,7 +54,9 @@ CGU_CNEP_LISTING_URL = "https://portaldatransparencia.gov.br/download-de-dados/c
 CGU_ZIP_ROOT = "https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida"
 CGU_HOSTS = frozenset({"portaldatransparencia.gov.br", "dadosabertos-download.cgu.gov.br"})
 CGU_FETCH_LOOKBACK_DAYS = 14
-OFFICIAL_HOSTS = OCDS_HOSTS | RFB_HOSTS | PNCP_HOSTS | TCE_SP_HOSTS | TCE_RS_HOSTS | CGU_HOSTS
+OFFICIAL_HOSTS = (
+    OCDS_HOSTS | RFB_HOSTS | PNCP_HOSTS | TCE_SP_HOSTS | TCE_RS_HOSTS | CGU_HOSTS | COMPRAS_GOV_HOSTS
+)
 USER_AGENT = "compras-ingest/0.1"
 _MONTH = re.compile(r"^\d{4}-\d{2}$")
 _PROP_NAME = re.compile(r"<d:displayname>([^<]+)</d:displayname>")
@@ -64,6 +69,15 @@ _LICITACAO_ZIP = re.compile(
     r"licitacao-(\d{4})(?:-(\d{2}))?(?:_\d+)?\.zip$",
     re.IGNORECASE,
 )
+
+
+@dataclass(frozen=True)
+class ComprasGovOfficial:
+    index_url: str
+    year: int
+    cadence: str
+    compra_url: str
+    item_url: str
 
 
 @dataclass(frozen=True)
@@ -231,6 +245,33 @@ def fixture_receita_official() -> ReceitaOfficial:
         "2024-12",
         ("Empresas0.zip", "Estabelecimentos0.zip", "Socios0.zip"),
     )
+
+
+def compras_gov_anual_compra_url(base: str, year: int) -> str:
+    root = base.rstrip("/")
+    return f"{root}/anual/{year}/comprasGOV-anual-VW_FT_PNCP_COMPRA-{year}.csv"
+
+
+def compras_gov_anual_item_url(base: str, year: int) -> str:
+    root = base.rstrip("/")
+    return f"{root}/anual/{year}/comprasGOV-anual-VW_FT_PNCP_COMPRA_ITEM-{year}.csv"
+
+
+def fixture_compras_gov_official(year: int, base: str = COMPRAS_GOV_INDEX.rstrip("/")) -> ComprasGovOfficial:
+    """Build official anual COMPRA+ITEM URLs. Does not contact hosts."""
+    if year < 2021:
+        raise RuntimeError(f"Compras.gov year out of range: {year}")
+    compra = compras_gov_anual_compra_url(base, year)
+    item = compras_gov_anual_item_url(base, year)
+    assert_official_host(compra, COMPRAS_GOV_HOSTS)
+    assert_official_host(item, COMPRAS_GOV_HOSTS)
+    if f"/anual/{year}/comprasGOV-anual-VW_FT_PNCP_COMPRA-{year}.csv" not in compra:
+        raise RuntimeError(f"COMPRA URL is not the official anual file: {compra}")
+    if f"/anual/{year}/comprasGOV-anual-VW_FT_PNCP_COMPRA_ITEM-{year}.csv" not in item:
+        raise RuntimeError(f"ITEM URL is not the official anual file: {item}")
+    if "COMPRA_ITEM" in compra.split("/")[-1]:
+        raise RuntimeError(f"COMPRA URL pointed at ITEM: {compra}")
+    return ComprasGovOfficial(COMPRAS_GOV_INDEX, year, "anual", compra, item)
 
 
 def fixture_ocds_official(year: int) -> OcdsOfficial:

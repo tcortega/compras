@@ -1,7 +1,7 @@
 import { DataTable } from '@/components/DataTable'
 import { ListFilters } from '@/components/ListFilters'
 import { Pager } from '@/components/Pager'
-import { Shell } from '@/components/Shell'
+import { SliceShell } from '@/components/SliceShell'
 import { api } from '@/lib/api'
 import { pageRequestFromSearch } from '@/lib/paging'
 import { routes } from '@/lib/routes'
@@ -17,7 +17,7 @@ export default async function ItensPage({ searchParams }: { searchParams: Promis
   const page = await api.listItems(req)
 
   return (
-    <Shell coverage={page.coverage} current={routes.itens}>
+    <SliceShell coverage={page.coverage} current={routes.itens}>
       <p className="kicker">Coleção</p>
       <h1>Itens</h1>
       <p className="lede">Linha de compra com unidade, valor e CATMAT quando existir.</p>
@@ -46,6 +46,6 @@ export default async function ItensPage({ searchParams }: { searchParams: Promis
         coverage={page.coverage}
         footer={<Pager base={routes.itens} req={req} total={page.total} />}
       />
-    </Shell>
+    </SliceShell>
   )
 }

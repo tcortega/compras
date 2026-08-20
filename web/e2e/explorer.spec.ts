@@ -52,6 +52,16 @@ const santaLuziaName = /Munic[ií]pio de Santa Luzia/i
 const novaFriburgoName = /Munic[ií]pio de Nova Friburgo/i
 const mariliaName = /Munic[ií]pio de Mar[ií]lia/i
 const balnearioName = /Munic[ií]pio de Balne[aá]rio Cambori[uú]/i
+const itaquaName = /Munic[ií]pio de Itaquaquecetuba/i
+const praiaGrandeName = /Munic[ií]pio de Praia Grande/i
+const saoJoseName = /Munic[ií]pio de S[aã]o Jos[eé] dos Pinhais/i
+const suzanoName = /Munic[ií]pio de Suzano/i
+const guarujaName = /Munic[ií]pio de Guaruj[aá]/i
+const cotiaName = /Munic[ií]pio de Cotia/i
+const parauapebasName = /Munic[ií]pio de Parauapebas/i
+const jacareiName = /Munic[ií]pio de Jacare[ií]/i
+const itaboraiName = /Munic[ií]pio de Itabora[ií]/i
+const maricaName = /Munic[ií]pio de Maric[aá]/i
 
 const publishedNames = [
   niteroiName,
@@ -102,6 +112,16 @@ const publishedNames = [
   novaFriburgoName,
   mariliaName,
   balnearioName,
+  itaquaName,
+  praiaGrandeName,
+  saoJoseName,
+  suzanoName,
+  guarujaName,
+  cotiaName,
+  parauapebasName,
+  jacareiName,
+  itaboraiName,
+  maricaName,
 ]
 
 async function assertCoverageAndBan(page: Page) {
@@ -162,10 +182,10 @@ test('home cards usam o n da coleção, não o n de itens', async ({ page }) => 
   await page.goto('/')
   await expect(page.getByRole('strong').filter({ hasText: 'Cobertura incompleta' })).toBeVisible()
   await expect(page.getByText(/UF mista/).first()).toBeVisible()
-  await expect(page.getByText(/Caxias do Sul \(RS\), Joinville \(SC\), Uberlândia \(MG\), Londrina \(PR\), Feira de Santana \(BA\), Caruaru \(PE\), Anápolis \(GO\), Vila Velha \(ES\), Campina Grande \(PB\), Caucaia \(CE\), Imperatriz \(MA\), Arapiraca \(AL\), Dourados \(MS\), Marabá \(PA\), Várzea Grande \(MT\), Ji-Paraná \(RO\), Parnamirim \(RN\), Cruzeiro do Sul \(AC\), Santana \(AP\), Rorainópolis \(RR\), Maringá \(PR\), Taubaté \(SP\), Cascavel \(PR\), Juiz de Fora \(MG\), Foz do Iguaçu \(PR\), Santa Maria \(RS\), Montes Claros \(MG\), Governador Valadares \(MG\), Canoas \(RS\), Lages \(SC\), Santarém \(PA\), Rio Verde \(GO\), Paulo Afonso \(BA\), São Lourenço da Mata \(PE\), Crato \(CE\), Ariquemes \(RO\), Colatina \(ES\), Castanhal \(PA\), Divinópolis \(MG\), Petrópolis \(RJ\), Ipatinga \(MG\), Macaé \(RJ\), Santa Luzia \(MG\), Nova Friburgo \(RJ\), Marília \(SP\) e Balneário Camboriú \(SC\)/).first()).toBeVisible()
+  await expect(page.getByText(/Caxias do Sul \(RS\), Joinville \(SC\), Uberlândia \(MG\), Londrina \(PR\), Feira de Santana \(BA\), Caruaru \(PE\), Anápolis \(GO\), Vila Velha \(ES\), Campina Grande \(PB\), Caucaia \(CE\), Imperatriz \(MA\), Arapiraca \(AL\), Dourados \(MS\), Marabá \(PA\), Várzea Grande \(MT\), Ji-Paraná \(RO\), Parnamirim \(RN\), Cruzeiro do Sul \(AC\), Santana \(AP\), Rorainópolis \(RR\), Maringá \(PR\), Taubaté \(SP\), Cascavel \(PR\), Juiz de Fora \(MG\), Foz do Iguaçu \(PR\), Santa Maria \(RS\), Montes Claros \(MG\), Governador Valadares \(MG\), Canoas \(RS\), Lages \(SC\), Santarém \(PA\), Rio Verde \(GO\), Paulo Afonso \(BA\), São Lourenço da Mata \(PE\), Crato \(CE\), Ariquemes \(RO\), Colatina \(ES\), Castanhal \(PA\), Divinópolis \(MG\), Petrópolis \(RJ\), Ipatinga \(MG\), Macaé \(RJ\), Santa Luzia \(MG\), Nova Friburgo \(RJ\), Marília \(SP\), Balneário Camboriú \(SC\), Itaquaquecetuba \(SP\), Praia Grande \(SP\), São José dos Pinhais \(PR\), Suzano \(SP\), Guarujá \(SP\), Cotia \(SP\), Parauapebas \(PA\), Jacareí \(SP\), Itaboraí \(RJ\) e Maricá \(RJ\)/).first()).toBeVisible()
   const brand = page.locator('.brand-kicker')
-  await expect(brand).toHaveText(/quarenta e nove municípios · 2024/i)
-  await expect(brand).not.toHaveText(/Caxias do Sul|Uberlândia|Londrina|Feira de Santana|Caruaru|Anápolis|Vila Velha|Campina Grande|Caucaia|Imperatriz|Arapiraca|Dourados|Marabá|Várzea Grande|Ji-Paraná|Parnamirim|Cruzeiro do Sul|Santana|Rorainópolis|Maringá|Taubaté|Cascavel|Juiz de Fora|Foz do Iguaçu|Santa Maria|Montes Claros|Governador Valadares|Canoas|Lages|Santarém|Rio Verde|Paulo Afonso|São Lourenço|Crato|Ariquemes|Colatina|Castanhal|Divinópolis|Petrópolis|Ipatinga|Macaé|Santa Luzia|Nova Friburgo|Marília|Balneário/)
+  await expect(brand).toHaveText(/cinquenta e nove municípios · 2024/i)
+  await expect(brand).not.toHaveText(/Caxias do Sul|Uberlândia|Londrina|Feira de Santana|Caruaru|Anápolis|Vila Velha|Campina Grande|Caucaia|Imperatriz|Arapiraca|Dourados|Marabá|Várzea Grande|Ji-Paraná|Parnamirim|Cruzeiro do Sul|Santana|Rorainópolis|Maringá|Taubaté|Cascavel|Juiz de Fora|Foz do Iguaçu|Santa Maria|Montes Claros|Governador Valadares|Canoas|Lages|Santarém|Rio Verde|Paulo Afonso|São Lourenço|Crato|Ariquemes|Colatina|Castanhal|Divinópolis|Petrópolis|Ipatinga|Macaé|Santa Luzia|Nova Friburgo|Marília|Balneário|Itaquaquecetuba|Praia Grande|São José|Suzano|Guarujá|Cotia|Parauapebas|Jacareí|Itaboraí|Maricá/)
   const brandBox = await brand.boundingBox()
   const masthead = await page.locator('.masthead-inner').boundingBox()
   expect(brandBox).toBeTruthy()
@@ -186,8 +206,8 @@ test('home cards usam o n da coleção, não o n de itens', async ({ page }) => 
   await expect(itens.getByText(new RegExp(`n=${itensN}`))).toBeVisible()
   expect(orgaosN).not.toEqual(itensN)
   if (!againstCompose) {
-    await expect(orgaos.getByRole('strong')).toHaveText('52')
-    await expect(itens.getByRole('strong')).toHaveText('76')
+    await expect(orgaos.getByRole('strong')).toHaveText('62')
+    await expect(itens.getByRole('strong')).toHaveText('86')
   }
 
   if (againstCompose) {
@@ -270,8 +290,8 @@ test('filtra Niterói por IBGE no formulário', async ({ page }) => {
 })
 
 test('filtra Bauru por UF SP e itens SP', async ({ page }) => {
-  await assertOrgaoUf(page, 'SP', bauruName, niteroiName, '3')
-  await assertItensUf(page, 'SP', /Papel A4 75 g/, '4')
+  await assertOrgaoUf(page, 'SP', bauruName, niteroiName, '9')
+  await assertItensUf(page, 'SP', /Papel A4 75 g/, '10')
 })
 
 test('filtra Caxias do Sul por IBGE e Joinville por UF SC', async ({ page }) => {
@@ -282,8 +302,8 @@ test('filtra Caxias do Sul por IBGE e Joinville por UF SC', async ({ page }) => 
 
 test('filtra Uberlândia por IBGE e Londrina por UF PR', async ({ page }) => {
   await assertOrgaoIbge(page, '3170206', uberlandiaName, londrinaName, 'MG')
-  await assertOrgaoUf(page, 'PR', londrinaName, uberlandiaName, '4')
-  await assertItensUf(page, 'PR', /Clindamicina/, '4')
+  await assertOrgaoUf(page, 'PR', londrinaName, uberlandiaName, '5')
+  await assertItensUf(page, 'PR', /Clindamicina/, '5')
 })
 
 test('filtra Feira de Santana por IBGE e Caruaru por UF PE', async ({ page }) => {
@@ -312,8 +332,8 @@ test('filtra Imperatriz por IBGE e Arapiraca por UF AL', async ({ page }) => {
 
 test('filtra Dourados por IBGE e Marabá por UF PA', async ({ page }) => {
   await assertOrgaoIbge(page, '5003702', douradosName, marabaName, 'MS')
-  await assertOrgaoUf(page, 'PA', marabaName, douradosName, '3')
-  await assertItensUf(page, 'PA', /Fog[aã]o/, '3')
+  await assertOrgaoUf(page, 'PA', marabaName, douradosName, '4')
+  await assertItensUf(page, 'PA', /Fog[aã]o/, '4')
 })
 
 test('filtra Várzea Grande por IBGE e Ji-Paraná por UF RO', async ({ page }) => {
@@ -397,6 +417,31 @@ test('filtra Santa Luzia por IBGE e Nova Friburgo por IBGE', async ({ page }) =>
 test('filtra Marília por IBGE e Balneário Camboriú por IBGE', async ({ page }) => {
   await assertOrgaoIbge(page, '3529005', mariliaName, balnearioName, 'SP')
   await assertOrgaoIbge(page, '4202008', balnearioName, mariliaName, 'SC')
+})
+
+test('filtra Itaquaquecetuba por IBGE e Praia Grande por IBGE', async ({ page }) => {
+  await assertOrgaoIbge(page, '3523107', itaquaName, praiaGrandeName, 'SP')
+  await assertOrgaoIbge(page, '3541000', praiaGrandeName, itaquaName, 'SP')
+})
+
+test('filtra São José dos Pinhais por IBGE e Suzano por IBGE', async ({ page }) => {
+  await assertOrgaoIbge(page, '4125506', saoJoseName, suzanoName, 'PR')
+  await assertOrgaoIbge(page, '3552502', suzanoName, saoJoseName, 'SP')
+})
+
+test('filtra Guarujá por IBGE e Cotia por IBGE', async ({ page }) => {
+  await assertOrgaoIbge(page, '3518701', guarujaName, cotiaName, 'SP')
+  await assertOrgaoIbge(page, '3513009', cotiaName, guarujaName, 'SP')
+})
+
+test('filtra Parauapebas por IBGE e Jacareí por IBGE', async ({ page }) => {
+  await assertOrgaoIbge(page, '1505536', parauapebasName, jacareiName, 'PA')
+  await assertOrgaoIbge(page, '3524402', jacareiName, parauapebasName, 'SP')
+})
+
+test('filtra Itaboraí por IBGE e Maricá por IBGE', async ({ page }) => {
+  await assertOrgaoIbge(page, '3301900', itaboraiName, maricaName, 'RJ')
+  await assertOrgaoIbge(page, '3302700', maricaName, itaboraiName, 'RJ')
 })
 
 test('mantém cobertura no filtro vazio e no vazio com UF', async ({ page }) => {
@@ -547,6 +592,16 @@ test('vazio, 404 e páginas estáticas mantêm cobertura e o banimento', async (
   await expect(page.getByText(/3303401/).first()).toBeVisible()
   await expect(page.getByText(/3529005/).first()).toBeVisible()
   await expect(page.getByText(/4202008/).first()).toBeVisible()
+  await expect(page.getByText(/3523107/).first()).toBeVisible()
+  await expect(page.getByText(/3541000/).first()).toBeVisible()
+  await expect(page.getByText(/4125506/).first()).toBeVisible()
+  await expect(page.getByText(/3552502/).first()).toBeVisible()
+  await expect(page.getByText(/3518701/).first()).toBeVisible()
+  await expect(page.getByText(/3513009/).first()).toBeVisible()
+  await expect(page.getByText(/1505536/).first()).toBeVisible()
+  await expect(page.getByText(/3524402/).first()).toBeVisible()
+  await expect(page.getByText(/3301900/).first()).toBeVisible()
+  await expect(page.getByText(/3302700/).first()).toBeVisible()
   await expect(page.getByText(/não é um total nacional/).first()).toBeVisible()
   await expect(page.getByText(/UF mista/).first()).toBeVisible()
   await assertCoverageAndBan(page)

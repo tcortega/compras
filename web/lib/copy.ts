@@ -15,12 +15,14 @@ export const SLICE_MUNICIPIOS = [
   { nome: 'Joinville', uf: 'SC', ibge: '4209102' },
   { nome: 'Uberlândia', uf: 'MG', ibge: '3170206' },
   { nome: 'Londrina', uf: 'PR', ibge: '4113700' },
+  { nome: 'Feira de Santana', uf: 'BA', ibge: '2910800' },
+  { nome: 'Caruaru', uf: 'PE', ibge: '2604106' },
 ] as const
 
-export const SLICE_BRAND = 'Sete municípios · 2024'
+export const SLICE_BRAND = 'Nove municípios · 2024'
 
 export const SLICE_LABEL =
-  'Volta Redonda e Niterói (RJ), Bauru (SP), Caxias do Sul (RS), Joinville (SC), Uberlândia (MG) e Londrina (PR) · 2024'
+  'Volta Redonda e Niterói (RJ), Bauru (SP), Caxias do Sul (RS), Joinville (SC), Uberlândia (MG), Londrina (PR), Feira de Santana (BA) e Caruaru (PE) · 2024'
 
 export const copy = {
   coverageIncomplete:

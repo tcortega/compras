@@ -180,6 +180,28 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			MunicipioIbge = "4113700",
 			MunicipioNome = "Londrina",
 		};
+		var feira = new Orgao
+		{
+			Id = SliceIds.OrgaoFeira,
+			Cnpj = "14043574000151",
+			RazaoSocial = "Municipio de Feira de Santana",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "BA",
+			MunicipioIbge = "2910800",
+			MunicipioNome = "Feira de Santana",
+		};
+		var caruaru = new Orgao
+		{
+			Id = SliceIds.OrgaoCaruaru,
+			Cnpj = "10091536000113",
+			RazaoSocial = "Municipio de Caruaru",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "PE",
+			MunicipioIbge = "2604106",
+			MunicipioNome = "Caruaru",
+		};
 		var fornecedor = new Fornecedor
 		{
 			Id = SliceIds.Fornecedor,
@@ -328,6 +350,34 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
 		};
+		var contratacaoFeira = new Contratacao
+		{
+			Id = SliceIds.ContratacaoFeira,
+			PncpId = "14043574000151-1-000544/2024",
+			OrgaoId = SliceIds.OrgaoFeira,
+			Modalidade = "pregao eletronico",
+			Objeto = "Aquisicao agua mineral natural, sem gas",
+			Ano = 2024,
+			ValorHomologado = 74100m,
+			PublicadoEm = Instant.FromUtc(2024, 10, 2, 7, 35),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoCaruaru = new Contratacao
+		{
+			Id = SliceIds.ContratacaoCaruaru,
+			PncpId = "10091536000113-1-000124/2024",
+			OrgaoId = SliceIds.OrgaoCaruaru,
+			Modalidade = "pregao eletronico",
+			Objeto = "Registro de precos para eventual e futura aquisicao de placas toponimicas",
+			Ano = 2024,
+			ValorHomologado = 39500m,
+			PublicadoEm = Instant.FromUtc(2024, 9, 25, 7, 8),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
 		var itemNiteroi = new Item
 		{
 			Id = SliceIds.ItemNiteroi,
@@ -430,11 +480,45 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
 		};
+		var itemFeira = new Item
+		{
+			Id = SliceIds.ItemFeira,
+			ContratacaoId = SliceIds.ContratacaoFeira,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Agua mineral natural",
+			Catmat = "445484",
+			Quantidade = 2000m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 33.6m,
+			ValorTotal = 67200m,
+			Uf = "BA",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var itemCaruaru = new Item
+		{
+			Id = SliceIds.ItemCaruaru,
+			ContratacaoId = SliceIds.ContratacaoCaruaru,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Placa sinalizadora",
+			Catmat = "383339",
+			Quantidade = 375m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 79m,
+			ValorTotal = 29625m,
+			Uf = "PE",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
 
-		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville, uberlandia, londrina);
+		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville, uberlandia, londrina, feira, caruaru);
 		db.Fornecedores.AddRange(fornecedor, fornecedorExtra);
-		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina);
-		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina);
+		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina, contratacaoFeira, contratacaoCaruaru);
+		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina, itemFeira, itemCaruaru);
 	}
 
 	private static JsonSerializerOptions CreateJson()

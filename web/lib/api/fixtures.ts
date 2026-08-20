@@ -16,6 +16,8 @@ export const ids = {
   orgaoJoinville: '7c2e1f40-4209-4050-9a01-000000000008',
   orgaoUberlandia: '7c2e1f40-3170-4050-9a01-000000000009',
   orgaoLondrina: '7c2e1f40-4113-4050-9a01-000000000010',
+  orgaoFeira: '7c2e1f40-2910-4050-9a01-000000000011',
+  orgaoCaruaru: '7c2e1f40-2604-4050-9a01-000000000012',
   fornFarma: '8d3f2a51-3306-4050-9a02-000000000001',
   fornAlim: '8d3f2a51-3306-4050-9a02-000000000002',
   fornComb: '8d3f2a51-3306-4050-9a02-000000000003',
@@ -39,6 +41,8 @@ export const ids = {
   ctJoinville: '9e4a3b62-4209-4050-9a03-000000000014',
   ctUberlandia: '9e4a3b62-3170-4050-9a03-000000000015',
   ctLondrina: '9e4a3b62-4113-4050-9a03-000000000016',
+  ctFeira: '9e4a3b62-2910-4050-9a03-000000000017',
+  ctCaruaru: '9e4a3b62-2604-4050-9a03-000000000018',
 } as const
 
 function orgao(
@@ -166,6 +170,26 @@ export const orgaos: Orgao[] = [
     'PR',
     '4113700',
     'Londrina',
+  ),
+  orgao(
+    ids.orgaoFeira,
+    '14043574000151',
+    'Município de Feira de Santana',
+    'executivo',
+    T2,
+    'BA',
+    '2910800',
+    'Feira de Santana',
+  ),
+  orgao(
+    ids.orgaoCaruaru,
+    '10091536000113',
+    'Município de Caruaru',
+    'executivo',
+    T1,
+    'PE',
+    '2604106',
+    'Caruaru',
   ),
 ]
 
@@ -448,6 +472,28 @@ export const contratacoes: Contratacao[] = [
     '2024-01-12T07:03:45.000Z',
     'compras.gov.br',
   ),
+  ct(
+    ids.ctFeira,
+    '14043574000151-1-000544/2024',
+    ids.orgaoFeira,
+    'pregão eletrônico',
+    'Aquisição água mineral natural, sem gás, para atender as necessidades da Secretaria Municipal de Desenvolvimento Social, do Município de Feira de Santana, Bahia e aos equipamentos coordenados por ela.',
+    2024,
+    74_100.0,
+    '2024-10-02T07:35:25.000Z',
+    'compras.gov.br',
+  ),
+  ct(
+    ids.ctCaruaru,
+    '10091536000113-1-000124/2024',
+    ids.orgaoCaruaru,
+    'pregão eletrônico',
+    'REGISTRO DE PREÇOS PARA EVENTUAL E FUTURA AQUISIÇÃO DE PLACAS TOPONÍMICAS, em atendimento as necessidades da Autarquia de Mobilidade, Trânsito e Transportes de Caruaru – AMTTC, ',
+    2024,
+    39_500.0,
+    '2024-09-25T07:08:04.000Z',
+    'compras.gov.br',
+  ),
 ]
 
 function item(
@@ -523,4 +569,6 @@ export const items: Item[] = [
   item(32, ids.ctJoinville, ids.fornPapel, 'Leitora código de barras a laser', '617529', 35, 'unidade', 'un', 948.0, 'SC', '2024-Q3', T1),
   item(33, ids.ctUberlandia, ids.fornPapel, 'Coturno', '446381', 127, 'par', 'par', 276.0, 'MG', '2024-Q1', T0),
   item(34, ids.ctLondrina, ids.fornPapel, 'Clindamicina', '268436', 10000, 'cápsula', 'capsula', 1.0999, 'PR', '2024-Q1', T0),
+  item(35, ids.ctFeira, ids.fornPapel, 'Água mineral natural', '445484', 2000, 'Copo 200,00 ML', 'l', 33.6, 'BA', '2024-Q4', T2),
+  item(36, ids.ctCaruaru, ids.fornPapel, 'Placa sinalizadora', '383339', 375, 'Unidade', 'un', 79.0, 'PE', '2024-Q3', T1),
 ]

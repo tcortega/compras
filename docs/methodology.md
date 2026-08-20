@@ -6,7 +6,7 @@ Este documento é a metodologia pública carimbada na linha de fonte do explorad
 
 A cobertura é incompleta.
 Nenhum agregado afirma cobertura nacional.
-O recorte publicado agora é Volta Redonda e Niterói (RJ), Bauru (SP), Caxias do Sul (RS), Joinville (SC), Uberlândia (MG) e Londrina (PR), códigos IBGE 3306305, 3303302, 3506003, 4305108, 4209102, 3170206 e 4113700, ano 2024, extraído dos arquivos em lote do Compras.gov.br.
+O recorte publicado agora é Volta Redonda e Niterói (RJ), Bauru (SP), Caxias do Sul (RS), Joinville (SC), Uberlândia (MG), Londrina (PR), Feira de Santana (BA) e Caruaru (PE), códigos IBGE 3306305, 3303302, 3506003, 4305108, 4209102, 3170206, 4113700, 2910800 e 2604106, ano 2024, extraído dos arquivos em lote do Compras.gov.br.
 Esses municípios aparecem no COMPRA municipal de 2024.
 O conjunto não é um censo nacional.
 Quando o agregado mistura UF, o campo uf fica vazio.

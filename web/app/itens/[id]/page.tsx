@@ -5,7 +5,14 @@ import { Shell } from '@/components/Shell'
 import { SourceLine } from '@/components/SourceLine'
 import { Stat } from '@/components/Stat'
 import { api, safeDetail } from '@/lib/api'
-import { formatCnpj, formatDecimal, formatMoney, formatQuarter } from '@/lib/format'
+import {
+  formatCanonicalUnit,
+  formatCnpj,
+  formatDecimal,
+  formatMoney,
+  formatQuarter,
+  hasWarehouseBasePrice,
+} from '@/lib/format'
 import { routes } from '@/lib/routes'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
@@ -69,7 +76,7 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
           { label: 'CATMAT', value: row.catmat ?? 'n/d', mono: true },
           { label: 'CATSER', value: row.catser ?? 'n/d', mono: true },
           { label: 'Unidade original', value: row.unidadeMedida },
-          { label: 'Unidade canônica', value: row.unidadeCanonica ?? 'n/d' },
+          { label: 'Unidade canônica', value: formatCanonicalUnit(row.unidadeCanonica) },
         ]}
       />
       <div className="stats">
@@ -79,9 +86,9 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
           coverage={peers.coverage}
         />
         <Stat label="Valor unitário" value={<Money value={row.valorUnitario} />} coverage={peers.coverage} />
-        {row.valorPorUnidadeCanonica != null ? (
+        {hasWarehouseBasePrice(row) ? (
           <Stat
-            label={`Valor por ${row.unidadeCanonica ?? 'unidade canônica'}`}
+            label={`Valor por ${formatCanonicalUnit(row.unidadeCanonica)}`}
             value={<Money value={row.valorPorUnidadeCanonica} />}
             coverage={peers.coverage}
           />

@@ -1,5 +1,5 @@
 import { CoverageBar } from '@/components/CoverageBar'
-import { copy, SITE_NAME, SITE_TAG, SLICE_LABEL } from '@/lib/copy'
+import { copy, SITE_NAME, SITE_TAG, SLICE_BRAND, SLICE_LABEL } from '@/lib/copy'
 import { navPrimary, routes } from '@/lib/routes'
 import type { Coverage } from '@/lib/types'
 import type { ReactNode } from 'react'
@@ -21,7 +21,7 @@ export function Shell({
       <header className="masthead">
         <div className="wrap masthead-inner">
           <a className="brand" href={routes.home}>
-            <span className="brand-kicker">{SLICE_LABEL}</span>
+            <span className="brand-kicker">{SLICE_BRAND}</span>
             <span className="brand-name">{SITE_NAME}</span>
             <span className="brand-tag">{SITE_TAG}</span>
           </a>

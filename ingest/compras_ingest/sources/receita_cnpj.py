@@ -163,7 +163,9 @@ def _load_fixture(settings: Settings, keep: set[str]) -> tuple[pl.DataFrame, pl.
     empresas = _read_named(path, ("Empresas", "empresa"), EMPRESA_COLS)
     estab = _read_named(path, ("Estabelecimentos", "estabelecimento"), ESTAB_COLS)
     socios = _read_named(path, ("Socios", "socio"), SOCIO_COLS)
-    return _join_filter(empresas, estab, socios, keep)
+    _ = keep
+    # Fixture CSVs are the planted set and land in full.
+    return _join_filter(empresas, estab, socios, set())
 
 
 def _load_remote(official: ReceitaOfficial, keep: set[str]) -> tuple[pl.DataFrame, pl.DataFrame]:

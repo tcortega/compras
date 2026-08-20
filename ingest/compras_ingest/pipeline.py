@@ -6,6 +6,7 @@ from pathlib import Path
 
 import polars as pl
 
+from compras_detect.adjacency import build_adjacencies
 from compras_detect.data_error import (
     anomaly_pool,
     catalog_reference_prices,
@@ -26,6 +27,7 @@ from compras_ingest.sources.tce_rs_licitacon import land_tce_rs_licitacon
 from compras_ingest.sources.tce_sp_licitacao import land_tce_sp_licitacao
 from compras_ingest.warehouse import (
     apply_schema,
+    write_adjacencies,
     write_catalog,
     write_entities,
     write_exclusions,
@@ -46,6 +48,7 @@ class PipelineResult:
     fact_rows: int
     flag_rows: int
     exclusion_rows: int
+    adjacency_rows: int
     items: pl.DataFrame = field(repr=False)
     flags: pl.DataFrame = field(repr=False)
 
@@ -72,6 +75,7 @@ def run_compras_slice(settings: Settings, store: LandingStore | None = None) -> 
         receita_ref,
     )
     flags, flag_rows = run_tier1_and_write_flags(settings, store, items)
+    _, adjacency_rows = run_adjacency_and_write(settings, store)
     return PipelineResult(
         landing,
         ocds_report,
@@ -79,6 +83,7 @@ def run_compras_slice(settings: Settings, store: LandingStore | None = None) -> 
         warehouse["facts"],
         flag_rows,
         warehouse.get("exclusions") or 0,
+        adjacency_rows,
         items,
         flags,
     )
@@ -152,6 +157,33 @@ def warehouse_data_error_fixture(settings: Settings) -> tuple[pl.DataFrame, pl.D
     exclusions = detect_data_errors(items)
     write_exclusions(settings, exclusions, items)
     return items, exclusions, anomaly_pool(items, exclusions)
+
+
+def run_adjacency_and_write(
+    settings: Settings,
+    store: LandingStore,
+) -> tuple[pl.DataFrame, int]:
+    """Build Receita adjacency edges from landed frames and persist them. Does not call C#."""
+    estab, socios, snapshot_id = _load_landed_receita(store)
+    edges = build_adjacencies(estab, socios, snapshot_id, settings.methodology_version)
+    return edges, write_adjacencies(settings, edges)
+
+
+def _load_landed_receita(store: LandingStore) -> tuple[pl.DataFrame, pl.DataFrame, str]:
+    estab = _concat_source(store, "receita_cnpj")
+    socios = _concat_source(store, "receita_cnpj_socios")
+    keys = sorted(store.list_parquet("receita_cnpj"))
+    snapshot_id = Path(keys[-1]).stem if keys else ""
+    return estab, socios, snapshot_id
+
+
+def _concat_source(store: LandingStore, source: str) -> pl.DataFrame:
+    frames = []
+    for key in store.list_parquet(source):
+        df = store.read_parquet(key)
+        if not df.is_empty():
+            frames.append(df)
+    return pl.concat(frames, how="diagonal_relaxed") if frames else pl.DataFrame()
 
 
 def run_tier1_and_write_flags(

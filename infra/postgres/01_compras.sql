@@ -126,6 +126,27 @@ CREATE TABLE IF NOT EXISTS landing_source (
   "snapshotId" text
 );
 
+CREATE TABLE IF NOT EXISTS fornecedor_adjacency (
+  kind text NOT NULL CHECK (kind IN (
+    'shared_qsa_partner',
+    'shared_address',
+    'shared_phone',
+    'shared_email'
+  )),
+  "leftCnpj" text NOT NULL,
+  "rightCnpj" text NOT NULL,
+  evidence text NOT NULL,
+  "snapshotId" text NOT NULL,
+  "methodologyVersion" text NOT NULL,
+  "createdAt" timestamptz NOT NULL,
+  PRIMARY KEY (kind, "leftCnpj", "rightCnpj"),
+  CHECK ("leftCnpj" < "rightCnpj")
+);
+
+CREATE INDEX IF NOT EXISTS fornecedor_adjacency_left_idx ON fornecedor_adjacency ("leftCnpj");
+CREATE INDEX IF NOT EXISTS fornecedor_adjacency_right_idx ON fornecedor_adjacency ("rightCnpj");
+CREATE INDEX IF NOT EXISTS fornecedor_adjacency_kind_idx ON fornecedor_adjacency (kind);
+
 ALTER TABLE item ADD COLUMN IF NOT EXISTS "valorPorUnidadeCanonica" numeric(18, 6);
 ALTER TABLE item ADD COLUMN IF NOT EXISTS "specConcentracao" text;
 ALTER TABLE item ADD COLUMN IF NOT EXISTS "specDosagem" text;

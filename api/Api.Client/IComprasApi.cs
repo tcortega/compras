@@ -73,6 +73,13 @@ public interface IComprasApi
 	[Get("/api/cobertura")]
 	Task<CoberturaPayload> GetCobertura();
 
+	[Get("/api/busca")]
+	Task<SearchPage> Search(
+		[Query] string? q = null,
+		[Query] string? methodologyVersion = null,
+		[Query] int? skip = null,
+		[Query] int? take = null);
+
 	[Post("/api/internal/flags")]
 	Task<IApiResponse<FlagRecord>> CreateFlag([Body] CreateFlagRequest body);
 

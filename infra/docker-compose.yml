@@ -31,6 +31,8 @@ x-dagster-env: &dagster-env
   TCE_SP_PATH: /app/ingest/fixtures/tce_sp_licitacao
   TCE_RS_PATH: /app/ingest/fixtures/tce_rs_licitacon
   TCE_RS_FETCH: "0"
+  MEILI_URL: http://meilisearch:7700
+  MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-dev-meili-master-key-32chars-ok}
 
 services:
   postgres:
@@ -131,7 +133,7 @@ services:
     volumes:
       - meili_data:/meili_data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7700/health"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:7700/health || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -211,6 +213,25 @@ services:
     restart: "no"
     networks: [compras]
 
+  search-index:
+    build:
+      context: ..
+      dockerfile: ingest/Dockerfile
+    command: ["python", "-m", "compras_ingest.search"]
+    environment:
+      <<: *dagster-env
+    volumes:
+      - ../ingest:/app/ingest
+      - ../normalize:/app/normalize
+      - ../detect:/app/detect
+    depends_on:
+      warehouse-seed:
+        condition: service_completed_successfully
+      meilisearch:
+        condition: service_healthy
+    restart: "no"
+    networks: [compras]
+
   api:
     build:
       context: ..
@@ -223,6 +244,8 @@ services:
       App__Port: "5080"
       App__MethodologyVersion: ${METHODOLOGY_VERSION:-0.2}
       App__ApplyMigrations: "false"
+      MEILI_URL: http://meilisearch:7700
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-dev-meili-master-key-32chars-ok}
     ports:
       - "5080:5080"
     depends_on:
@@ -230,6 +253,10 @@ services:
         condition: service_healthy
       warehouse-seed:
         condition: service_completed_successfully
+      search-index:
+        condition: service_completed_successfully
+      meilisearch:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:5080/api/orgaos?skip=0&take=1"]
       interval: 5s
@@ -245,6 +272,8 @@ services:
     restart: unless-stopped
     environment:
       API_BASE_URL: http://api:5080
+      MEILI_URL: http://meilisearch:7700
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-dev-meili-master-key-32chars-ok}
       SKIP_STATIC_PARAMS: "1"
       STAGING_TRIAGE: "1"
       TRIAGE_LABELS_PATH: /tmp/triage-labels.csv

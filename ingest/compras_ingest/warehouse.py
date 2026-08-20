@@ -398,6 +398,11 @@ def fetch_orgaos(settings: Settings) -> list[dict]:
         return list(conn.execute('SELECT * FROM orgao ORDER BY "municipioIbge", cnpj').fetchall())
 
 
+def fetch_fornecedores(settings: Settings) -> list[dict]:
+    with psycopg.connect(settings.postgres_dsn, row_factory=dict_row) as conn:
+        return list(conn.execute('SELECT * FROM fornecedor ORDER BY "razaoSocial", id').fetchall())
+
+
 def fetch_contratacao(settings: Settings, pncp_id: str) -> dict | None:
     with psycopg.connect(settings.postgres_dsn, row_factory=dict_row) as conn:
         return conn.execute('SELECT * FROM contratacao WHERE "pncpId" = %s', (pncp_id,)).fetchone()

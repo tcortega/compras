@@ -8,10 +8,13 @@ import os
 import re
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 
 API = os.environ.get("API_BASE_URL", "http://127.0.0.1:5080").rstrip("/")
 WEB = os.environ.get("WEB_BASE_URL", "http://127.0.0.1:3100").rstrip("/")
+MEILI = os.environ.get("MEILI_URL", "http://127.0.0.1:7700").rstrip("/")
+MEILI_KEY = os.environ.get("MEILI_MASTER_KEY", "dev-meili-master-key-32chars-ok")
 
 STUB_MARKERS = (
     "7c2e1f40-3306-4050",
@@ -526,6 +529,7 @@ def main() -> int:
     if not fornecedor_rows:
         raise SystemExit("api /api/fornecedores returned no rows")
     fid = fornecedor_rows[0]["id"]
+    prove_search(rows[0], items_page[0], fornecedor_rows[0], n)
 
     contratacoes = get_json(f"{API}/api/contratacoes?skip=0&take=50")
     deny_flags(contratacoes, f"{API}/api/contratacoes")
@@ -544,6 +548,13 @@ def main() -> int:
     deny_flags(by_fornecedor, f"{API}/api/contratacoes?fornecedorId")
     if not (by_fornecedor.get("items") or []):
         raise SystemExit("api /api/contratacoes?fornecedorId returned no rows")
+
+    empty_busca = get_text(f"{WEB}/busca")
+    assert_served_page(empty_busca, "web /busca")
+    if not re.search(r"n=\d+", empty_busca):
+        raise SystemExit("web /busca empty q lost coverage.n")
+    if "Órgãos" in empty_busca and "Ver todos" in empty_busca:
+        raise SystemExit("web /busca empty q listed collections")
 
     home = get_text(f"{WEB}/")
     assert_served_page(home, "web /")
@@ -1833,6 +1844,89 @@ def get_text(url: str, ok: tuple[int, ...] = (200,)) -> str:
 def table_html(html: str) -> str:
     match = re.search(r"<table\b[\s\S]*?</table>", html, re.I)
     return match.group(0) if match else ""
+
+
+def prove_search(item: dict, orgao: dict, fornecedor: dict, slice_n: int) -> None:
+    empty = get_json(f"{API}/api/busca")
+    deny_flags(empty, "api /api/busca")
+    deny_stub(json.dumps(empty, ensure_ascii=False), "api /api/busca")
+    if empty.get("source") != "meilisearch":
+        raise SystemExit(f"api /api/busca is still the in-process stub: {empty.get('source')}")
+    empty_cov = empty.get("coverage") or {}
+    if empty_cov.get("n") != slice_n:
+        raise SystemExit(f"api /api/busca empty q lost slice n: {empty_cov} vs {slice_n}")
+    if empty_cov.get("uf") not in (None, ""):
+        raise SystemExit(f"api /api/busca invented a UF: {empty_cov}")
+    if (empty.get("items") or {}).get("items"):
+        raise SystemExit("api /api/busca empty q invented item hits")
+
+    desc = str(item.get("descricao") or "").strip()
+    token = next((part for part in re.split(r"\s+", desc) if len(part) >= 4), desc)
+    if not token:
+        raise SystemExit("warehouse item missing description for search prove")
+    item_hit = get_json(f"{API}/api/busca?q={urllib.parse.quote(token)}&take=5")
+    deny_flags(item_hit, "api /api/busca?q=item")
+    deny_stub(json.dumps(item_hit, ensure_ascii=False), "api /api/busca?q=item")
+    if item_hit.get("source") != "meilisearch":
+        raise SystemExit("api /api/busca item search is still the in-process stub")
+    if str((item_hit.get("coverage") or {}).get("uf") or ""):
+        raise SystemExit(f"mixed search invented a UF: {item_hit.get('coverage')}")
+    hit_ids = {str(row.get("id") or "") for row in ((item_hit.get("items") or {}).get("items") or [])}
+    if str(item.get("id") or "") not in hit_ids and desc.casefold() not in json.dumps(item_hit, ensure_ascii=False).casefold():
+        raise SystemExit(f"api /api/busca missed planted item {token}")
+
+    razao = str(orgao.get("razaoSocial") or "").strip()
+    orgao_hit = get_json(f"{API}/api/busca?q={urllib.parse.quote(razao)}&take=5")
+    deny_flags(orgao_hit, "api /api/busca?q=orgao")
+    orgao_ids = {str(row.get("id") or "") for row in ((orgao_hit.get("orgaos") or {}).get("items") or [])}
+    if str(orgao.get("id") or "") not in orgao_ids:
+        raise SystemExit(f"api /api/busca missed planted orgao {razao}")
+
+    forn = str(fornecedor.get("razaoSocial") or "").strip()
+    forn_hit = get_json(f"{API}/api/busca?q={urllib.parse.quote(forn)}&take=5")
+    deny_flags(forn_hit, "api /api/busca?q=fornecedor")
+    forn_ids = {str(row.get("id") or "") for row in ((forn_hit.get("fornecedores") or {}).get("items") or [])}
+    if str(fornecedor.get("id") or "") not in forn_ids:
+        raise SystemExit(f"api /api/busca missed planted fornecedor {forn}")
+
+    meili = meili_search(token)
+    deny_flags(meili, "meili /indexes/compras/search")
+    if not (meili.get("hits") or []):
+        raise SystemExit("meili index missed planted item text")
+
+    html = get_text(f"{WEB}/busca?q={urllib.parse.quote(token)}")
+    assert_served_page(html, "web /busca?q=item")
+    if "Índice Meilisearch" not in html:
+        raise SystemExit("web /busca is still the in-process stub")
+    if desc[:12].casefold() not in html.casefold() and token.casefold() not in html.casefold():
+        raise SystemExit("web /busca missed planted item text")
+
+
+def meili_search(q: str) -> dict:
+    body = json.dumps({"q": q, "limit": 5}).encode()
+    req = urllib.request.Request(
+        f"{MEILI}/indexes/compras/search",
+        data=body,
+        headers={
+            "content-type": "application/json",
+            "authorization": f"Bearer {MEILI_KEY}",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            raw = resp.read().decode("utf-8", "replace")
+    except urllib.error.HTTPError as exc:
+        raise SystemExit(f"meili search status {exc.code}") from exc
+    except urllib.error.URLError as exc:
+        raise SystemExit(f"meili unreachable: {exc.reason}") from exc
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise SystemExit("meili search is not JSON") from exc
+    if not isinstance(data, dict):
+        raise SystemExit("meili search JSON is not an object")
+    return data
 
 
 def deny_stub(blob: str, where: str) -> None:

@@ -3,6 +3,8 @@
 ASP.NET Core 8 read API for canonical procurement entities in Postgres.
 
 The explorer searches, browses, and drills into orgaos, fornecedores, contratacoes, and items.
+`GET /api/busca` queries the Meilisearch index of item descriptions and orgao/fornecedor names.
+C# does not build that index.
 
 Every aggregate returns a coverage denominator (`n`, `uf`, `quarter`, `methodologyVersion`).
 

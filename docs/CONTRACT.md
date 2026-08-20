@@ -9,7 +9,7 @@ The explorer may start on Postgres.
 ## Identity
 
 Phase 0 precision slice: Volta Redonda, RJ, IBGE 3306305, year 2024.
-The published explorer slice also lands Niterói, RJ, IBGE 3303302, and Bauru, SP, IBGE 3506003, year 2024, from the same Compras.gov / PNCP 2024 bulk.
+The published explorer slice also lands Niterói, RJ, IBGE 3303302, Bauru, SP, IBGE 3506003, Caxias do Sul, RS, IBGE 4305108, and Joinville, SC, IBGE 4209102, year 2024, from the same Compras.gov / PNCP 2024 bulk.
 That published set does not limit the schema.
 A mixed-UF aggregate leaves `uf` empty.
 It is not a national total.

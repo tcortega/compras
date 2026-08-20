@@ -378,6 +378,28 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			MunicipioIbge = "3554102",
 			MunicipioNome = "Taubate",
 		};
+		var cascavel = new Orgao
+		{
+			Id = SliceIds.OrgaoCascavel,
+			Cnpj = "76208867000107",
+			RazaoSocial = "Municipio de Cascavel",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "PR",
+			MunicipioIbge = "4104808",
+			MunicipioNome = "Cascavel",
+		};
+		var juizDeFora = new Orgao
+		{
+			Id = SliceIds.OrgaoJuizDeFora,
+			Cnpj = "18338178000102",
+			RazaoSocial = "Municipio de Juiz de Fora",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "MG",
+			MunicipioIbge = "3136702",
+			MunicipioNome = "Juiz de Fora",
+		};
 		var fornecedor = new Fornecedor
 		{
 			Id = SliceIds.Fornecedor,
@@ -774,6 +796,34 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			Ano = 2024,
 			ValorHomologado = 8250m,
 			PublicadoEm = Instant.FromUtc(2024, 9, 10, 15, 0),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoCascavel = new Contratacao
+		{
+			Id = SliceIds.ContratacaoCascavel,
+			PncpId = "76208867000107-1-000325/2024",
+			OrgaoId = SliceIds.OrgaoCascavel,
+			Modalidade = "pregao eletronico",
+			Objeto = "Aquisicao de tres motocicletas para a Guarda Municipal de Cascavel",
+			Ano = 2024,
+			ValorHomologado = 196110m,
+			PublicadoEm = Instant.FromUtc(2024, 11, 5, 7, 25),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoJuizDeFora = new Contratacao
+		{
+			Id = SliceIds.ContratacaoJuizDeFora,
+			PncpId = "18338178000102-1-000200/2024",
+			OrgaoId = SliceIds.OrgaoJuizDeFora,
+			Modalidade = "dispensa",
+			Objeto = "Keytruda 100mg/4ml solucao injetavel",
+			Ano = 2024,
+			ValorHomologado = 160214m,
+			PublicadoEm = Instant.FromUtc(2024, 9, 13, 14, 21),
 			Source = "compras.gov.br",
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
@@ -1185,11 +1235,45 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
 		};
+		var itemCascavel = new Item
+		{
+			Id = SliceIds.ItemCascavel,
+			ContratacaoId = SliceIds.ContratacaoCascavel,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Motocicleta",
+			Catmat = "318890",
+			Quantidade = 3m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 65370m,
+			ValorTotal = 196110m,
+			Uf = "PR",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var itemJuizDeFora = new Item
+		{
+			Id = SliceIds.ItemJuizDeFora,
+			ContratacaoId = SliceIds.ContratacaoJuizDeFora,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Pembrolizumabe",
+			Catmat = "440269",
+			Quantidade = 10m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 16021.4m,
+			ValorTotal = 160214m,
+			Uf = "MG",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
 
-		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville, uberlandia, londrina, feira, caruaru, anapolis, vilaVelha, campinaGrande, caucaia, imperatriz, arapiraca, dourados, maraba, varzeaGrande, jiParana, parnamirim, cruzeiroDoSul, santana, rorainopolis, maringa, taubate);
+		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville, uberlandia, londrina, feira, caruaru, anapolis, vilaVelha, campinaGrande, caucaia, imperatriz, arapiraca, dourados, maraba, varzeaGrande, jiParana, parnamirim, cruzeiroDoSul, santana, rorainopolis, maringa, taubate, cascavel, juizDeFora);
 		db.Fornecedores.AddRange(fornecedor, fornecedorExtra);
-		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina, contratacaoFeira, contratacaoCaruaru, contratacaoAnapolis, contratacaoVilaVelha, contratacaoCampinaGrande, contratacaoCaucaia, contratacaoImperatriz, contratacaoArapiraca, contratacaoDourados, contratacaoMaraba, contratacaoVarzeaGrande, contratacaoJiParana, contratacaoParnamirim, contratacaoCruzeiroDoSul, contratacaoSantana, contratacaoRorainopolis, contratacaoMaringa, contratacaoTaubate);
-		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina, itemFeira, itemCaruaru, itemAnapolis, itemVilaVelha, itemCampinaGrande, itemCaucaia, itemImperatriz, itemArapiraca, itemDourados, itemMaraba, itemVarzeaGrande, itemJiParana, itemParnamirim, itemCruzeiroDoSul, itemSantana, itemRorainopolis, itemMaringa, itemTaubate);
+		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina, contratacaoFeira, contratacaoCaruaru, contratacaoAnapolis, contratacaoVilaVelha, contratacaoCampinaGrande, contratacaoCaucaia, contratacaoImperatriz, contratacaoArapiraca, contratacaoDourados, contratacaoMaraba, contratacaoVarzeaGrande, contratacaoJiParana, contratacaoParnamirim, contratacaoCruzeiroDoSul, contratacaoSantana, contratacaoRorainopolis, contratacaoMaringa, contratacaoTaubate, contratacaoCascavel, contratacaoJuizDeFora);
+		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina, itemFeira, itemCaruaru, itemAnapolis, itemVilaVelha, itemCampinaGrande, itemCaucaia, itemImperatriz, itemArapiraca, itemDourados, itemMaraba, itemVarzeaGrande, itemJiParana, itemParnamirim, itemCruzeiroDoSul, itemSantana, itemRorainopolis, itemMaringa, itemTaubate, itemCascavel, itemJuizDeFora);
 	}
 
 	private static JsonSerializerOptions CreateJson()

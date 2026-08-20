@@ -2,7 +2,7 @@
 
 Municipio chosen for the Phase 0 precision gate: Volta Redonda, RJ, IBGE 3306305, year 2024.
 Population is about 274k (IBGE 2022), inside the 100k-500k mid-size band, and it is not a capital.
-The published explorer fixture also lands municípios that the same 2024 COMPRA file already counted: Niterói, RJ, IBGE 3303302 (238 municipal contratacoes), Bauru, SP, IBGE 3506003 (736), Caxias do Sul, RS, IBGE 4305108 (577), Joinville, SC, IBGE 4209102 (346), Uberlândia, MG, IBGE 3170206 (1152), Londrina, PR, IBGE 4113700 (257), Feira de Santana, BA, IBGE 2910800 (12), Caruaru, PE, IBGE 2604106 (167), Anápolis, GO, IBGE 5201108 (62), Vila Velha, ES, IBGE 3205200 (33), Campina Grande, PB, IBGE 2504009 (225), Caucaia, CE, IBGE 2303709 (83), Imperatriz, MA, IBGE 2105302 (6), Arapiraca, AL, IBGE 2700300 (162), Dourados, MS, IBGE 5003702 (53), Marabá, PA, IBGE 1504208 (233), Várzea Grande, MT, IBGE 5108402 (23), Ji-Paraná, RO, IBGE 1100122 (183), Parnamirim, RN, IBGE 2403251 (52), Cruzeiro do Sul, AC, IBGE 1200203 (56), Santana, AP, IBGE 1600600 (6), Rorainópolis, RR, IBGE 1400472 (6), Maringá, PR, IBGE 4115200 (425), and Taubaté, SP, IBGE 3554102 (384).
+The published explorer fixture also lands municípios that the same 2024 COMPRA file already counted: Niterói, RJ, IBGE 3303302 (238 municipal contratacoes), Bauru, SP, IBGE 3506003 (736), Caxias do Sul, RS, IBGE 4305108 (577), Joinville, SC, IBGE 4209102 (346), Uberlândia, MG, IBGE 3170206 (1152), Londrina, PR, IBGE 4113700 (257), Feira de Santana, BA, IBGE 2910800 (12), Caruaru, PE, IBGE 2604106 (167), Anápolis, GO, IBGE 5201108 (62), Vila Velha, ES, IBGE 3205200 (33), Campina Grande, PB, IBGE 2504009 (225), Caucaia, CE, IBGE 2303709 (83), Imperatriz, MA, IBGE 2105302 (6), Arapiraca, AL, IBGE 2700300 (162), Dourados, MS, IBGE 5003702 (53), Marabá, PA, IBGE 1504208 (233), Várzea Grande, MT, IBGE 5108402 (23), Ji-Paraná, RO, IBGE 1100122 (183), Parnamirim, RN, IBGE 2403251 (52), Cruzeiro do Sul, AC, IBGE 1200203 (56), Santana, AP, IBGE 1600600 (6), Rorainópolis, RR, IBGE 1400472 (6), Maringá, PR, IBGE 4115200 (425), Taubaté, SP, IBGE 3554102 (384), Cascavel, PR, IBGE 4104808 (245), and Juiz de Fora, MG, IBGE 3136702 (142).
 Those extra rows use the same landed COMPRA/ITEM schema.
 They do not replace the Volta Redonda labeled set.
 Jaboatão dos Guararapes, PE, IBGE 2607901, has no municipal row in that 2024 COMPRA file.
@@ -38,9 +38,18 @@ Iranduba, AM, IBGE 1301852, is present in the 2024 COMPRA file only as federal r
 Unused UFs AM, PI, SE, TO, and DF have municipal rows only in small towns, so they have zero mid-size municipal rows in that 2024 COMPRA file.
 Maringá is the listed municipal PR fallback with landed volume after those unused UFs had no mid-size municipal row.
 Taubaté is the listed municipal SP fallback with landed volume after those unused UFs had no mid-size municipal row.
+Pelotas, RS, IBGE 4314407, is present in the 2024 COMPRA file only as federal rows.
+Franca, SP, IBGE 3516200, is present in the 2024 COMPRA file only as state rows.
+Vitória da Conquista, BA, IBGE 2933307, is present in the 2024 COMPRA file only as federal and state rows.
+Petrolina, PE, IBGE 2611101, is present in the 2024 COMPRA file only as federal rows.
+Campos dos Goytacazes, RJ, IBGE 3301009, is present in the 2024 COMPRA file only as federal and state rows.
+São José do Rio Preto, SP, IBGE 3549805, is present in the 2024 COMPRA file only as state and federal rows.
+Blumenau, SC, IBGE 4202404, has only 14 municipal rows, all from the Câmara.
+Cascavel is the listed municipal PR fallback with landed volume after those unused UFs still had no mid-size municipal row.
+Juiz de Fora is the listed municipal MG fallback with landed volume after those unused UFs still had no mid-size municipal row.
 The 2024 COMPRA file has 57,384 municipal rows across 731 distinct municipio names.
 Volta Redonda has 964 municipal contratacoes (959 unique id_compra), the highest volume among clearly mid-size non-capital cities after excluding Uberlandia / Ribeirao Preto which sit above 500k.
-Other candidates present with volume: Bauru 736, Caxias do Sul 577, Maringa 425, Taubate 384, Joinville 346, Campina Grande 225 municipal 2024, Londrina 257, Niteroi 238.
+Other candidates present with volume: Bauru 736, Caxias do Sul 577, Maringa 425, Taubate 384, Joinville 346, Cascavel 245, Campina Grande 225 municipal 2024, Londrina 257, Niteroi 238, Juiz de Fora 142.
 
 ## Bulk repo layout
 

@@ -1,0 +1,52 @@
+name: e2e
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: compras
+          POSTGRES_PASSWORD: compras
+          POSTGRES_DB: compras
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U compras -d compras"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+      clickhouse:
+        image: clickhouse/clickhouse-server:24.8
+        ports:
+          - 8123:8123
+        options: >-
+          --health-cmd "clickhouse-client --query 'SELECT 1'"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pipeline
+        run: pip install -e ingest
+      - name: Load Dagster defs
+        run: python -c "from compras_ingest.definitions import defs; print(defs)"
+      - name: Compose file present
+        run: test -f infra/docker-compose.yml && python -c "import pathlib; print(pathlib.Path('infra/docker-compose.yml').read_text().splitlines()[0])"
+      - name: E2E fixture in, parquet and rows out
+        env:
+          POSTGRES_DSN: postgresql://compras:compras@127.0.0.1:5432/compras
+          CLICKHOUSE_URL: http://127.0.0.1:8123
+          CLICKHOUSE_USER: default
+          CLICKHOUSE_PASSWORD: ""
+          CLICKHOUSE_DATABASE: compras
+          LANDING_URI: ${{ github.workspace }}/.e2e-landing
+        run: python -m compras_ingest.e2e

@@ -4,6 +4,10 @@
 *.zip
 *.7z
 !labels/**/*.csv
+!ingest/fixtures/**/*.csv
+!normalize/compras_normalize/data/*.csv
+.e2e-landing/
+.e2e-work/
 
 # python
 .venv/

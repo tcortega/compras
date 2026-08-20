@@ -10,7 +10,7 @@ export function Shell({
   current,
 }: {
   children: ReactNode
-  coverage: Coverage
+  coverage?: Coverage
   current?: string
 }) {
   return (

@@ -5,7 +5,6 @@ import { Shell } from '@/components/Shell'
 import { SourceLine } from '@/components/SourceLine'
 import { Stat } from '@/components/Stat'
 import { api, safeDetail } from '@/lib/api'
-import { METHOD_VERSION } from '@/lib/copy'
 import { formatCnpj, formatEsfera, formatNumber, formatPoder } from '@/lib/format'
 import { routes } from '@/lib/routes'
 import { contratacaoColumns, itemColumns } from '@/lib/tables'
@@ -58,7 +57,7 @@ export default async function OrgaoPage({ params }: { params: Promise<{ id: stri
         <Stat label="Contratações" value={formatNumber(cts.total)} coverage={cts.coverage} />
         <Stat label="Itens" value={formatNumber(its.total)} coverage={its.coverage} />
       </div>
-      <SourceLine methodologyVersion={METHOD_VERSION} />
+      <SourceLine methodologyVersion={its.coverage.methodologyVersion} />
 
       <section className="section">
         <div className="section-head">

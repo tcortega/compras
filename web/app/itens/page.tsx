@@ -26,11 +26,11 @@ export default async function ItensPage({ searchParams }: { searchParams: Promis
         q={req.q}
         extra={
           <>
-            <label className="field">
+            <label className="field field-uf">
               <span>UF</span>
-              <input name="uf" defaultValue={req.uf ?? ''} maxLength={2} />
+              <input name="uf" defaultValue={req.uf ?? ''} maxLength={2} autoCapitalize="characters" />
             </label>
-            <label className="field">
+            <label className="field field-quarter">
               <span>Trimestre</span>
               <input name="quarter" defaultValue={req.quarter ?? ''} placeholder="2024-Q2" />
             </label>

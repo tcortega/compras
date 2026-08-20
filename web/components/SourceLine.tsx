@@ -14,7 +14,7 @@ export function SourceLine({
 }) {
   return (
     <p className="source">
-        <span>Fonte: {source ? formatSource(source) : 'recorte ingerido'}</span>
+      <span>Fonte: {source ? formatSource(source) : 'recorte ingerido'}</span>
       <span>
         Snapshot {snapshotId}
         {publishedAt ? ` · publicado em ${formatDate(publishedAt)}` : ''}

@@ -3,7 +3,7 @@ import { coverageText } from '@/lib/coverage'
 import { routes } from '@/lib/routes'
 import type { Coverage } from '@/lib/types'
 
-export function CoverageBar({ coverage }: { coverage: Coverage }) {
+export function CoverageBar({ coverage }: { coverage?: Coverage }) {
   return (
     <div className="coverage-bar">
       <div className="wrap coverage-bar-inner">
@@ -11,7 +11,8 @@ export function CoverageBar({ coverage }: { coverage: Coverage }) {
           <strong>{copy.coverageIncomplete}</strong>
         </p>
         <p>
-          {coverageText(coverage)} · <a href={routes.cobertura}>Como lemos a cobertura</a>
+          {coverage ? `${coverageText(coverage)} · ` : null}
+          <a href={routes.cobertura}>Como lemos a cobertura</a>
         </p>
       </div>
     </div>

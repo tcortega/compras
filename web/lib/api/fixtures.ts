@@ -22,6 +22,8 @@ export const ids = {
   orgaoVilaVelha: '7c2e1f40-3205-4050-9a01-000000000014',
   orgaoCampina: '7c2e1f40-2504-4050-9a01-000000000015',
   orgaoCaucaia: '7c2e1f40-2303-4050-9a01-000000000016',
+  orgaoImperatriz: '7c2e1f40-2105-4050-9a01-000000000017',
+  orgaoArapiraca: '7c2e1f40-2700-4050-9a01-000000000018',
   fornFarma: '8d3f2a51-3306-4050-9a02-000000000001',
   fornAlim: '8d3f2a51-3306-4050-9a02-000000000002',
   fornComb: '8d3f2a51-3306-4050-9a02-000000000003',
@@ -51,6 +53,8 @@ export const ids = {
   ctVilaVelha: '9e4a3b62-3205-4050-9a03-000000000020',
   ctCampina: '9e4a3b62-2504-4050-9a03-000000000021',
   ctCaucaia: '9e4a3b62-2303-4050-9a03-000000000022',
+  ctImperatriz: '9e4a3b62-2105-4050-9a03-000000000023',
+  ctArapiraca: '9e4a3b62-2700-4050-9a03-000000000024',
 } as const
 
 function orgao(
@@ -238,6 +242,26 @@ export const orgaos: Orgao[] = [
     'CE',
     '2303709',
     'Caucaia',
+  ),
+  orgao(
+    ids.orgaoImperatriz,
+    '06158455000116',
+    'Município de Imperatriz',
+    'executivo',
+    T1,
+    'MA',
+    '2105302',
+    'Imperatriz',
+  ),
+  orgao(
+    ids.orgaoArapiraca,
+    '12198693000158',
+    'Município de Arapiraca',
+    'executivo',
+    T2,
+    'AL',
+    '2700300',
+    'Arapiraca',
   ),
 ]
 
@@ -586,6 +610,28 @@ export const contratacoes: Contratacao[] = [
     '2024-09-30T15:44:26.000Z',
     'compras.gov.br',
   ),
+  ct(
+    ids.ctImperatriz,
+    '06158455000116-1-000002/2024',
+    ids.orgaoImperatriz,
+    'pregão eletrônico',
+    'Aquisição de Projetos Literários direcionados a diferentes grupos etários: Educação Infantil, englobando crianças de 0 a 5 anos; Ensino Fundamental, Anos Iniciais, para alunos do 1º ao 5º ano; Ensino Fundamental Anos Finais, voltado aos estudantes do 6º ao 9º ano; além da Educação de Jovens e Adultos (EJA); também abarca a capacitação correspondente para atender os profissionais da educação, incluindo professores e  coordenadores, nas áreas da Educação Infantil',
+    2024,
+    28_380_165.45,
+    '2024-07-12T07:07:56.000Z',
+    'compras.gov.br',
+  ),
+  ct(
+    ids.ctArapiraca,
+    '12198693000158-1-000088/2024',
+    ids.orgaoArapiraca,
+    'dispensa',
+    'Aquisição de medicamento, paciente com hipertensão arterial sistêmica e Epilepsia generalizada não especificada.',
+    2024,
+    288.0,
+    '2024-10-02T10:49:57.000Z',
+    'compras.gov.br',
+  ),
 ]
 
 function item(
@@ -667,4 +713,6 @@ export const items: Item[] = [
   item(38, ids.ctVilaVelha, ids.fornPapel, 'Revelador Radiológico', '405620', 420, 'Frasco 475,00 ML', 'frasco', 7.48, 'ES', '2024-Q4', T2),
   item(39, ids.ctCampina, ids.fornPapel, 'Memória Ram', '618288', 4, 'Unidade', 'un', 209.99, 'PB', '2024-Q4', T2),
   item(40, ids.ctCaucaia, ids.fornPapel, 'Bloco receituário médico', '485443', 1000, 'Unidade', 'un', 8.55, 'CE', '2024-Q3', T1),
+  item(41, ids.ctImperatriz, ids.fornPapel, 'Livro Didático', '464257', 100, 'Unidade', 'un', 525.3, 'MA', '2024-Q3', T1),
+  item(42, ids.ctArapiraca, ids.fornPapel, 'Lamotrigina', '602451', 18, 'Comprimido', 'comprimido', 16.0, 'AL', '2024-Q4', T2),
 ]

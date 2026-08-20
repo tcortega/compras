@@ -21,7 +21,7 @@ export default async function CoberturaPage() {
         <p>{copy.coverageQuality}</p>
         <p>Lei 8.666/93 foi revogada em 30 de dezembro de 2023. 2024 é o primeiro ano de item municipal centralizado.</p>
         <p>Cobertura municipal nacional não é alcançável antes de cerca de 2027-2028. Nenhum agregado nesta interface afirma o contrário.</p>
-        <p>Todo total na tela mostra n, UF e trimestre. Se o trimestre varia no recorte, o chip diz vários trimestres.</p>
+        <p>Todo total na tela mostra n, UF, trimestre e a versão da metodologia. Se o trimestre varia no recorte, o chip diz vários trimestres.</p>
       </div>
     </Shell>
   )

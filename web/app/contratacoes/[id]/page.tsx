@@ -59,7 +59,6 @@ export default async function ContratacaoPage({ params }: { params: Promise<{ id
       <div className="stats">
         <Stat label="Homologado" value={<Money value={row.valorHomologado} />} coverage={its.coverage} />
         <Stat label="Itens" value={formatNumber(its.total)} coverage={its.coverage} />
-        <Stat label="Fonte" value={formatSource(row.source)} coverage={its.coverage} />
       </div>
       <SourceLine
         source={row.source}

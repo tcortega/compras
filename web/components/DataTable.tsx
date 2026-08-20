@@ -7,7 +7,14 @@ export type Column<T> = {
   key: string
   header: string
   align?: 'left' | 'right'
+  mono?: boolean
   cell: (row: T) => ReactNode
+}
+
+function cellClass(col: { align?: 'left' | 'right'; mono?: boolean }): string | undefined {
+  const parts = [col.align === 'right' ? 'num' : undefined, col.mono ? 'mono' : undefined]
+  const joined = parts.filter(Boolean).join(' ')
+  return joined || undefined
 }
 
 export function DataTable<T extends { id: string }>({
@@ -39,7 +46,7 @@ export function DataTable<T extends { id: string }>({
         <thead>
           <tr>
             {columns.map((col) => (
-              <th key={col.key} className={col.align === 'right' ? 'num' : undefined}>
+              <th key={col.key} className={cellClass(col)}>
                 {col.header}
               </th>
             ))}
@@ -49,7 +56,7 @@ export function DataTable<T extends { id: string }>({
           {rows.map((row) => (
             <tr key={row.id}>
               {columns.map((col) => (
-                <td key={col.key} className={col.align === 'right' ? 'num' : undefined}>
+                <td key={col.key} className={cellClass(col)}>
                   {col.cell(row)}
                 </td>
               ))}

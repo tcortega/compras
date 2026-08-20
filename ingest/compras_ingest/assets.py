@@ -8,6 +8,7 @@ from compras_ingest.sources.compras_gov import land_compras_gov
 from compras_ingest.sources.ocds import land_ocds
 from compras_ingest.sources.pncp_consulta import land_pncp_consulta
 from compras_ingest.sources.receita_cnpj import cnpj_basicos_from_frame, land_receita_cnpj
+from compras_ingest.sources.tce_sp_licitacao import land_tce_sp_licitacao
 
 
 def _settings() -> Settings:
@@ -62,6 +63,16 @@ def pncp_consulta(context: AssetExecutionContext) -> dict:
 
 
 @asset(
+    group_name="tier_b",
+    description="TCE-SP monthly licitacao CSV. Participant proposals. Internal only. Bauru slice. Not cubo SQL.",
+)
+def tce_sp_licitacao(context: AssetExecutionContext) -> dict:
+    ref, df = land_tce_sp_licitacao(_settings())
+    context.log.info(f"tce_sp_licitacao rows={df.height} sha={ref.sha256} public=False")
+    return {**ref.as_dict(), "internal": True, "explorer": False, "public": False}
+
+
+@asset(
     group_name="warehouse",
     description="Read landed parquet, normalize items, write Postgres entities and ClickHouse facts. Python never calls C#.",
 )
@@ -72,9 +83,11 @@ def warehouse_entities(
     receita_cnpj: dict,
     ocds_crosscheck: dict,
     pncp_consulta: dict,
+    tce_sp_licitacao: dict,
 ) -> dict:
     _ = ocds_crosscheck
     _ = pncp_consulta
+    _ = tce_sp_licitacao
     settings = _settings()
     store = LandingStore(settings)
     items, summary = warehouse_from_landing(settings, store, compras_gov, catalogo_cnbs, receita_cnpj)
@@ -108,6 +121,7 @@ defs = Definitions(
         compras_gov,
         ocds_crosscheck,
         pncp_consulta,
+        tce_sp_licitacao,
         warehouse_entities,
         tier1_flags,
     ]
@@ -121,13 +135,14 @@ def required_asset_keys() -> set[str]:
         "compras_gov",
         "ocds_crosscheck",
         "pncp_consulta",
+        "tce_sp_licitacao",
         "warehouse_entities",
         "tier1_flags",
     }
 
 
 def required_warehouse_parents() -> set[str]:
-    return {"compras_gov", "catalogo_cnbs", "receita_cnpj", "ocds_crosscheck", "pncp_consulta"}
+    return {"compras_gov", "catalogo_cnbs", "receita_cnpj", "ocds_crosscheck", "pncp_consulta", "tce_sp_licitacao"}
 
 
 def required_receita_parents() -> set[str]:

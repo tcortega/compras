@@ -40,6 +40,11 @@ class Settings:
     pncp_consulta_ibge: str
     pncp_consulta_year: int
     pncp_consulta_uf: str
+    tce_sp_path: Path | None
+    tce_sp_fetch: bool
+    tce_sp_year: int
+    tce_sp_month: int
+    tce_sp_municipio: str
     fixture_root: Path
 
     @classmethod
@@ -78,6 +83,11 @@ class Settings:
             pncp_consulta_ibge=os.environ.get("PNCP_CONSULTA_IBGE", "3306305"),
             pncp_consulta_year=int(os.environ.get("PNCP_CONSULTA_YEAR", os.environ.get("COMPRAS_GOV_YEAR", "2024"))),
             pncp_consulta_uf=os.environ.get("PNCP_CONSULTA_UF", "RJ"),
+            tce_sp_path=_opt_path("TCE_SP_PATH", fixture / "tce_sp_licitacao"),
+            tce_sp_fetch=_bool_env("TCE_SP_FETCH"),
+            tce_sp_year=int(os.environ.get("TCE_SP_YEAR", os.environ.get("COMPRAS_GOV_YEAR", "2024"))),
+            tce_sp_month=int(os.environ.get("TCE_SP_MONTH", "1")),
+            tce_sp_municipio=os.environ.get("TCE_SP_MUNICIPIO", "Bauru"),
             fixture_root=fixture,
         )
 

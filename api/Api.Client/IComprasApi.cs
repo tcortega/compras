@@ -72,6 +72,14 @@ public interface IComprasApi
 	[Post("/api/internal/flags")]
 	Task<IApiResponse<FlagRecord>> CreateFlag([Body] CreateFlagRequest body);
 
+	[Get("/api/internal/flags")]
+	Task<FlagPage> ListFlags(
+		[Query] string? kind = null,
+		[Query] FlagState? state = null,
+		[Query] Guid? itemId = null,
+		[Query] int? skip = null,
+		[Query] int? take = null);
+
 	[Get("/api/internal/flags/{id}")]
 	Task<IApiResponse<FlagRecord>> GetFlag(Guid id);
 

@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.Json;
 using Api.Client;
 using Api.Tests.Fixtures;
 
@@ -122,6 +123,221 @@ public sealed class PublicationTests(ComprasApiFixture fixture) : IClassFixture<
 	}
 
 	[Fact]
+	public async Task FullCycle_ListAfterFlagsExist()
+	{
+		var client = fixture.GetClient();
+		var now = fixture.Clock.GetCurrentInstant();
+		var qtyDelta = "qty * unit_price != total_value. qty=10 unit_price=5.00 product=50.00 total=40.00";
+		var sanctionDelta = "CNPJ present on CEIS/CNEP. Source: PNCP 3306305-1-000001/2024.";
+		var sourceUrl = "https://pncp.gov.br/app/editais/3306305/2024/1";
+
+		var qtyItem1 = await client.CreateFlag(new()
+		{
+			ItemId = SliceIds.Item1,
+			Kind = "qty_unit_price_neq_total",
+			Delta = qtyDelta,
+			SourceUrl = sourceUrl,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		});
+		Assert.NotNull(qtyItem1.Content);
+		var expectedQty1 = qtyItem1.Content with
+		{
+			State = FlagState.Detected,
+			DetectedAt = now,
+			NotifiedAt = null,
+			PublishAfter = null,
+			PublishedAt = null,
+			ReplyText = null,
+			RepliedAt = null,
+			Suspended = false,
+			Framing = "indicio requiring verification",
+		};
+		Assert.Equal(expectedQty1, qtyItem1.Content);
+		await ValidateFlag(client, expectedQty1);
+
+		var qtyItem2 = await client.CreateFlag(new()
+		{
+			ItemId = SliceIds.Item2,
+			Kind = "qty_unit_price_neq_total",
+			Delta = qtyDelta,
+			SourceUrl = sourceUrl,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		});
+		Assert.NotNull(qtyItem2.Content);
+		var expectedQty2 = qtyItem2.Content with
+		{
+			State = FlagState.Detected,
+			DetectedAt = now,
+			NotifiedAt = null,
+			PublishAfter = null,
+			PublishedAt = null,
+			ReplyText = null,
+			RepliedAt = null,
+			Suspended = false,
+			Framing = "indicio requiring verification",
+		};
+		Assert.Equal(expectedQty2, qtyItem2.Content);
+		await ValidateFlag(client, expectedQty2);
+
+		var sanction = await client.CreateFlag(new()
+		{
+			ItemId = SliceIds.Item1,
+			Kind = "sanctioned_ceis_cnep",
+			Delta = sanctionDelta,
+			SourceUrl = sourceUrl,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		});
+		Assert.NotNull(sanction.Content);
+		var expectedSanction = sanction.Content with
+		{
+			State = FlagState.Detected,
+			DetectedAt = now,
+			NotifiedAt = null,
+			PublishAfter = null,
+			PublishedAt = null,
+			ReplyText = null,
+			RepliedAt = null,
+			Suspended = false,
+			Framing = "indicio requiring verification",
+		};
+		Assert.Equal(expectedSanction, sanction.Content);
+		await ValidateFlag(client, expectedSanction);
+
+		var qtyCoverage = new Coverage
+		{
+			N = 2,
+			Uf = "",
+			Quarter = "",
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var listed = await client.ListFlags(kind: "qty_unit_price_neq_total", state: FlagState.Detected);
+		Assert.Equal(
+			new FlagPage
+			{
+				Items = [expectedQty1, expectedQty2],
+				Coverage = qtyCoverage,
+				Total = 2,
+			},
+			listed);
+
+		var listedSanction = await client.ListFlags(kind: "sanctioned_ceis_cnep", state: FlagState.Detected);
+		Assert.Equal(
+			new FlagPage
+			{
+				Items = [expectedSanction],
+				Coverage = qtyCoverage with { N = 1 },
+				Total = 1,
+			},
+			listedSanction);
+
+		var firstPage = await client.ListFlags(kind: "qty_unit_price_neq_total", take: 1);
+		Assert.Equal(
+			new FlagPage
+			{
+				Items = [expectedQty1],
+				Coverage = qtyCoverage,
+				Total = 2,
+			},
+			firstPage);
+
+		var secondPage = await client.ListFlags(kind: "qty_unit_price_neq_total", skip: 1, take: 1);
+		Assert.Equal(
+			new FlagPage
+			{
+				Items = [expectedQty2],
+				Coverage = qtyCoverage,
+				Total = 2,
+			},
+			secondPage);
+
+		var byItem = await client.ListFlags(
+			kind: "qty_unit_price_neq_total",
+			state: FlagState.Detected,
+			itemId: SliceIds.Item1);
+		Assert.Equal(
+			new FlagPage
+			{
+				Items = [expectedQty1],
+				Coverage = qtyCoverage with { N = 1 },
+				Total = 1,
+			},
+			byItem);
+
+		var reviewed = await client.ReviewFlag(expectedQty1.Id);
+		expectedQty1 = expectedQty1 with { State = FlagState.InternalReview };
+		Assert.Equal(expectedQty1, reviewed.Content);
+		await ValidateFlag(client, expectedQty1);
+
+		var stillDetected = await client.ListFlags(kind: "qty_unit_price_neq_total", state: FlagState.Detected);
+		Assert.Equal(
+			new FlagPage
+			{
+				Items = [expectedQty2],
+				Coverage = qtyCoverage with { N = 1 },
+				Total = 1,
+			},
+			stillDetected);
+
+		var inReview = await client.ListFlags(kind: "qty_unit_price_neq_total", state: FlagState.InternalReview);
+		Assert.Equal(
+			new FlagPage
+			{
+				Items = [expectedQty1],
+				Coverage = qtyCoverage with { N = 1 },
+				Total = 1,
+			},
+			inReview);
+
+		var explorer = await client.GetItem(SliceIds.Item1);
+		Assert.Equal(
+			new ItemDetail
+			{
+				Item = new()
+				{
+					Id = SliceIds.Item1,
+					ContratacaoId = SliceIds.Contratacao,
+					FornecedorId = SliceIds.Fornecedor,
+					Descricao = "Resma papel A4",
+					Catmat = "123456",
+					Catser = null,
+					Quantidade = 100m,
+					UnidadeMedida = "UN",
+					UnidadeCanonica = "un",
+					ValorUnitario = 8m,
+					ValorTotal = 800m,
+					Uf = SliceIds.Uf,
+					Quarter = SliceIds.Quarter,
+					SnapshotId = SliceIds.Snapshot,
+					MethodologyVersion = SliceIds.Methodology,
+					Coverage = new()
+					{
+						N = 2,
+						Uf = SliceIds.Uf,
+						Quarter = SliceIds.Quarter,
+						MethodologyVersion = SliceIds.Methodology,
+					},
+				},
+				OrgaoId = SliceIds.Orgao,
+				OrgaoRazaoSocial = "Municipio de Volta Redonda",
+				FornecedorRazaoSocial = "Papelaria Central Ltda",
+				ContratacaoPncpId = "3306305-1-000001/2024",
+			},
+			explorer.Content);
+
+		var http = fixture.CreateHttpClient();
+		await AssertExplorerJsonHasNoFlagField(http, $"/api/items/{SliceIds.Item1}");
+		await AssertExplorerJsonHasNoFlagField(
+			http,
+			$"/api/items?contratacaoId={SliceIds.Contratacao}&uf={SliceIds.Uf}&quarter={SliceIds.Quarter}");
+		await AssertExplorerJsonHasNoFlagField(http, $"/api/orgaos?q=Volta&quarter={SliceIds.Quarter}");
+		await AssertExplorerJsonHasNoFlagField(http, $"/api/fornecedores?q=Papelaria&uf={SliceIds.Uf}&quarter={SliceIds.Quarter}");
+		await AssertExplorerJsonHasNoFlagField(http, $"/api/contratacoes?orgaoId={SliceIds.Orgao}&ano=2024");
+	}
+
+	[Fact]
 	public async Task Publish_FromDetected_Conflict()
 	{
 		var client = fixture.GetClient();
@@ -196,5 +412,34 @@ public sealed class PublicationTests(ComprasApiFixture fixture) : IClassFixture<
 	{
 		var loaded = await client.GetFlag(expected.Id);
 		Assert.Equal(expected, loaded.Content);
+	}
+
+	private static async Task AssertExplorerJsonHasNoFlagField(HttpClient http, string path)
+	{
+		var json = await http.GetStringAsync(new Uri(http.BaseAddress!, path));
+		using var doc = JsonDocument.Parse(json);
+		AssertNoFlagProperty(doc.RootElement);
+	}
+
+	private static void AssertNoFlagProperty(JsonElement element)
+	{
+		if (element.ValueKind is JsonValueKind.Object)
+		{
+			foreach (var property in element.EnumerateObject())
+			{
+				if (property.Name.Contains("flag", StringComparison.OrdinalIgnoreCase))
+					Assert.Fail($"Explorer JSON must not carry {property.Name}.");
+
+				AssertNoFlagProperty(property.Value);
+			}
+
+			return;
+		}
+
+		if (element.ValueKind is not JsonValueKind.Array)
+			return;
+
+		foreach (var child in element.EnumerateArray())
+			AssertNoFlagProperty(child);
 	}
 }

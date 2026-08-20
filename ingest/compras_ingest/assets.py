@@ -6,7 +6,7 @@ from compras_ingest.settings import Settings
 from compras_ingest.sources.catalogo_cnbs import land_catalogo_cnbs
 from compras_ingest.sources.compras_gov import land_compras_gov
 from compras_ingest.sources.ocds import land_ocds
-from compras_ingest.sources.receita_cnpj import land_receita_cnpj
+from compras_ingest.sources.receita_cnpj import cnpj_basicos_from_frame, land_receita_cnpj
 
 
 def _settings() -> Settings:
@@ -20,17 +20,6 @@ def catalogo_cnbs(context: AssetExecutionContext) -> dict:
     return ref.as_dict()
 
 
-@asset(group_name="tier_a", description="Receita CNPJ dump. Download stubbed behind RECEITA_CNPJ_PATH.")
-def receita_cnpj(context: AssetExecutionContext) -> dict:
-    settings = _settings()
-    if settings.receita_cnpj_path is None:
-        context.log.warning("RECEITA_CNPJ_PATH unset. Skip download. Asset keeps landing shape.")
-        return {"source": "receita_cnpj", "skipped": True}
-    ref, df = land_receita_cnpj(settings)
-    context.log.info(f"receita_cnpj rows={df.height} sha={ref.sha256}")
-    return ref.as_dict()
-
-
 @asset(group_name="tier_a", description="Compras.gov.br bulk CSVs. Primary source.")
 def compras_gov(context: AssetExecutionContext) -> dict:
     ref, df = land_compras_gov(_settings())
@@ -38,24 +27,24 @@ def compras_gov(context: AssetExecutionContext) -> dict:
     return ref.as_dict()
 
 
-@asset(
-    group_name="tier_a",
-    description="OCP OCDS feed. Schema cross-check only. Not primary.",
-    deps=[compras_gov],
-)
-def ocds_crosscheck(context: AssetExecutionContext, compras_gov: dict) -> dict:
-    _ = compras_gov
+@asset(group_name="tier_a", description="Receita CNPJ dump. Stream-filter to compras slice. CPF masked.")
+def receita_cnpj(context: AssetExecutionContext, compras_gov: dict) -> dict:
     settings = _settings()
     store = LandingStore(settings)
-    compras_ids: set[str] = set()
-    for key in store.list_parquet("compras_gov"):
-        df = store.read_parquet(key)
-        col = "numerocontrolepncp" if "numerocontrolepncp" in df.columns else None
-        if col:
-            compras_ids.update(str(v) for v in df[col].to_list() if v)
-    if settings.ocds_path is None:
-        context.log.warning("OCDS_PATH unset. Cross-check skipped.")
-        return {"role": "schema_crosscheck", "primary": False, "skipped": True}
+    basicos = _basicos_from_ref(store, compras_gov)
+    ref, df = land_receita_cnpj(settings, store, cnpj_basicos=basicos)
+    context.log.info(f"receita_cnpj rows={df.height} sha={ref.sha256} basicos={len(basicos)}")
+    return ref.as_dict()
+
+
+@asset(
+    group_name="tier_a",
+    description="OCP OCDS republished feed (publication 157). Schema cross-check. Not primary.",
+)
+def ocds_crosscheck(context: AssetExecutionContext, compras_gov: dict) -> dict:
+    settings = _settings()
+    store = LandingStore(settings)
+    compras_ids = _compras_ids(store, compras_gov)
     ref, report = land_ocds(settings, compras_ids, store)
     context.log.info(f"ocds sha={ref.sha256} report={report}")
     return {**ref.as_dict(), **report}
@@ -70,7 +59,9 @@ def warehouse_entities(
     compras_gov: dict,
     catalogo_cnbs: dict,
     receita_cnpj: dict,
+    ocds_crosscheck: dict,
 ) -> dict:
+    _ = ocds_crosscheck
     settings = _settings()
     store = LandingStore(settings)
     items, summary = warehouse_from_landing(settings, store, compras_gov, catalogo_cnbs, receita_cnpj)
@@ -114,7 +105,15 @@ def required_asset_keys() -> set[str]:
 
 
 def required_warehouse_parents() -> set[str]:
-    return {"compras_gov", "catalogo_cnbs", "receita_cnpj"}
+    return {"compras_gov", "catalogo_cnbs", "receita_cnpj", "ocds_crosscheck"}
+
+
+def required_receita_parents() -> set[str]:
+    return {"compras_gov"}
+
+
+def required_ocds_parents() -> set[str]:
+    return {"compras_gov"}
 
 
 def required_detect_parents() -> set[str]:
@@ -128,14 +127,36 @@ def assert_asset_graph() -> list[str]:
     if missing:
         raise RuntimeError(f"dagster defs missing {missing}")
     by_name = {k.to_user_string(): k for k in graph.get_all_asset_keys()}
-    warehouse_parents = {p.to_user_string() for p in graph.get(by_name["warehouse_entities"]).parent_keys}
-    detect_parents = {p.to_user_string() for p in graph.get(by_name["tier1_flags"]).parent_keys}
-    if not required_warehouse_parents().issubset(warehouse_parents):
-        raise RuntimeError(
-            f"warehouse_entities must depend on landed assets, missing {required_warehouse_parents() - warehouse_parents}"
-        )
-    if not required_detect_parents().issubset(detect_parents):
-        raise RuntimeError(
-            f"tier1_flags must depend on warehouse_entities, missing {required_detect_parents() - detect_parents}"
-        )
+
+    def parents(name: str) -> set[str]:
+        return {p.to_user_string() for p in graph.get(by_name[name]).parent_keys}
+
+    checks = (
+        ("warehouse_entities", required_warehouse_parents()),
+        ("receita_cnpj", required_receita_parents()),
+        ("ocds_crosscheck", required_ocds_parents()),
+        ("tier1_flags", required_detect_parents()),
+    )
+    for name, need in checks:
+        have = parents(name)
+        if not need.issubset(have):
+            raise RuntimeError(f"{name} missing parents {need - have}")
     return keys
+
+
+def _basicos_from_ref(store: LandingStore, compras: dict) -> set[str]:
+    key = compras.get("key")
+    if not key:
+        return set()
+    return cnpj_basicos_from_frame(store.read_parquet(str(key)))
+
+
+def _compras_ids(store: LandingStore, compras: dict) -> set[str]:
+    key = compras.get("key")
+    if not key:
+        return set()
+    df = store.read_parquet(str(key))
+    col = "numerocontrolepncp" if "numerocontrolepncp" in df.columns else None
+    if not col:
+        return set()
+    return {str(v) for v in df[col].to_list() if v}

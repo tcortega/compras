@@ -11,7 +11,7 @@ from compras_ingest.settings import Settings
 from compras_ingest.sources.catalogo_cnbs import land_catalogo_cnbs
 from compras_ingest.sources.compras_gov import land_compras_gov
 from compras_ingest.sources.ocds import land_ocds
-from compras_ingest.sources.receita_cnpj import land_receita_cnpj
+from compras_ingest.sources.receita_cnpj import cnpj_basicos_from_frame, land_receita_cnpj
 from compras_ingest.warehouse import apply_schema, write_entities, write_facts, write_flags
 from compras_normalize.catalog import load_catalog
 from compras_normalize.items import normalize_frame
@@ -32,17 +32,13 @@ class PipelineResult:
 def run_compras_slice(settings: Settings, store: LandingStore | None = None) -> PipelineResult:
     store = store or LandingStore(settings)
     catalog_ref, _catalog_df = land_catalogo_cnbs(settings, store)
-    receita_ref: dict = {"source": "receita_cnpj", "skipped": True}
-    if settings.receita_cnpj_path is not None:
-        landed_cnpj, _cnpj_df = land_receita_cnpj(settings, store)
-        receita_ref = landed_cnpj.as_dict()
     landing, raw = land_compras_gov(settings, store)
     compras_ids = set()
     if "numerocontrolepncp" in raw.columns:
         compras_ids = {str(v) for v in raw["numerocontrolepncp"].to_list() if v}
-    ocds_report = {}
-    if settings.ocds_path is not None:
-        _, ocds_report = land_ocds(settings, compras_ids, store)
+    landed_cnpj, _cnpj_df = land_receita_cnpj(settings, store, cnpj_basicos=cnpj_basicos_from_frame(raw))
+    receita_ref = landed_cnpj.as_dict()
+    _, ocds_report = land_ocds(settings, compras_ids, store)
     items, warehouse = warehouse_from_landing(
         settings,
         store,

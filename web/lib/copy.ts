@@ -35,12 +35,14 @@ export const SLICE_MUNICIPIOS = [
   { nome: 'Taubaté', uf: 'SP', ibge: '3554102' },
   { nome: 'Cascavel', uf: 'PR', ibge: '4104808' },
   { nome: 'Juiz de Fora', uf: 'MG', ibge: '3136702' },
+  { nome: 'Foz do Iguaçu', uf: 'PR', ibge: '4108304' },
+  { nome: 'Santa Maria', uf: 'RS', ibge: '4316907' },
 ] as const
 
-export const SLICE_BRAND = 'Vinte e sete municípios · 2024'
+export const SLICE_BRAND = 'Vinte e nove municípios · 2024'
 
 export const SLICE_LABEL =
-  'Volta Redonda e Niterói (RJ), Bauru (SP), Caxias do Sul (RS), Joinville (SC), Uberlândia (MG), Londrina (PR), Feira de Santana (BA), Caruaru (PE), Anápolis (GO), Vila Velha (ES), Campina Grande (PB), Caucaia (CE), Imperatriz (MA), Arapiraca (AL), Dourados (MS), Marabá (PA), Várzea Grande (MT), Ji-Paraná (RO), Parnamirim (RN), Cruzeiro do Sul (AC), Santana (AP), Rorainópolis (RR), Maringá (PR), Taubaté (SP), Cascavel (PR) e Juiz de Fora (MG) · 2024'
+  'Volta Redonda e Niterói (RJ), Bauru (SP), Caxias do Sul (RS), Joinville (SC), Uberlândia (MG), Londrina (PR), Feira de Santana (BA), Caruaru (PE), Anápolis (GO), Vila Velha (ES), Campina Grande (PB), Caucaia (CE), Imperatriz (MA), Arapiraca (AL), Dourados (MS), Marabá (PA), Várzea Grande (MT), Ji-Paraná (RO), Parnamirim (RN), Cruzeiro do Sul (AC), Santana (AP), Rorainópolis (RR), Maringá (PR), Taubaté (SP), Cascavel (PR), Juiz de Fora (MG), Foz do Iguaçu (PR) e Santa Maria (RS) · 2024'
 
 export const copy = {
   coverageIncomplete:

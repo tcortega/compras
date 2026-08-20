@@ -1263,8 +1263,8 @@ def _assert_cobid_suite(settings: Settings) -> None:
     edges = fetch_cobid_edges(settings)
     if not edges:
         raise SystemExit("co_bid_edge is empty")
-    cover_pair = {e for e in edges if e.get("licitacaoId") in set(expected["cover_licitacoes"])}
-    if not cover_pair:
+    cover_ids = set(expected["cover_licitacoes"])
+    if not any(e.get("licitacaoId") in cover_ids for e in edges):
         raise SystemExit("missing COVER co_bid edges")
     for row in edges:
         left = str(row.get("leftCnpj") or "")

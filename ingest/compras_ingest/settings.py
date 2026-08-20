@@ -35,6 +35,11 @@ class Settings:
     receita_cnpj_fetch: bool
     receita_cnpj_basicos: tuple[str, ...]
     sanctions_dir: Path | None
+    pncp_consulta_dir: Path | None
+    pncp_consulta_fetch: bool
+    pncp_consulta_ibge: str
+    pncp_consulta_year: int
+    pncp_consulta_uf: str
     fixture_root: Path
 
     @classmethod
@@ -68,6 +73,11 @@ class Settings:
             receita_cnpj_fetch=_bool_env("RECEITA_CNPJ_FETCH"),
             receita_cnpj_basicos=_csv_env("RECEITA_CNPJ_BASICOS"),
             sanctions_dir=_opt_path("SANCTIONS_DIR", fixture / "sanctions"),
+            pncp_consulta_dir=_opt_path("PNCP_CONSULTA_DIR", fixture / "pncp_consulta"),
+            pncp_consulta_fetch=_bool_env("PNCP_CONSULTA_FETCH"),
+            pncp_consulta_ibge=os.environ.get("PNCP_CONSULTA_IBGE", "3306305"),
+            pncp_consulta_year=int(os.environ.get("PNCP_CONSULTA_YEAR", os.environ.get("COMPRAS_GOV_YEAR", "2024"))),
+            pncp_consulta_uf=os.environ.get("PNCP_CONSULTA_UF", "RJ"),
             fixture_root=fixture,
         )
 

@@ -16,7 +16,7 @@ from compras_ingest.pipeline import _collect_landing_records, land_second_snapsh
 from compras_ingest.settings import Settings
 from compras_ingest.sources.ocds import land_ocds
 from compras_ingest.sources.receita_cnpj import cnpj_basicos_from_frame, land_receita_cnpj
-from compras_ingest.warehouse import fetch_contratacao, fetch_items_for, fetch_one_orgao, fetch_raw_text_blobs, write_flags
+from compras_ingest.warehouse import fetch_contratacao, fetch_flags, fetch_items_for, fetch_one_orgao, fetch_raw_text_blobs, write_flags
 
 
 ORGAO_CNPJ = "29477000000180"
@@ -48,12 +48,23 @@ def main() -> int:
     landing_records = _collect_landing_records(store, "compras_gov")
     flags = run_tier1(result.items, landing_records=landing_records, sanctions=None)
     write_flags(settings, flags, result.items)
-    kinds = set(result.flags["kind"].to_list()) if result.flags.height else set()
-    kinds.update(flags["kind"].to_list() if flags.height else [])
+    stored = fetch_flags(settings, state="detected")
+    kinds = {str(row["kind"]) for row in stored}
     if "qty_unit_price_neq_total" not in kinds:
-        raise SystemExit("expected qty_unit_price_neq_total flag from fixture")
+        raise SystemExit("warehouse missing qty_unit_price_neq_total after write_flags")
     if "retroactive_edit" not in kinds:
-        raise SystemExit("expected retroactive_edit after second landing")
+        raise SystemExit("warehouse missing retroactive_edit after second landing")
+    for row in stored:
+        if not row.get("itemId"):
+            raise SystemExit("warehouse flag missing itemId")
+        if not row.get("delta"):
+            raise SystemExit("warehouse flag missing delta")
+        if not row.get("snapshotId"):
+            raise SystemExit("warehouse flag missing snapshotId")
+        if not row.get("methodologyVersion"):
+            raise SystemExit("warehouse flag missing methodologyVersion")
+        if str(row.get("state") or "") != "detected":
+            raise SystemExit(f"warehouse flag state is not detected: {row.get('state')}")
     blobs = fetch_raw_text_blobs(settings)
     for source in LANDED_SOURCES:
         for key in store.list_parquet(source):

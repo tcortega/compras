@@ -99,6 +99,7 @@ public sealed class Flag : ITimestamped, ISuspendable
 			builder.ToTable("flag");
 			builder.HasIndex(x => x.ItemId);
 			builder.HasIndex(x => x.State);
+			builder.HasIndex(x => x.Kind);
 			builder.Property(x => x.Kind).HasMaxLength(64);
 			builder.Property(x => x.State).HasConversion(ClosedSet.Text<FlagState>()).HasMaxLength(32);
 			builder.Property(x => x.Delta).HasMaxLength(4000);

@@ -88,3 +88,4 @@ CREATE INDEX IF NOT EXISTS item_peer_idx ON item (catmat, uf, quarter);
 CREATE INDEX IF NOT EXISTS contratacao_orgao_idx ON contratacao ("orgaoId");
 CREATE INDEX IF NOT EXISTS flag_item_idx ON flag ("itemId");
 CREATE INDEX IF NOT EXISTS flag_state_idx ON flag (state);
+CREATE INDEX IF NOT EXISTS flag_kind_idx ON flag (kind);

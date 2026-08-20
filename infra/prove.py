@@ -90,8 +90,44 @@ def main() -> int:
     if "volta redonda" not in orgaos_html.casefold():
         raise SystemExit("web /orgaos missing Volta Redonda")
 
+    flags = get_json(f"{API}/api/internal/flags?state=detected&skip=0&take=50")
+    flag_coverage = flags.get("coverage") or {}
+    flag_n = flag_coverage.get("n")
+    if not isinstance(flag_n, int) or flag_n < 1:
+        raise SystemExit(f"internal flags coverage.n missing or empty: {flag_coverage}")
+    if not str(flag_coverage.get("methodologyVersion") or ""):
+        raise SystemExit("internal flags coverage missing methodologyVersion")
+    flag_rows = flags.get("items") or []
+    if not flag_rows:
+        raise SystemExit("internal flags returned no rows")
+    kinds = {str(row.get("kind") or "") for row in flag_rows}
+    if "qty_unit_price_neq_total" not in kinds:
+        raise SystemExit(f"internal flags missing tier1 qty fact: {sorted(kinds)}")
+    for row in flag_rows:
+        if str(row.get("state") or "") != "detected":
+            raise SystemExit(f"internal flag state is not detected: {row.get('state')}")
+        if not row.get("itemId"):
+            raise SystemExit("internal flag missing itemId")
+        if not row.get("delta"):
+            raise SystemExit("internal flag missing delta")
+        if not row.get("snapshotId"):
+            raise SystemExit("internal flag missing snapshotId")
+        if not row.get("methodologyVersion"):
+            raise SystemExit("internal flag missing methodologyVersion")
+    paged = get_json(f"{API}/api/internal/flags?state=detected&take=1")
+    if len(paged.get("items") or []) != 1:
+        raise SystemExit("internal flags take=1 did not page")
+    if (paged.get("coverage") or {}).get("n") != flag_n:
+        raise SystemExit("internal flags page coverage.n changed")
+    qty = get_json(f"{API}/api/internal/flags?kind=qty_unit_price_neq_total&state=detected")
+    if not (qty.get("items") or []):
+        raise SystemExit("internal flags kind filter missed qty_unit_price_neq_total")
+    deny_flags(orgaos, f"{API}/api/orgaos")
+    deny_flags(items, f"{API}/api/items")
+    deny_flags(item, f"{API}/api/items/{iid}")
+
     print("compose prove ok")
-    print(f"orgao={razao} ibge={orgao.get('municipioIbge')} items={n}")
+    print(f"orgao={razao} ibge={orgao.get('municipioIbge')} items={n} flags={flag_n}")
     return 0
 
 

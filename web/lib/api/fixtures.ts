@@ -42,6 +42,8 @@ export const ids = {
   orgaoGovernadorValadares: '7c2e1f40-3127-4050-9a01-000000000034',
   orgaoCanoas: '7c2e1f40-4304-4050-9a01-000000000035',
   orgaoLages: '7c2e1f40-4203-4050-9a01-000000000036',
+  orgaoSantarem: '7c2e1f40-1506-4050-9a01-000000000037',
+  orgaoRioVerde: '7c2e1f40-5218-4050-9a01-000000000038',
   fornFarma: '8d3f2a51-3306-4050-9a02-000000000001',
   fornAlim: '8d3f2a51-3306-4050-9a02-000000000002',
   fornComb: '8d3f2a51-3306-4050-9a02-000000000003',
@@ -91,6 +93,8 @@ export const ids = {
   ctGovernadorValadares: '9e4a3b62-3127-4050-9a03-000000000040',
   ctCanoas: '9e4a3b62-4304-4050-9a03-000000000041',
   ctLages: '9e4a3b62-4203-4050-9a03-000000000042',
+  ctSantarem: '9e4a3b62-1506-4050-9a03-000000000043',
+  ctRioVerde: '9e4a3b62-5218-4050-9a03-000000000044',
 } as const
 
 function orgao(
@@ -478,6 +482,26 @@ export const orgaos: Orgao[] = [
     'SC',
     '4209300',
     'Lages',
+  ),
+  orgao(
+    ids.orgaoSantarem,
+    '05182233000761',
+    'Município de Santarém',
+    'executivo',
+    T2,
+    'PA',
+    '1506807',
+    'Santarém',
+  ),
+  orgao(
+    ids.orgaoRioVerde,
+    '02056729000105',
+    'Município de Rio Verde',
+    'executivo',
+    T2,
+    'GO',
+    '5218805',
+    'Rio Verde',
   ),
 ]
 
@@ -1046,6 +1070,28 @@ export const contratacoes: Contratacao[] = [
     '2024-09-04T07:15:38.000Z',
     'compras.gov.br',
   ),
+  ct(
+    ids.ctSantarem,
+    '05182233000761-1-000020/2024',
+    ids.orgaoSantarem,
+    'pregao eletronico',
+    'Construção de unidade Básica de Saúde (UBS) Tapará Grande - Modelo Municipal',
+    2024,
+    326_424.56,
+    '2024-08-29T07:18:41.000Z',
+    'compras.gov.br',
+  ),
+  ct(
+    ids.ctRioVerde,
+    '02056729000105-1-001376/2024',
+    ids.orgaoRioVerde,
+    'dispensa',
+    'Aquisição de 10 Lâmpada de LED tubular T8 mínimo 40W bivolt luz branca 240 cm para repor as lâmpadas queimadas da C.E.D (central de eliminação de documentos) atendendo assim as necessidades da controladoria municipal.',
+    2024,
+    450.0,
+    '2024-11-06T17:03:48.000Z',
+    'compras.gov.br',
+  ),
 ]
 
 function item(
@@ -1147,4 +1193,6 @@ export const items: Item[] = [
   item(58, ids.ctGovernadorValadares, ids.fornPapel, 'Cartão controle acesso', '618284', 30000, 'Unidade', 'un', 1.45, 'MG', '2024-Q4', T2),
   item(59, ids.ctCanoas, ids.fornPapel, 'Clorímetro', '247827', 1, 'Unidade', 'un', 1667.07, 'RS', '2024-Q4', T2),
   item(60, ids.ctLages, ids.fornPapel, 'Sacola', '229690', 30, 'Unidade', 'un', 97.0, 'SC', '2024-Q3', T2),
+  item(61, ids.ctSantarem, ids.fornPapel, 'Obras Civis Públicas ( Construção )', '5622', 1, 'UN', 'un', 326424.56, 'PA', '2024-Q3', T2),
+  item(62, ids.ctRioVerde, ids.fornPapel, 'Lâmpada refletora', '485659', 10, 'Unidade', 'un', 45.0, 'GO', '2024-Q4', T2),
 ]

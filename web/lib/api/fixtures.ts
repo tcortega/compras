@@ -30,6 +30,8 @@ export const ids = {
   orgaoJiParana: '7c2e1f40-1100-4050-9a01-000000000022',
   orgaoParnamirim: '7c2e1f40-2403-4050-9a01-000000000023',
   orgaoCruzeiroDoSul: '7c2e1f40-1200-4050-9a01-000000000024',
+  orgaoSantana: '7c2e1f40-1600-4050-9a01-000000000025',
+  orgaoRorainopolis: '7c2e1f40-1400-4050-9a01-000000000026',
   fornFarma: '8d3f2a51-3306-4050-9a02-000000000001',
   fornAlim: '8d3f2a51-3306-4050-9a02-000000000002',
   fornComb: '8d3f2a51-3306-4050-9a02-000000000003',
@@ -67,6 +69,8 @@ export const ids = {
   ctJiParana: '9e4a3b62-1100-4050-9a03-000000000028',
   ctParnamirim: '9e4a3b62-2403-4050-9a03-000000000029',
   ctCruzeiroDoSul: '9e4a3b62-1200-4050-9a03-000000000030',
+  ctSantana: '9e4a3b62-1600-4050-9a03-000000000031',
+  ctRorainopolis: '9e4a3b62-1400-4050-9a03-000000000032',
 } as const
 
 function orgao(
@@ -334,6 +338,26 @@ export const orgaos: Orgao[] = [
     'AC',
     '1200203',
     'Cruzeiro do Sul',
+  ),
+  orgao(
+    ids.orgaoSantana,
+    '23066640000108',
+    'Município de Santana',
+    'executivo',
+    T2,
+    'AP',
+    '1600600',
+    'Santana',
+  ),
+  orgao(
+    ids.orgaoRorainopolis,
+    '01613031000180',
+    'Município de Rorainópolis',
+    'executivo',
+    T2,
+    'RR',
+    '1400472',
+    'Rorainópolis',
   ),
 ]
 
@@ -770,6 +794,28 @@ export const contratacoes: Contratacao[] = [
     '2024-07-19T07:14:02.000Z',
     'compras.gov.br',
   ),
+  ct(
+    ids.ctSantana,
+    '23066640000108-1-000002/2024',
+    ids.orgaoSantana,
+    'pregao presencial',
+    'Contratação de instituição financeira para a prestação de serviços de processamento dos pagamentos ativos originados da folha de salários dos servidores efetivos e comissionados, temporários, de programas, estagiários e demais pessoas que mantenham vínculo de remuneração com a Administração Direta do Poder Executivo Municipal, em caráter de exclusividade, e concessão de crédito consignado, em caráter preferencial.',
+    2024,
+    1.0,
+    '2024-11-08T14:01:11.000Z',
+    'compras.gov.br',
+  ),
+  ct(
+    ids.ctRorainopolis,
+    '01613031000180-1-000001/2024',
+    ids.orgaoRorainopolis,
+    'pregao presencial',
+    'Aquisição de veículos Ambulâncias Tipo B – Suporte Básico, padrão SAMU e Tipo A (Furgão), remoção simples, para atender as demandas da Secretaria Municipal de Saúde (SEMSA).',
+    2024,
+    1_404_000.0,
+    '2024-10-31T13:53:46.000Z',
+    'compras.gov.br',
+  ),
 ]
 
 function item(
@@ -859,4 +905,6 @@ export const items: Item[] = [
   item(46, ids.ctJiParana, ids.fornPapel, 'Assinatura de banco de imagens', '30130', 1, 'Unidade', 'un', 38540.0, 'RO', '2024-Q4', T2),
   item(47, ids.ctParnamirim, ids.fornPapel, 'Automóvel', '430273', 1, 'Unidade', 'un', 78500.0, 'RN', '2024-Q3', T2),
   item(48, ids.ctCruzeiroDoSul, ids.fornPapel, 'Grade niveladora', '463162', 1, 'Unidade', 'un', 26784.45, 'AC', '2024-Q3', T1),
+  item(49, ids.ctSantana, ids.fornPapel, 'Prestação de serviços bancários', null, 1, 'UN', 'un', 1.0, 'AP', '2024-Q4', T2),
+  item(50, ids.ctRorainopolis, ids.fornPapel, 'Ambulância', '621643', 3, 'Unidade', 'un', 324000.0, 'RR', '2024-Q4', T2),
 ]

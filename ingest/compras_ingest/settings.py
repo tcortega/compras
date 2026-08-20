@@ -29,6 +29,8 @@ class Settings:
     compras_gov_dir: Path | None
     compras_gov_base: str
     compras_gov_year: int
+    compras_gov_years: tuple[int, ...]
+    compras_gov_fetch: bool
     ocds_path: Path | None
     ocds_fetch: bool
     ocds_year: int
@@ -79,6 +81,8 @@ class Settings:
                 "COMPRAS_GOV_BASE", "https://repositorio.dados.gov.br/seges/comprasgov"
             ),
             compras_gov_year=int(os.environ.get("COMPRAS_GOV_YEAR", "2024")),
+            compras_gov_years=_years_env(),
+            compras_gov_fetch=_bool_env("COMPRAS_GOV_FETCH"),
             ocds_path=_opt_path("OCDS_PATH", fixture / "ocds" / "releases.jsonl"),
             ocds_fetch=_bool_env("OCDS_FETCH"),
             ocds_year=int(os.environ.get("OCDS_YEAR", os.environ.get("COMPRAS_GOV_YEAR", "2024"))),
@@ -120,6 +124,15 @@ def _bool_env(key: str) -> bool:
 
 def _csv_env(key: str) -> tuple[str, ...]:
     return tuple(p.strip() for p in os.environ.get(key, "").split(",") if p.strip())
+
+
+def _years_env() -> tuple[int, ...]:
+    raw = os.environ.get("COMPRAS_GOV_YEARS", "").strip()
+    if raw:
+        years = tuple(int(p) for p in raw.split(",") if p.strip())
+        if years:
+            return years
+    return (2024, 2025, 2026)
 
 
 def _opt_date(key: str) -> date | None:

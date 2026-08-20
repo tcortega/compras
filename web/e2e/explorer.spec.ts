@@ -184,7 +184,11 @@ test('home cards usam o n da coleção, não o n de itens', async ({ page }) => 
   await expect(page.getByText(/UF mista/).first()).toBeVisible()
   await expect(page.getByText(/Caxias do Sul \(RS\), Joinville \(SC\), Uberlândia \(MG\), Londrina \(PR\), Feira de Santana \(BA\), Caruaru \(PE\), Anápolis \(GO\), Vila Velha \(ES\), Campina Grande \(PB\), Caucaia \(CE\), Imperatriz \(MA\), Arapiraca \(AL\), Dourados \(MS\), Marabá \(PA\), Várzea Grande \(MT\), Ji-Paraná \(RO\), Parnamirim \(RN\), Cruzeiro do Sul \(AC\), Santana \(AP\), Rorainópolis \(RR\), Maringá \(PR\), Taubaté \(SP\), Cascavel \(PR\), Juiz de Fora \(MG\), Foz do Iguaçu \(PR\), Santa Maria \(RS\), Montes Claros \(MG\), Governador Valadares \(MG\), Canoas \(RS\), Lages \(SC\), Santarém \(PA\), Rio Verde \(GO\), Paulo Afonso \(BA\), São Lourenço da Mata \(PE\), Crato \(CE\), Ariquemes \(RO\), Colatina \(ES\), Castanhal \(PA\), Divinópolis \(MG\), Petrópolis \(RJ\), Ipatinga \(MG\), Macaé \(RJ\), Santa Luzia \(MG\), Nova Friburgo \(RJ\), Marília \(SP\), Balneário Camboriú \(SC\), Itaquaquecetuba \(SP\), Praia Grande \(SP\), São José dos Pinhais \(PR\), Suzano \(SP\), Guarujá \(SP\), Cotia \(SP\), Parauapebas \(PA\), Jacareí \(SP\), Itaboraí \(RJ\) e Maricá \(RJ\)/).first()).toBeVisible()
   const brand = page.locator('.brand-kicker')
-  await expect(brand).toHaveText(/cinquenta e nove municípios · 2024/i)
+  if (againstCompose) {
+    await expect(brand).toHaveText(/cinquenta e nove municípios · 2024-2026 ytd/i)
+  } else {
+    await expect(brand).toHaveText(/cinquenta e nove municípios · 2024$/i)
+  }
   await expect(brand).not.toHaveText(/Caxias do Sul|Uberlândia|Londrina|Feira de Santana|Caruaru|Anápolis|Vila Velha|Campina Grande|Caucaia|Imperatriz|Arapiraca|Dourados|Marabá|Várzea Grande|Ji-Paraná|Parnamirim|Cruzeiro do Sul|Santana|Rorainópolis|Maringá|Taubaté|Cascavel|Juiz de Fora|Foz do Iguaçu|Santa Maria|Montes Claros|Governador Valadares|Canoas|Lages|Santarém|Rio Verde|Paulo Afonso|São Lourenço|Crato|Ariquemes|Colatina|Castanhal|Divinópolis|Petrópolis|Ipatinga|Macaé|Santa Luzia|Nova Friburgo|Marília|Balneário|Itaquaquecetuba|Praia Grande|São José|Suzano|Guarujá|Cotia|Parauapebas|Jacareí|Itaboraí|Maricá/)
   const brandBox = await brand.boundingBox()
   const masthead = await page.locator('.masthead-inner').boundingBox()
@@ -604,6 +608,9 @@ test('vazio, 404 e páginas estáticas mantêm cobertura e o banimento', async (
   await expect(page.getByText(/3302700/).first()).toBeVisible()
   await expect(page.getByText(/não é um total nacional/).first()).toBeVisible()
   await expect(page.getByText(/UF mista/).first()).toBeVisible()
+  if (againstCompose) {
+    await expect(page.getByText(/2024-2026 YTD/i).first()).toBeVisible()
+  }
   await assertCoverageAndBan(page)
 
   await page.goto('/metodologia')

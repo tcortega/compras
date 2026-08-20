@@ -69,10 +69,32 @@ export const SLICE_MUNICIPIOS = [
   { nome: 'Maricá', uf: 'RJ', ibge: '3302700' },
 ] as const
 
-export const SLICE_BRAND = 'Cinquenta e nove municípios · 2024'
+export const SLICE_YEAR_CANDIDATES = [2024, 2025, 2026] as const
 
-export const SLICE_LABEL =
-  'Volta Redonda e Niterói (RJ), Bauru (SP), Caxias do Sul (RS), Joinville (SC), Uberlândia (MG), Londrina (PR), Feira de Santana (BA), Caruaru (PE), Anápolis (GO), Vila Velha (ES), Campina Grande (PB), Caucaia (CE), Imperatriz (MA), Arapiraca (AL), Dourados (MS), Marabá (PA), Várzea Grande (MT), Ji-Paraná (RO), Parnamirim (RN), Cruzeiro do Sul (AC), Santana (AP), Rorainópolis (RR), Maringá (PR), Taubaté (SP), Cascavel (PR), Juiz de Fora (MG), Foz do Iguaçu (PR), Santa Maria (RS), Montes Claros (MG), Governador Valadares (MG), Canoas (RS), Lages (SC), Santarém (PA), Rio Verde (GO), Paulo Afonso (BA), São Lourenço da Mata (PE), Crato (CE), Ariquemes (RO), Colatina (ES), Castanhal (PA), Divinópolis (MG), Petrópolis (RJ), Ipatinga (MG), Macaé (RJ), Santa Luzia (MG), Nova Friburgo (RJ), Marília (SP), Balneário Camboriú (SC), Itaquaquecetuba (SP), Praia Grande (SP), São José dos Pinhais (PR), Suzano (SP), Guarujá (SP), Cotia (SP), Parauapebas (PA), Jacareí (SP), Itaboraí (RJ) e Maricá (RJ) · 2024'
+export const SLICE_CITIES =
+  'Volta Redonda e Niterói (RJ), Bauru (SP), Caxias do Sul (RS), Joinville (SC), Uberlândia (MG), Londrina (PR), Feira de Santana (BA), Caruaru (PE), Anápolis (GO), Vila Velha (ES), Campina Grande (PB), Caucaia (CE), Imperatriz (MA), Arapiraca (AL), Dourados (MS), Marabá (PA), Várzea Grande (MT), Ji-Paraná (RO), Parnamirim (RN), Cruzeiro do Sul (AC), Santana (AP), Rorainópolis (RR), Maringá (PR), Taubaté (SP), Cascavel (PR), Juiz de Fora (MG), Foz do Iguaçu (PR), Santa Maria (RS), Montes Claros (MG), Governador Valadares (MG), Canoas (RS), Lages (SC), Santarém (PA), Rio Verde (GO), Paulo Afonso (BA), São Lourenço da Mata (PE), Crato (CE), Ariquemes (RO), Colatina (ES), Castanhal (PA), Divinópolis (MG), Petrópolis (RJ), Ipatinga (MG), Macaé (RJ), Santa Luzia (MG), Nova Friburgo (RJ), Marília (SP), Balneário Camboriú (SC), Itaquaquecetuba (SP), Praia Grande (SP), São José dos Pinhais (PR), Suzano (SP), Guarujá (SP), Cotia (SP), Parauapebas (PA), Jacareí (SP), Itaboraí (RJ) e Maricá (RJ)'
+
+export function sliceYearSpan(years: readonly number[]): string {
+  const known = [...years].filter((year) => Number.isFinite(year)).sort((a, b) => a - b)
+  if (!known.length) return String(SLICE_YEAR)
+  const min = known[0]
+  const max = known[known.length - 1]
+  if (min === max) return String(min)
+  if (max >= 2026) return `${min}-${max} YTD`
+  return `${min}-${max}`
+}
+
+export function sliceBrand(years: readonly number[] = [SLICE_YEAR]): string {
+  return `Cinquenta e nove municípios · ${sliceYearSpan(years)}`
+}
+
+export function sliceLabel(years: readonly number[] = [SLICE_YEAR]): string {
+  return `${SLICE_CITIES} · ${sliceYearSpan(years)}`
+}
+
+export const SLICE_BRAND = sliceBrand([SLICE_YEAR])
+
+export const SLICE_LABEL = sliceLabel([SLICE_YEAR])
 
 export const copy = {
   coverageIncomplete:

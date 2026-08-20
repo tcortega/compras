@@ -1,7 +1,7 @@
 import { DataTable } from '@/components/DataTable'
 import { EntityHeader } from '@/components/EntityHeader'
 import { FieldList } from '@/components/FieldList'
-import { Shell } from '@/components/Shell'
+import { SliceShell } from '@/components/SliceShell'
 import { SourceLine } from '@/components/SourceLine'
 import { Stat } from '@/components/Stat'
 import { api, safeDetail } from '@/lib/api'
@@ -39,7 +39,7 @@ export default async function FornecedorPage({ params }: { params: Promise<{ id:
   ])
 
   return (
-    <Shell coverage={its.coverage} current={routes.fornecedores}>
+    <SliceShell coverage={its.coverage} current={routes.fornecedores}>
       <EntityHeader kicker="Fornecedor · pessoa jurídica" title={row.razaoSocial} />
       <FieldList
         fields={[
@@ -71,6 +71,6 @@ export default async function FornecedorPage({ params }: { params: Promise<{ id:
         </div>
         <DataTable rows={its.items} columns={itemColumns} coverage={its.coverage} />
       </section>
-    </Shell>
+    </SliceShell>
   )
 }

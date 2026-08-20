@@ -1,19 +1,20 @@
 import { CoverageChip } from '@/components/CoverageChip'
 import { SearchForm } from '@/components/SearchForm'
-import { Shell } from '@/components/Shell'
-import { api } from '@/lib/api'
-import { copy, SLICE_LABEL, SLICE_YEAR } from '@/lib/copy'
+import { SliceShell } from '@/components/SliceShell'
+import { api, loadSliceYears } from '@/lib/api'
+import { copy, sliceLabel, sliceYearSpan } from '@/lib/copy'
 import { formatNumber } from '@/lib/format'
 import { routes } from '@/lib/routes'
 
 export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
-  const [orgaos, fornecedores, contratacoes, items] = await Promise.all([
+  const [orgaos, fornecedores, contratacoes, items, years] = await Promise.all([
     api.listOrgaos({ skip: 0, take: 1 }),
     api.listFornecedores({ skip: 0, take: 1 }),
     api.listContratacoes({ skip: 0, take: 1 }),
     api.listItems({ skip: 0, take: 1 }),
+    loadSliceYears(),
   ])
 
   const cards = [
@@ -24,12 +25,12 @@ export default async function HomePage() {
   ]
 
   return (
-    <Shell coverage={items.coverage} current={routes.home}>
+    <SliceShell coverage={items.coverage} current={routes.home}>
       <section className="hero">
-        <p className="kicker">Recorte publicado · {SLICE_YEAR}</p>
+        <p className="kicker">Recorte publicado · {sliceYearSpan(years)}</p>
         <h1>O que foi comprado com dinheiro público.</h1>
         <p className="lede">
-          Recorte publicado: {SLICE_LABEL}.
+          Recorte publicado: {sliceLabel(years)}.
           Busca, listagem e ficha de órgão, fornecedor, contratação e item.
           Cada agregado traz o denominador da cobertura.
           Sem classificação de órgãos ou fornecedores, sem pontuação e sem juízo.
@@ -48,6 +49,6 @@ export default async function HomePage() {
           </a>
         ))}
       </section>
-    </Shell>
+    </SliceShell>
   )
 }

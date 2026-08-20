@@ -1,7 +1,7 @@
 import { DataTable } from '@/components/DataTable'
 import { ListFilters } from '@/components/ListFilters'
 import { Pager } from '@/components/Pager'
-import { Shell } from '@/components/Shell'
+import { SliceShell } from '@/components/SliceShell'
 import { api } from '@/lib/api'
 import { pageRequestFromSearch } from '@/lib/paging'
 import { routes } from '@/lib/routes'
@@ -17,7 +17,7 @@ export default async function ContratacoesPage({ searchParams }: { searchParams:
   const page = await api.listContratacoes(req)
 
   return (
-    <Shell coverage={page.coverage} current={routes.contratacoes}>
+    <SliceShell coverage={page.coverage} current={routes.contratacoes}>
       <p className="kicker">Coleção</p>
       <h1>Contratações</h1>
       <p className="lede">Procedimentos publicados no recorte, com fonte e snapshot.</p>
@@ -41,6 +41,6 @@ export default async function ContratacoesPage({ searchParams }: { searchParams:
         coverage={page.coverage}
         footer={<Pager base={routes.contratacoes} req={req} total={page.total} />}
       />
-    </Shell>
+    </SliceShell>
   )
 }

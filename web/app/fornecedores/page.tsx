@@ -1,7 +1,7 @@
 import { DataTable } from '@/components/DataTable'
 import { ListFilters } from '@/components/ListFilters'
 import { Pager } from '@/components/Pager'
-import { Shell } from '@/components/Shell'
+import { SliceShell } from '@/components/SliceShell'
 import { api } from '@/lib/api'
 import { pageRequestFromSearch } from '@/lib/paging'
 import { routes } from '@/lib/routes'
@@ -17,7 +17,7 @@ export default async function FornecedoresPage({ searchParams }: { searchParams:
   const page = await api.listFornecedores(req)
 
   return (
-    <Shell coverage={page.coverage} current={routes.fornecedores}>
+    <SliceShell coverage={page.coverage} current={routes.fornecedores}>
       <p className="kicker">Coleção</p>
       <h1>Fornecedores</h1>
       <p className="lede">Pessoas jurídicas que venderam no recorte. CPF não é publicado.</p>
@@ -28,6 +28,6 @@ export default async function FornecedoresPage({ searchParams }: { searchParams:
         coverage={page.coverage}
         footer={<Pager base={routes.fornecedores} req={req} total={page.total} />}
       />
-    </Shell>
+    </SliceShell>
   )
 }

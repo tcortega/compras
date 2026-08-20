@@ -23,9 +23,11 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 
 	public FakeClock Clock => _factory.Clock;
 
+	public HttpClient CreateHttpClient() => _factory.CreateClient();
+
 	public IComprasApi GetClient()
 	{
-		var http = _factory.CreateClient();
+		var http = CreateHttpClient();
 		return RestService.For<IComprasApi>(
 			http,
 			new RefitSettings
@@ -90,6 +92,28 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			MunicipioIbge = "3106200",
 			MunicipioNome = "Belo Horizonte",
 		};
+		var pageAlfa = new Orgao
+		{
+			Id = SliceIds.PageOrgaoAlfa,
+			Cnpj = "22222222000191",
+			RazaoSocial = "Paginacao Alfa",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "ES",
+			MunicipioIbge = "3205309",
+			MunicipioNome = "Vitoria",
+		};
+		var pageBeta = new Orgao
+		{
+			Id = SliceIds.PageOrgaoBeta,
+			Cnpj = "33333333000191",
+			RazaoSocial = "Paginacao Beta",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "ES",
+			MunicipioIbge = "3205309",
+			MunicipioNome = "Vitoria",
+		};
 		var fornecedor = new Fornecedor
 		{
 			Id = SliceIds.Fornecedor,
@@ -147,7 +171,7 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			MethodologyVersion = SliceIds.Methodology,
 		};
 
-		db.Orgaos.AddRange(orgao, hidden, suspendTarget);
+		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta);
 		db.Fornecedores.Add(fornecedor);
 		db.Contratacoes.Add(contratacao);
 		db.Items.AddRange(item1, item2);

@@ -26,14 +26,7 @@ public static partial class ListFornecedores
 		public string? MethodologyVersion { get; init; }
 	}
 
-	public sealed record Response
-	{
-		public required IReadOnlyList<FornecedorRecord> Items { get; init; }
-
-		public required Coverage Coverage { get; init; }
-	}
-
-	private static async ValueTask<Response> HandleAsync(
+	private static async ValueTask<PageResult<FornecedorRecord>> HandleAsync(
 		Command command,
 		ApplicationDbContext db,
 		IOptions<AppOptions> options,
@@ -55,10 +48,6 @@ public static partial class ListFornecedores
 			.Select(FornecedorRecord.Project(command.Uf, command.Quarter, methodology))
 			.ToListAsync(ct);
 
-		return new()
-		{
-			Items = items,
-			Coverage = Slice.Page(n, command.Uf, command.Quarter, methodology),
-		};
+		return Slice.Result(items, n, command.Uf, command.Quarter, methodology);
 	}
 }

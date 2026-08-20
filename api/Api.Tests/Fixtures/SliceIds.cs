@@ -24,13 +24,25 @@ public static class SliceIds
 
 	public static readonly Guid OrgaoBauru = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa4");
 
+	public static readonly Guid OrgaoCaxias = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa5");
+
+	public static readonly Guid OrgaoJoinville = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa6");
+
 	public static readonly Guid ContratacaoNiteroi = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1");
 
 	public static readonly Guid ContratacaoBauru = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2");
 
+	public static readonly Guid ContratacaoCaxias = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb3");
+
+	public static readonly Guid ContratacaoJoinville = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb4");
+
 	public static readonly Guid ItemNiteroi = Guid.Parse("cccccccc-cccc-cccc-cccc-ccccccccccc1");
 
 	public static readonly Guid ItemBauru = Guid.Parse("cccccccc-cccc-cccc-cccc-ccccccccccc2");
+
+	public static readonly Guid ItemCaxias = Guid.Parse("cccccccc-cccc-cccc-cccc-ccccccccccc3");
+
+	public static readonly Guid ItemJoinville = Guid.Parse("cccccccc-cccc-cccc-cccc-ccccccccccc4");
 
 	public static readonly Guid FornecedorExtra = Guid.Parse("dddddddd-dddd-dddd-dddd-ddddddddddd1");
 

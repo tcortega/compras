@@ -11,9 +11,12 @@ export const SLICE_MUNICIPIOS = [
   { nome: 'Volta Redonda', uf: 'RJ', ibge: '3306305' },
   { nome: 'Niterói', uf: 'RJ', ibge: '3303302' },
   { nome: 'Bauru', uf: 'SP', ibge: '3506003' },
+  { nome: 'Caxias do Sul', uf: 'RS', ibge: '4305108' },
+  { nome: 'Joinville', uf: 'SC', ibge: '4209102' },
 ] as const
 
-export const SLICE_LABEL = 'Volta Redonda, Niterói (RJ) e Bauru (SP) · 2024'
+export const SLICE_LABEL =
+  'Volta Redonda e Niterói (RJ), Bauru (SP), Caxias do Sul (RS) e Joinville (SC) · 2024'
 
 export const copy = {
   coverageIncomplete:

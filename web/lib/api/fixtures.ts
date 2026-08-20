@@ -12,6 +12,8 @@ export const ids = {
   orgaoTransito: '7c2e1f40-3306-4050-9a01-000000000004',
   orgaoNiteroi: '7c2e1f40-3303-4050-9a01-000000000005',
   orgaoBauru: '7c2e1f40-3506-4050-9a01-000000000006',
+  orgaoCaxias: '7c2e1f40-4305-4050-9a01-000000000007',
+  orgaoJoinville: '7c2e1f40-4209-4050-9a01-000000000008',
   fornFarma: '8d3f2a51-3306-4050-9a02-000000000001',
   fornAlim: '8d3f2a51-3306-4050-9a02-000000000002',
   fornComb: '8d3f2a51-3306-4050-9a02-000000000003',
@@ -31,6 +33,8 @@ export const ids = {
   ctSinal: '9e4a3b62-3306-4050-9a03-000000000010',
   ctNiteroi: '9e4a3b62-3303-4050-9a03-000000000011',
   ctBauru: '9e4a3b62-3506-4050-9a03-000000000012',
+  ctCaxias: '9e4a3b62-4305-4050-9a03-000000000013',
+  ctJoinville: '9e4a3b62-4209-4050-9a03-000000000014',
 } as const
 
 function orgao(
@@ -118,6 +122,26 @@ export const orgaos: Orgao[] = [
     'SP',
     '3506003',
     'Bauru',
+  ),
+  orgao(
+    ids.orgaoCaxias,
+    '88830609000139',
+    'Município de Caxias do Sul',
+    'executivo',
+    T2,
+    'RS',
+    '4305108',
+    'Caxias do Sul',
+  ),
+  orgao(
+    ids.orgaoJoinville,
+    '83169623000110',
+    'Município de Joinville',
+    'executivo',
+    T1,
+    'SC',
+    '4209102',
+    'Joinville',
   ),
 ]
 
@@ -356,6 +380,28 @@ export const contratacoes: Contratacao[] = [
     '2024-04-12T11:00:00.000Z',
     'compras.gov.br',
   ),
+  ct(
+    ids.ctCaxias,
+    '88830609000139-1-000888/2024',
+    ids.orgaoCaxias,
+    'pregão eletrônico',
+    'Fornecimento de suporte para monitor',
+    2024,
+    11_000.0,
+    '2024-11-04T07:17:34.000Z',
+    'compras.gov.br',
+  ),
+  ct(
+    ids.ctJoinville,
+    '83169623000110-1-000301/2024',
+    ids.orgaoJoinville,
+    'pregão eletrônico',
+    'Aquisição de leitores de código de barras a laser fixo.',
+    2024,
+    33_180.0,
+    '2024-08-09T07:01:05.000Z',
+    'compras.gov.br',
+  ),
 ]
 
 function item(
@@ -425,4 +471,6 @@ export const items: Item[] = [
   item(28, ids.ctNiteroi, ids.fornPapel, 'Álcool etílico 70% 1 L', '420090', 40, 'litro', 'l', 8.5, 'RJ', '2024-Q1', T0),
   item(29, ids.ctBauru, ids.fornPapel, 'Papel A4 75 g/m² resma 500 folhas', '476101', 16, 'resma', 'un', 5.0, 'SP', '2024-Q2', T1),
   item(30, ids.ctBauru, ids.fornPapel, 'Caneta esferográfica azul', '476130', 200, 'unidade', 'un', 0.9, 'SP', '2024-Q2', T1),
+  item(31, ids.ctCaxias, ids.fornPapel, 'Suporte para monitor LCD', '601992', 100, 'unidade', 'un', 110.0, 'RS', '2024-Q4', T2),
+  item(32, ids.ctJoinville, ids.fornPapel, 'Leitora código de barras a laser', '617529', 35, 'unidade', 'un', 948.0, 'SC', '2024-Q3', T1),
 ]

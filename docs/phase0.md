@@ -2,7 +2,7 @@
 
 Municipio chosen for the Phase 0 precision gate: Volta Redonda, RJ, IBGE 3306305, year 2024.
 Population is about 274k (IBGE 2022), inside the 100k-500k mid-size band, and it is not a capital.
-The published explorer fixture also lands two more municípios that the same 2024 COMPRA file already counted: Niterói, RJ, IBGE 3303302 (238 municipal contratacoes), and Bauru, SP, IBGE 3506003 (736 municipal contratacoes).
+The published explorer fixture also lands municípios that the same 2024 COMPRA file already counted: Niterói, RJ, IBGE 3303302 (238 municipal contratacoes), Bauru, SP, IBGE 3506003 (736), Caxias do Sul, RS, IBGE 4305108 (577), and Joinville, SC, IBGE 4209102 (346).
 Those extra rows use the same landed COMPRA/ITEM schema.
 They do not replace the Volta Redonda labeled set.
 The 2024 COMPRA file has 57,384 municipal rows across 731 distinct municipio names.

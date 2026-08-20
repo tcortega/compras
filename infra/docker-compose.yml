@@ -246,6 +246,8 @@ services:
     environment:
       API_BASE_URL: http://api:5080
       SKIP_STATIC_PARAMS: "1"
+      STAGING_TRIAGE: "1"
+      TRIAGE_LABELS_PATH: /tmp/triage-labels.csv
       NODE_ENV: production
       PORT: "3000"
       HOSTNAME: 0.0.0.0

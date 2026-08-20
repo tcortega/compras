@@ -87,6 +87,9 @@ public interface IComprasApi
 	[Get("/api/internal/flags/{id}")]
 	Task<IApiResponse<FlagRecord>> GetFlag(Guid id);
 
+	[Get("/api/internal/flags/{id}/audit")]
+	Task<IApiResponse<FlagAuditPage>> ListFlagAudit(Guid id);
+
 	[Post("/api/internal/flags/{id}/review")]
 	Task<IApiResponse<FlagRecord>> ReviewFlag(Guid id);
 

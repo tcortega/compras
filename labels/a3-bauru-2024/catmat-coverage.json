@@ -1,0 +1,18 @@
+{
+  "n_items": 2953,
+  "n_with_catmat": 2412,
+  "n_with_catser": 178,
+  "n_both_catmat_and_catser": 175,
+  "n_code_present_but_unmatched": 0,
+  "n_no_code": 538,
+  "n_free_text_only": 538,
+  "percent_coded": 81.78,
+  "join_rule": "exact integer match of item.cod_item_catalogo to catmat.codigoItem or catser.codigoServico; no fuzzy description matching",
+  "catalog_urls": [
+    "https://repositorio.dados.gov.br/seges/comprasgov/catalogo_cnbs/catmat.csv",
+    "https://repositorio.dados.gov.br/seges/comprasgov/catalogo_cnbs/catser.csv"
+  ],
+  "catmat_catalog_n": 343352,
+  "catser_catalog_n": 3095,
+  "notes": "percent_coded = (n_with_catmat + n_with_catser - n_both) / n_items on this municipal executive slice. Phase 0 Volta Redonda 2024 remains 81.75 percent and is not rewritten."
+}

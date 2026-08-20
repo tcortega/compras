@@ -1,0 +1,5 @@
+id_compra,orgao_entidade_esfera_id,orgao_entidade_poder_id,unidade_orgao_uf_sigla,unidade_orgao_municipio_nome,unidade_orgao_codigo_ibge,orgao_entidade_cnpj,orgao_entidade_razao_social,numero_controle_PNCP,ano_compra,sequencial_compra,modalidade_nome,objeto_compra,data_publicacao_pncp,data_inclusao
+B-2024-1,M,E,SP,BAURU,3506003,35060030000100,MUNICIPIO DE BAURU,35060030000100-1-000001/2024,2024,1,Pregão - Eletrônico,cadeiras,2024-04-10,2024-04-10
+B-2024-2,M,E,SP,BAURU,3506003,35060030000100,MUNICIPIO DE BAURU,35060030000100-1-000002/2024,2024,2,Pregão - Eletrônico,papel e cadeira,2024-04-11,2024-04-11
+P-2024-1,M,E,SP,TAUBATE,3554102,35541020000100,MUNICIPIO DE TAUBATE,35541020000100-1-000001/2024,2024,1,Pregão - Eletrônico,peers,2024-04-12,2024-04-12
+L-2024-1,M,L,SP,BAURU,3506003,35060030000200,CAMARA MUNICIPAL DE BAURU,35060030000200-1-000001/2024,2024,1,Pregão - Eletrônico,camara only,2024-04-13,2024-04-13

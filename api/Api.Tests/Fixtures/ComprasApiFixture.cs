@@ -620,6 +620,28 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			MunicipioIbge = "3303401",
 			MunicipioNome = "Nova Friburgo",
 		};
+		var marilia = new Orgao
+		{
+			Id = SliceIds.OrgaoMarilia,
+			Cnpj = "44477909000100",
+			RazaoSocial = "Municipio de Marilia",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "SP",
+			MunicipioIbge = "3529005",
+			MunicipioNome = "Marilia",
+		};
+		var balneario = new Orgao
+		{
+			Id = SliceIds.OrgaoBalneario,
+			Cnpj = "83102285000107",
+			RazaoSocial = "Municipio de Balneario Camboriu",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "SC",
+			MunicipioIbge = "4202008",
+			MunicipioNome = "Balneario Camboriu",
+		};
 		var fornecedor = new Fornecedor
 		{
 			Id = SliceIds.Fornecedor,
@@ -1324,6 +1346,34 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			Ano = 2024,
 			ValorHomologado = 8000m,
 			PublicadoEm = Instant.FromUtc(2024, 10, 8, 11, 7),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoMarilia = new Contratacao
+		{
+			Id = SliceIds.ContratacaoMarilia,
+			PncpId = "44477909000100-1-000487/2024",
+			OrgaoId = SliceIds.OrgaoMarilia,
+			Modalidade = "pregao eletronico",
+			Objeto = "Registro de Precos visando a eventual aquisicao de cestas de alimentos destinadas aos servidores ativos da Prefeitura Municipal de Marilia e AMAE.",
+			Ano = 2024,
+			ValorHomologado = 401.3m,
+			PublicadoEm = Instant.FromUtc(2024, 10, 8, 7, 11),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoBalneario = new Contratacao
+		{
+			Id = SliceIds.ContratacaoBalneario,
+			PncpId = "83102285000107-1-000442/2024",
+			OrgaoId = SliceIds.OrgaoBalneario,
+			Modalidade = "pregao eletronico",
+			Objeto = "Aquisicao de aparelho/sistema de ergometria para realizacao de exames de diagnostico em cardiologia.",
+			Ano = 2024,
+			ValorHomologado = 18500m,
+			PublicadoEm = Instant.FromUtc(2024, 9, 19, 7, 9),
 			Source = "compras.gov.br",
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
@@ -2109,11 +2159,45 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
 		};
+		var itemMarilia = new Item
+		{
+			Id = SliceIds.ItemMarilia,
+			ContratacaoId = SliceIds.ContratacaoMarilia,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Macarrao",
+			Catmat = "480420",
+			Quantidade = 1m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 401.3m,
+			ValorTotal = 401.3m,
+			Uf = "SP",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var itemBalneario = new Item
+		{
+			Id = SliceIds.ItemBalneario,
+			ContratacaoId = SliceIds.ContratacaoBalneario,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Cardiologia - Teste Ergometrico",
+			Catmat = "6505",
+			Quantidade = 1m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 18500m,
+			ValorTotal = 18500m,
+			Uf = "SC",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
 
-		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville, uberlandia, londrina, feira, caruaru, anapolis, vilaVelha, campinaGrande, caucaia, imperatriz, arapiraca, dourados, maraba, varzeaGrande, jiParana, parnamirim, cruzeiroDoSul, santana, rorainopolis, maringa, taubate, cascavel, juizDeFora, foz, santaMaria, montesClaros, governadorValadares, canoas, lages, santarem, rioVerde, pauloAfonso, saoLourenco, crato, ariquemes, colatina, castanhal, divinopolis, petropolis, ipatinga, macae, santaLuzia, novaFriburgo);
+		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville, uberlandia, londrina, feira, caruaru, anapolis, vilaVelha, campinaGrande, caucaia, imperatriz, arapiraca, dourados, maraba, varzeaGrande, jiParana, parnamirim, cruzeiroDoSul, santana, rorainopolis, maringa, taubate, cascavel, juizDeFora, foz, santaMaria, montesClaros, governadorValadares, canoas, lages, santarem, rioVerde, pauloAfonso, saoLourenco, crato, ariquemes, colatina, castanhal, divinopolis, petropolis, ipatinga, macae, santaLuzia, novaFriburgo, marilia, balneario);
 		db.Fornecedores.AddRange(fornecedor, fornecedorExtra);
-		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina, contratacaoFeira, contratacaoCaruaru, contratacaoAnapolis, contratacaoVilaVelha, contratacaoCampinaGrande, contratacaoCaucaia, contratacaoImperatriz, contratacaoArapiraca, contratacaoDourados, contratacaoMaraba, contratacaoVarzeaGrande, contratacaoJiParana, contratacaoParnamirim, contratacaoCruzeiroDoSul, contratacaoSantana, contratacaoRorainopolis, contratacaoMaringa, contratacaoTaubate, contratacaoCascavel, contratacaoJuizDeFora, contratacaoFoz, contratacaoSantaMaria, contratacaoMontesClaros, contratacaoGovernadorValadares, contratacaoCanoas, contratacaoLages, contratacaoSantarem, contratacaoRioVerde, contratacaoPauloAfonso, contratacaoSaoLourenco, contratacaoCrato, contratacaoAriquemes, contratacaoColatina, contratacaoCastanhal, contratacaoDivinopolis, contratacaoPetropolis, contratacaoIpatinga, contratacaoMacae, contratacaoSantaLuzia, contratacaoNovaFriburgo);
-		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina, itemFeira, itemCaruaru, itemAnapolis, itemVilaVelha, itemCampinaGrande, itemCaucaia, itemImperatriz, itemArapiraca, itemDourados, itemMaraba, itemVarzeaGrande, itemJiParana, itemParnamirim, itemCruzeiroDoSul, itemSantana, itemRorainopolis, itemMaringa, itemTaubate, itemCascavel, itemJuizDeFora, itemFoz, itemSantaMaria, itemMontesClaros, itemGovernadorValadares, itemCanoas, itemLages, itemSantarem, itemRioVerde, itemPauloAfonso, itemSaoLourenco, itemCrato, itemAriquemes, itemColatina, itemCastanhal, itemDivinopolis, itemPetropolis, itemIpatinga, itemMacae, itemSantaLuzia, itemNovaFriburgo);
+		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina, contratacaoFeira, contratacaoCaruaru, contratacaoAnapolis, contratacaoVilaVelha, contratacaoCampinaGrande, contratacaoCaucaia, contratacaoImperatriz, contratacaoArapiraca, contratacaoDourados, contratacaoMaraba, contratacaoVarzeaGrande, contratacaoJiParana, contratacaoParnamirim, contratacaoCruzeiroDoSul, contratacaoSantana, contratacaoRorainopolis, contratacaoMaringa, contratacaoTaubate, contratacaoCascavel, contratacaoJuizDeFora, contratacaoFoz, contratacaoSantaMaria, contratacaoMontesClaros, contratacaoGovernadorValadares, contratacaoCanoas, contratacaoLages, contratacaoSantarem, contratacaoRioVerde, contratacaoPauloAfonso, contratacaoSaoLourenco, contratacaoCrato, contratacaoAriquemes, contratacaoColatina, contratacaoCastanhal, contratacaoDivinopolis, contratacaoPetropolis, contratacaoIpatinga, contratacaoMacae, contratacaoSantaLuzia, contratacaoNovaFriburgo, contratacaoMarilia, contratacaoBalneario);
+		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina, itemFeira, itemCaruaru, itemAnapolis, itemVilaVelha, itemCampinaGrande, itemCaucaia, itemImperatriz, itemArapiraca, itemDourados, itemMaraba, itemVarzeaGrande, itemJiParana, itemParnamirim, itemCruzeiroDoSul, itemSantana, itemRorainopolis, itemMaringa, itemTaubate, itemCascavel, itemJuizDeFora, itemFoz, itemSantaMaria, itemMontesClaros, itemGovernadorValadares, itemCanoas, itemLages, itemSantarem, itemRioVerde, itemPauloAfonso, itemSaoLourenco, itemCrato, itemAriquemes, itemColatina, itemCastanhal, itemDivinopolis, itemPetropolis, itemIpatinga, itemMacae, itemSantaLuzia, itemNovaFriburgo, itemMarilia, itemBalneario);
 	}
 
 	private static JsonSerializerOptions CreateJson()

@@ -50,6 +50,8 @@ const ipatingaName = /Munic[ií]pio de Ipatinga/i
 const macaeName = /Munic[ií]pio de Maca[eé]/i
 const santaLuziaName = /Munic[ií]pio de Santa Luzia/i
 const novaFriburgoName = /Munic[ií]pio de Nova Friburgo/i
+const mariliaName = /Munic[ií]pio de Mar[ií]lia/i
+const balnearioName = /Munic[ií]pio de Balne[aá]rio Cambori[uú]/i
 
 const publishedNames = [
   niteroiName,
@@ -98,6 +100,8 @@ const publishedNames = [
   macaeName,
   santaLuziaName,
   novaFriburgoName,
+  mariliaName,
+  balnearioName,
 ]
 
 async function assertCoverageAndBan(page: Page) {
@@ -158,10 +162,10 @@ test('home cards usam o n da coleção, não o n de itens', async ({ page }) => 
   await page.goto('/')
   await expect(page.getByRole('strong').filter({ hasText: 'Cobertura incompleta' })).toBeVisible()
   await expect(page.getByText(/UF mista/).first()).toBeVisible()
-  await expect(page.getByText(/Caxias do Sul \(RS\), Joinville \(SC\), Uberlândia \(MG\), Londrina \(PR\), Feira de Santana \(BA\), Caruaru \(PE\), Anápolis \(GO\), Vila Velha \(ES\), Campina Grande \(PB\), Caucaia \(CE\), Imperatriz \(MA\), Arapiraca \(AL\), Dourados \(MS\), Marabá \(PA\), Várzea Grande \(MT\), Ji-Paraná \(RO\), Parnamirim \(RN\), Cruzeiro do Sul \(AC\), Santana \(AP\), Rorainópolis \(RR\), Maringá \(PR\), Taubaté \(SP\), Cascavel \(PR\), Juiz de Fora \(MG\), Foz do Iguaçu \(PR\), Santa Maria \(RS\), Montes Claros \(MG\), Governador Valadares \(MG\), Canoas \(RS\), Lages \(SC\), Santarém \(PA\), Rio Verde \(GO\), Paulo Afonso \(BA\), São Lourenço da Mata \(PE\), Crato \(CE\), Ariquemes \(RO\), Colatina \(ES\), Castanhal \(PA\), Divinópolis \(MG\), Petrópolis \(RJ\), Ipatinga \(MG\), Macaé \(RJ\), Santa Luzia \(MG\) e Nova Friburgo \(RJ\)/).first()).toBeVisible()
+  await expect(page.getByText(/Caxias do Sul \(RS\), Joinville \(SC\), Uberlândia \(MG\), Londrina \(PR\), Feira de Santana \(BA\), Caruaru \(PE\), Anápolis \(GO\), Vila Velha \(ES\), Campina Grande \(PB\), Caucaia \(CE\), Imperatriz \(MA\), Arapiraca \(AL\), Dourados \(MS\), Marabá \(PA\), Várzea Grande \(MT\), Ji-Paraná \(RO\), Parnamirim \(RN\), Cruzeiro do Sul \(AC\), Santana \(AP\), Rorainópolis \(RR\), Maringá \(PR\), Taubaté \(SP\), Cascavel \(PR\), Juiz de Fora \(MG\), Foz do Iguaçu \(PR\), Santa Maria \(RS\), Montes Claros \(MG\), Governador Valadares \(MG\), Canoas \(RS\), Lages \(SC\), Santarém \(PA\), Rio Verde \(GO\), Paulo Afonso \(BA\), São Lourenço da Mata \(PE\), Crato \(CE\), Ariquemes \(RO\), Colatina \(ES\), Castanhal \(PA\), Divinópolis \(MG\), Petrópolis \(RJ\), Ipatinga \(MG\), Macaé \(RJ\), Santa Luzia \(MG\), Nova Friburgo \(RJ\), Marília \(SP\) e Balneário Camboriú \(SC\)/).first()).toBeVisible()
   const brand = page.locator('.brand-kicker')
-  await expect(brand).toHaveText(/quarenta e sete municípios · 2024/i)
-  await expect(brand).not.toHaveText(/Caxias do Sul|Uberlândia|Londrina|Feira de Santana|Caruaru|Anápolis|Vila Velha|Campina Grande|Caucaia|Imperatriz|Arapiraca|Dourados|Marabá|Várzea Grande|Ji-Paraná|Parnamirim|Cruzeiro do Sul|Santana|Rorainópolis|Maringá|Taubaté|Cascavel|Juiz de Fora|Foz do Iguaçu|Santa Maria|Montes Claros|Governador Valadares|Canoas|Lages|Santarém|Rio Verde|Paulo Afonso|São Lourenço|Crato|Ariquemes|Colatina|Castanhal|Divinópolis|Petrópolis|Ipatinga|Macaé|Santa Luzia|Nova Friburgo/)
+  await expect(brand).toHaveText(/quarenta e nove municípios · 2024/i)
+  await expect(brand).not.toHaveText(/Caxias do Sul|Uberlândia|Londrina|Feira de Santana|Caruaru|Anápolis|Vila Velha|Campina Grande|Caucaia|Imperatriz|Arapiraca|Dourados|Marabá|Várzea Grande|Ji-Paraná|Parnamirim|Cruzeiro do Sul|Santana|Rorainópolis|Maringá|Taubaté|Cascavel|Juiz de Fora|Foz do Iguaçu|Santa Maria|Montes Claros|Governador Valadares|Canoas|Lages|Santarém|Rio Verde|Paulo Afonso|São Lourenço|Crato|Ariquemes|Colatina|Castanhal|Divinópolis|Petrópolis|Ipatinga|Macaé|Santa Luzia|Nova Friburgo|Marília|Balneário/)
   const brandBox = await brand.boundingBox()
   const masthead = await page.locator('.masthead-inner').boundingBox()
   expect(brandBox).toBeTruthy()
@@ -182,8 +186,8 @@ test('home cards usam o n da coleção, não o n de itens', async ({ page }) => 
   await expect(itens.getByText(new RegExp(`n=${itensN}`))).toBeVisible()
   expect(orgaosN).not.toEqual(itensN)
   if (!againstCompose) {
-    await expect(orgaos.getByRole('strong')).toHaveText('50')
-    await expect(itens.getByRole('strong')).toHaveText('74')
+    await expect(orgaos.getByRole('strong')).toHaveText('52')
+    await expect(itens.getByRole('strong')).toHaveText('76')
   }
 
   if (againstCompose) {
@@ -266,14 +270,14 @@ test('filtra Niterói por IBGE no formulário', async ({ page }) => {
 })
 
 test('filtra Bauru por UF SP e itens SP', async ({ page }) => {
-  await assertOrgaoUf(page, 'SP', bauruName, niteroiName, '2')
-  await assertItensUf(page, 'SP', /Papel A4 75 g/, '3')
+  await assertOrgaoUf(page, 'SP', bauruName, niteroiName, '3')
+  await assertItensUf(page, 'SP', /Papel A4 75 g/, '4')
 })
 
 test('filtra Caxias do Sul por IBGE e Joinville por UF SC', async ({ page }) => {
   await assertOrgaoIbge(page, '4305108', caxiasName, joinvilleName, 'RS')
-  await assertOrgaoUf(page, 'SC', joinvilleName, caxiasName, '2')
-  await assertItensUf(page, 'SC', /Leitora c[oó]digo/, '2')
+  await assertOrgaoUf(page, 'SC', joinvilleName, caxiasName, '3')
+  await assertItensUf(page, 'SC', /Leitora c[oó]digo/, '3')
 })
 
 test('filtra Uberlândia por IBGE e Londrina por UF PR', async ({ page }) => {
@@ -388,6 +392,11 @@ test('filtra Ipatinga por IBGE e Macaé por IBGE', async ({ page }) => {
 test('filtra Santa Luzia por IBGE e Nova Friburgo por IBGE', async ({ page }) => {
   await assertOrgaoIbge(page, '3157807', santaLuziaName, novaFriburgoName, 'MG')
   await assertOrgaoIbge(page, '3303401', novaFriburgoName, santaLuziaName, 'RJ')
+})
+
+test('filtra Marília por IBGE e Balneário Camboriú por IBGE', async ({ page }) => {
+  await assertOrgaoIbge(page, '3529005', mariliaName, balnearioName, 'SP')
+  await assertOrgaoIbge(page, '4202008', balnearioName, mariliaName, 'SC')
 })
 
 test('mantém cobertura no filtro vazio e no vazio com UF', async ({ page }) => {
@@ -536,6 +545,8 @@ test('vazio, 404 e páginas estáticas mantêm cobertura e o banimento', async (
   await expect(page.getByText(/3302403/).first()).toBeVisible()
   await expect(page.getByText(/3157807/).first()).toBeVisible()
   await expect(page.getByText(/3303401/).first()).toBeVisible()
+  await expect(page.getByText(/3529005/).first()).toBeVisible()
+  await expect(page.getByText(/4202008/).first()).toBeVisible()
   await expect(page.getByText(/não é um total nacional/).first()).toBeVisible()
   await expect(page.getByText(/UF mista/).first()).toBeVisible()
   await assertCoverageAndBan(page)

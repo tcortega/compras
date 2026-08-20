@@ -147,6 +147,88 @@ public sealed class PublicationTests(ComprasApiFixture fixture) : IClassFixture<
 	}
 
 	[Fact]
+	public async Task FullCycle_DetectReviewNotifyHoldPublishResolve()
+	{
+		var client = fixture.GetClient();
+		var now = fixture.Clock.GetCurrentInstant();
+
+		var created = await client.CreateFlag(new()
+		{
+			ItemId = SliceIds.Item2,
+			Kind = "qty_mismatch",
+			Delta = "Orgao paid R$2.00/unit for CATMAT 123456 on 2024-03-10. Median across 2 comparable purchases in RJ, 2024-Q2: R$5.00. Source: PNCP 3306305-1-000001/2024.",
+			SourceUrl = "https://pncp.gov.br/app/editais/3306305/2024/1",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		});
+		Assert.NotNull(created.Content);
+		var expected = created.Content with
+		{
+			State = FlagState.Detected,
+			DetectedAt = now,
+			NotifiedAt = null,
+			PublishAfter = null,
+			PublishedAt = null,
+			ReplyText = null,
+			RepliedAt = null,
+			Suspended = false,
+			Framing = "indicio requiring verification",
+		};
+		Assert.Equal(expected, created.Content);
+		await ValidateFlag(client, expected);
+
+		var reviewed = await client.ReviewFlag(expected.Id);
+		expected = expected with { State = FlagState.InternalReview };
+		Assert.Equal(expected, reviewed.Content);
+		await ValidateFlag(client, expected);
+
+		var notified = await client.NotifyFlag(expected.Id);
+		expected = expected with
+		{
+			State = FlagState.Notified,
+			NotifiedAt = now,
+			PublishAfter = now + Duration.FromDays(7),
+		};
+		Assert.Equal(expected, notified.Content);
+		await ValidateFlag(client, expected);
+
+		var early = await client.PublishFlag(expected.Id);
+		Assert.Equal(HttpStatusCode.Conflict, early.StatusCode);
+		await ValidateFlag(client, expected);
+
+		fixture.Clock.Advance(Duration.FromDays(7));
+		var publishedAt = now + Duration.FromDays(7);
+		var published = await client.PublishFlag(expected.Id);
+		expected = expected with
+		{
+			State = FlagState.Published,
+			PublishedAt = publishedAt,
+		};
+		Assert.Equal(expected, published.Content);
+		await ValidateFlag(client, expected);
+
+		var resolved = await client.ResolveFlag(expected.Id);
+		expected = expected with { State = FlagState.Resolved };
+		Assert.Equal(expected, resolved.Content);
+		await ValidateFlag(client, expected);
+
+		var audit = await fixture.ListFlagAudit(expected.Id);
+		Assert.Equal(5, audit.Count);
+		Assert.Equal(
+			[
+				new() { FromState = null, ToState = "detected" },
+				new() { FromState = "detected", ToState = "internal_review" },
+				new() { FromState = "internal_review", ToState = "notified" },
+				new() { FromState = "notified", ToState = "published" },
+				new() { FromState = "published", ToState = "resolved" },
+			],
+			audit);
+
+		var http = fixture.CreateHttpClient();
+		await AssertExplorerJsonHasNoFlagField(http, $"/api/items/{SliceIds.Item2}");
+	}
+
+	[Fact]
 	public async Task FullCycle_ListAfterFlagsExist()
 	{
 		var client = fixture.GetClient();

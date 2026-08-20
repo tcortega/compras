@@ -61,6 +61,9 @@ def _normalize_row(
     total = parse_decimal(_first(row, "valortotalresultado", "valortotal"))
     price_base = _price_per_canonical(unit, unit_price, qty, total)
     publicado = parse_datetime(_first(row, "datapublicacaopncp", "datainclusaopncp"))
+    resultado = parse_date(_first(row, "dataresultado", "data_resultado"))
+    item_pub = parse_date(_first(row, "datainclusaopncp"))
+    award = parse_date(_first(row, "award_date")) or resultado or item_pub
     fornecedor_cnpj = _digits(_first(row, "codfornecedor", "nifornecedor", "fornecedor_cnpj"))
     opened_on = None
     cnae = None
@@ -90,8 +93,8 @@ def _normalize_row(
         "ano": _first(row, "anocomprapncp", "ano") or (str(publicado.year) if publicado else ""),
         "valor_homologado": _dec_str(parse_decimal(_first(row, "valortotalhomologado"))),
         "publicado_em": publicado.isoformat() if publicado else "",
-        "data_resultado": _first(row, "dataresultado", "data_resultado") or "",
-        "award_date": publicado.date().isoformat() if publicado else "",
+        "data_resultado": resultado.isoformat() if resultado else "",
+        "award_date": award.isoformat() if award else "",
         "descricao": descricao or "",
         "catmat": hit.catmat or "",
         "catser": hit.catser or "",

@@ -1,4 +1,4 @@
-import { readCoverage } from '@/lib/coverage'
+import { fillCoverage, readCoverage } from '@/lib/coverage'
 import type {
   Contratacao,
   ExplorerClient,
@@ -11,6 +11,22 @@ import type {
 import { ApiError, ApiNotFoundError, isPublished } from '@/lib/types'
 
 const ENTITY_REVALIDATE = 3600
+
+const STUB_MARKERS = [
+  '7c2e1f40-3306-4050',
+  '8d3f2a51-3306-4050',
+  '9e4a3b62-3306-4050',
+  'ae5b4c73-3306-4050',
+  'sha256:dev-slice-vr-2024',
+]
+
+function assertNotStubPayload(payload: unknown, path: string): void {
+  const blob = JSON.stringify(payload)
+  const hit = STUB_MARKERS.find((marker) => blob.includes(marker))
+  if (hit) {
+    throw new ApiError(502, `API devolveu recorte stub em ${path}`)
+  }
+}
 
 function queryOf(req: PageRequest): string {
   const params = new URLSearchParams()
@@ -34,7 +50,7 @@ function publishedPage<T extends { suspended?: boolean }>(
 ): SkipTakePage<T> {
   const o = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {}
   const items = (Array.isArray(o.items) ? (o.items as T[]) : []).filter(isPublished)
-  const coverage = readCoverage(o.coverage)
+  const coverage = fillCoverage(readCoverage(o.coverage), items)
   const total = typeof o.total === 'number' ? o.total : coverage.n
   return {
     items,
@@ -77,7 +93,9 @@ export function createHttpClient(baseUrl: string): ExplorerClient {
     if (!res.ok) {
       throw new ApiError(res.status, `API ${res.status} em ${path}`)
     }
-    return (await res.json()) as T
+    const payload = (await res.json()) as T
+    assertNotStubPayload(payload, path)
+    return payload
   }
 
   return {

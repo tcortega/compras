@@ -4,7 +4,7 @@ import { SLICE_IBGE, SLICE_LABEL, copy } from '@/lib/copy'
 import { coverageText } from '@/lib/coverage'
 import type { Metadata } from 'next'
 
-export const revalidate = 3600
+export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Cobertura' }
 
 export default async function CoberturaPage() {

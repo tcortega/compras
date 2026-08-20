@@ -39,7 +39,11 @@ services:
       - ./postgres/01_compras.sql:/docker-entrypoint-initdb.d/01_compras.sql:ro
       - ./postgres/02_dagster.sh:/docker-entrypoint-initdb.d/02_dagster.sh:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-compras} -d ${POSTGRES_DB:-compras}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-compras} -d ${POSTGRES_DB:-compras} && psql -U ${POSTGRES_USER:-compras} -d ${DAGSTER_PG_DB:-dagster} -c 'SELECT 1' >/dev/null",
+        ]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -95,7 +99,7 @@ services:
     networks: [compras]
 
   minio-init:
-    image: minio/mc:RELEASE.2024-12-18T00-37-43Z
+    image: minio/mc:RELEASE.2024-11-21T17-21-54Z
     depends_on:
       minio:
         condition: service_healthy
@@ -148,10 +152,11 @@ services:
       minio-init:
         condition: service_completed_successfully
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/server_info"]
-      interval: 10s
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:3000/server_info >/dev/null"]
+      interval: 5s
       timeout: 5s
-      retries: 20
+      retries: 24
+      start_period: 45s
     networks: [compras]
 
   dagster-daemon:
@@ -174,6 +179,79 @@ services:
         condition: service_healthy
       minio-init:
         condition: service_completed_successfully
+    networks: [compras]
+
+  warehouse-seed:
+    build:
+      context: ..
+      dockerfile: ingest/Dockerfile
+    command: ["python", "-m", "compras_ingest.seed"]
+    environment:
+      <<: *dagster-env
+    volumes:
+      - ../ingest:/app/ingest
+      - ../normalize:/app/normalize
+      - ../detect:/app/detect
+      - ../infra:/app/infra
+    depends_on:
+      postgres:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    restart: "no"
+    networks: [compras]
+
+  api:
+    build:
+      context: ..
+      dockerfile: api/Dockerfile
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__Compras: Host=postgres;Port=5432;Database=${POSTGRES_DB:-compras};Username=${POSTGRES_USER:-compras};Password=${POSTGRES_PASSWORD:-compras}
+      App__Host: 0.0.0.0
+      App__Port: "5080"
+      App__MethodologyVersion: ${METHODOLOGY_VERSION:-phase1-0.1.0}
+      App__ApplyMigrations: "false"
+    ports:
+      - "5080:5080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      warehouse-seed:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:5080/api/orgaos?skip=0&take=1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    networks: [compras]
+
+  web:
+    build:
+      context: ..
+      dockerfile: web/Dockerfile
+    restart: unless-stopped
+    environment:
+      API_BASE_URL: http://api:5080
+      SKIP_STATIC_PARAMS: "1"
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: 0.0.0.0
+    ports:
+      - "3100:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3000/"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 15s
     networks: [compras]
 
 volumes:

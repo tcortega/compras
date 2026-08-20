@@ -1,0 +1,14 @@
+.git
+**/.git
+**/.next
+**/node_modules
+**/bin
+**/obj
+**/.venv
+**/.e2e-landing
+**/.e2e-work
+**/__pycache__
+**/*.user
+.env
+.env.*
+!.env.example

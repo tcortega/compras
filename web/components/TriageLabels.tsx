@@ -1,4 +1,3 @@
-import { runTriageLabel } from '@/app/interno/triagem/actions'
 import { LABEL_RUBRIC, triageCopy, type FlagRecord } from '@/lib/flags'
 
 export function TriageLabels({ flag }: { flag: FlagRecord }) {
@@ -6,7 +5,7 @@ export function TriageLabels({ flag }: { flag: FlagRecord }) {
     <section className="section" aria-labelledby="rotulos-triagem">
       <h2 id="rotulos-triagem">{triageCopy.labels}</h2>
       <p className="lede">{triageCopy.precision}</p>
-      <form className="triage-label-form" action={runTriageLabel}>
+      <form className="triage-label-form" action="/interno/triagem/rotulo" method="post">
         <input type="hidden" name="id" value={flag.id} />
         <input type="hidden" name="itemId" value={flag.itemId} />
         <input type="hidden" name="kind" value={flag.kind} />

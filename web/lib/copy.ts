@@ -27,12 +27,14 @@ export const SLICE_MUNICIPIOS = [
   { nome: 'Marabá', uf: 'PA', ibge: '1504208' },
   { nome: 'Várzea Grande', uf: 'MT', ibge: '5108402' },
   { nome: 'Ji-Paraná', uf: 'RO', ibge: '1100122' },
+  { nome: 'Parnamirim', uf: 'RN', ibge: '2403251' },
+  { nome: 'Cruzeiro do Sul', uf: 'AC', ibge: '1200203' },
 ] as const
 
-export const SLICE_BRAND = 'Dezenove municípios · 2024'
+export const SLICE_BRAND = 'Vinte e um municípios · 2024'
 
 export const SLICE_LABEL =
-  'Volta Redonda e Niterói (RJ), Bauru (SP), Caxias do Sul (RS), Joinville (SC), Uberlândia (MG), Londrina (PR), Feira de Santana (BA), Caruaru (PE), Anápolis (GO), Vila Velha (ES), Campina Grande (PB), Caucaia (CE), Imperatriz (MA), Arapiraca (AL), Dourados (MS), Marabá (PA), Várzea Grande (MT) e Ji-Paraná (RO) · 2024'
+  'Volta Redonda e Niterói (RJ), Bauru (SP), Caxias do Sul (RS), Joinville (SC), Uberlândia (MG), Londrina (PR), Feira de Santana (BA), Caruaru (PE), Anápolis (GO), Vila Velha (ES), Campina Grande (PB), Caucaia (CE), Imperatriz (MA), Arapiraca (AL), Dourados (MS), Marabá (PA), Várzea Grande (MT), Ji-Paraná (RO), Parnamirim (RN) e Cruzeiro do Sul (AC) · 2024'
 
 export const copy = {
   coverageIncomplete:

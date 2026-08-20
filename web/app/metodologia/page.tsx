@@ -1,14 +1,16 @@
 import { Shell } from '@/components/Shell'
-import { stubSliceCoverage } from '@/lib/api'
+import { loadSliceCoverage } from '@/lib/api'
 import { METHOD_VERSION } from '@/lib/copy'
 import { routes } from '@/lib/routes'
 import type { Metadata } from 'next'
 
+export const revalidate = 3600
 export const metadata: Metadata = { title: 'Metodologia' }
 
-export default function MetodologiaPage() {
+export default async function MetodologiaPage() {
+  const coverage = await loadSliceCoverage()
   return (
-    <Shell coverage={stubSliceCoverage}>
+    <Shell coverage={coverage}>
       <p className="kicker">Versão {METHOD_VERSION}</p>
       <h1>Metodologia do explorador</h1>
       <div className="prose">

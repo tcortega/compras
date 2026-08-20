@@ -1,18 +1,14 @@
 import { readCoverage } from '@/lib/coverage'
 import type {
   Contratacao,
-  ContratacaoDetail,
   ExplorerClient,
   Fornecedor,
-  FornecedorDetail,
   Item,
-  ItemDetail,
   Orgao,
-  OrgaoDetail,
   PageRequest,
   SkipTakePage,
 } from '@/lib/types'
-import { ApiError, ApiNotFoundError } from '@/lib/types'
+import { ApiError, ApiNotFoundError, isPublished } from '@/lib/types'
 
 const ENTITY_REVALIDATE = 3600
 
@@ -31,17 +27,38 @@ function queryOf(req: PageRequest): string {
   return params.toString()
 }
 
-function asPage<T>(raw: unknown, skip: number, take: number): SkipTakePage<T> {
+function publishedPage<T extends { suspended?: boolean }>(
+  raw: unknown,
+  skip: number,
+  take: number,
+): SkipTakePage<T> {
   const o = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {}
-  const items = Array.isArray(o.items) ? (o.items as T[]) : []
-  const total = typeof o.total === 'number' ? o.total : items.length
+  const items = (Array.isArray(o.items) ? (o.items as T[]) : []).filter(isPublished)
+  const coverage = readCoverage(o.coverage)
+  const total = typeof o.total === 'number' ? o.total : coverage.n
   return {
     items,
     total,
     skip: typeof o.skip === 'number' ? o.skip : skip,
     take: typeof o.take === 'number' ? o.take : take,
-    coverage: readCoverage(o.coverage),
+    coverage,
   }
+}
+
+function unwrapEntity<T extends { suspended?: boolean }>(
+  raw: unknown,
+  nestedKey: string,
+  resource: string,
+  id: string,
+): T {
+  if (!raw || typeof raw !== 'object') {
+    throw new ApiError(502, `API sem entidade em /api/${resource}/${id}`)
+  }
+  const o = raw as Record<string, unknown>
+  const nested = o[nestedKey]
+  const row = (nested && typeof nested === 'object' && !Array.isArray(nested) ? nested : raw) as T
+  if (!isPublished(row)) throw new ApiNotFoundError(resource, id)
+  return row
 }
 
 export function createHttpClient(baseUrl: string): ExplorerClient {
@@ -66,31 +83,41 @@ export function createHttpClient(baseUrl: string): ExplorerClient {
   return {
     async listOrgaos(req) {
       const raw = await getJson<unknown>(`/api/orgaos?${queryOf(req)}`, 60)
-      return asPage<Orgao>(raw, req.skip, req.take)
+      return publishedPage<Orgao>(raw, req.skip, req.take)
     },
     async getOrgao(id) {
-      return getJson<OrgaoDetail>(`/api/orgaos/${id}`)
+      return unwrapEntity<Orgao>(await getJson<unknown>(`/api/orgaos/${id}`), 'orgao', 'orgao', id)
     },
     async listFornecedores(req) {
       const raw = await getJson<unknown>(`/api/fornecedores?${queryOf(req)}`, 60)
-      return asPage<Fornecedor>(raw, req.skip, req.take)
+      return publishedPage<Fornecedor>(raw, req.skip, req.take)
     },
     async getFornecedor(id) {
-      return getJson<FornecedorDetail>(`/api/fornecedores/${id}`)
+      return unwrapEntity<Fornecedor>(
+        await getJson<unknown>(`/api/fornecedores/${id}`),
+        'fornecedor',
+        'fornecedor',
+        id,
+      )
     },
     async listContratacoes(req) {
       const raw = await getJson<unknown>(`/api/contratacoes?${queryOf(req)}`, 60)
-      return asPage<Contratacao>(raw, req.skip, req.take)
+      return publishedPage<Contratacao>(raw, req.skip, req.take)
     },
     async getContratacao(id) {
-      return getJson<ContratacaoDetail>(`/api/contratacoes/${id}`)
+      return unwrapEntity<Contratacao>(
+        await getJson<unknown>(`/api/contratacoes/${id}`),
+        'contratacao',
+        'contratacao',
+        id,
+      )
     },
     async listItems(req) {
       const raw = await getJson<unknown>(`/api/items?${queryOf(req)}`, 60)
-      return asPage<Item>(raw, req.skip, req.take)
+      return publishedPage<Item>(raw, req.skip, req.take)
     },
     async getItem(id) {
-      return getJson<ItemDetail>(`/api/items/${id}`)
+      return unwrapEntity<Item>(await getJson<unknown>(`/api/items/${id}`), 'item', 'item', id)
     },
   }
 }

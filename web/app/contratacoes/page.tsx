@@ -31,6 +31,7 @@ export default async function ContratacoesPage({ searchParams }: { searchParams:
               <input name="ano" inputMode="numeric" defaultValue={req.ano ? String(req.ano) : ''} />
             </label>
             {req.orgaoId ? <input type="hidden" name="orgaoId" value={req.orgaoId} /> : null}
+            {req.fornecedorId ? <input type="hidden" name="fornecedorId" value={req.fornecedorId} /> : null}
           </>
         }
       />

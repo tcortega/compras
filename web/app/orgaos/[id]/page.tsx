@@ -40,9 +40,13 @@ export default async function OrgaoPage({ params }: { params: Promise<{ id: stri
     api.listContratacoes({ skip: 0, take: 8, orgaoId: id }),
     api.listItems({ skip: 0, take: 8, orgaoId: id }),
   ])
+  const homologado = cts.items
+    .map((c) => c.valorHomologado)
+    .filter((v): v is number => v != null)
+    .reduce<number | null>((sum, v) => (sum == null ? v : sum + v), null)
 
   return (
-    <Shell coverage={row.coverage} current={routes.orgaos}>
+    <Shell coverage={its.coverage} current={routes.orgaos}>
       <EntityHeader
         kicker={`Órgão · ${formatEsfera(row.esfera)} · ${formatPoder(row.poder)} · ${row.uf}`}
         title={row.razaoSocial}
@@ -56,9 +60,9 @@ export default async function OrgaoPage({ params }: { params: Promise<{ id: stri
         ]}
       />
       <div className="stats">
-        <Stat label="Contratações" value={formatNumber(row.totals.contratacoes)} coverage={row.totals.coverage} />
-        <Stat label="Homologado" value={<Money value={row.totals.valorHomologado} />} coverage={row.totals.coverage} />
-        <Stat label="Itens" value={formatNumber(row.totals.items)} coverage={row.totals.coverage} />
+        <Stat label="Contratações" value={formatNumber(cts.total)} coverage={cts.coverage} />
+        <Stat label="Homologado" value={<Money value={homologado} />} coverage={cts.coverage} />
+        <Stat label="Itens" value={formatNumber(its.total)} coverage={its.coverage} />
       </div>
       <SourceLine methodologyVersion={METHOD_VERSION} />
 

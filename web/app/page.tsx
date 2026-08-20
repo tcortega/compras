@@ -1,8 +1,8 @@
+import { CoverageChip } from '@/components/CoverageChip'
 import { SearchForm } from '@/components/SearchForm'
 import { Shell } from '@/components/Shell'
 import { api } from '@/lib/api'
 import { copy, SLICE_LABEL } from '@/lib/copy'
-import { coverageParts } from '@/lib/coverage'
 import { formatNumber } from '@/lib/format'
 import { routes } from '@/lib/routes'
 
@@ -39,18 +39,13 @@ export default async function HomePage() {
         </div>
       </section>
       <section className="index-grid" aria-label="Totais do recorte">
-        {cards.map((card) => {
-          const parts = coverageParts(card.coverage)
-          return (
-            <a key={card.href} className="index-card" href={card.href}>
-              <p className="kicker">{card.kicker}</p>
-              <strong>{formatNumber(card.total)}</strong>
-              <span>
-                {parts.n} · {parts.geo} · {parts.when} · {parts.method}
-              </span>
-            </a>
-          )
-        })}
+        {cards.map((card) => (
+          <a key={card.href} className="index-card" href={card.href}>
+            <p className="kicker">{card.kicker}</p>
+            <strong>{formatNumber(card.total)}</strong>
+            <CoverageChip coverage={card.coverage} />
+          </a>
+        ))}
       </section>
     </Shell>
   )

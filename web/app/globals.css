@@ -282,7 +282,9 @@ h3 {
 .btn-ghost {
   background: transparent;
   color: var(--ink);
-  border-color: var(--rule-strong);
+  border: 1px solid var(--rule-strong);
+  font: inherit;
+  cursor: pointer;
   height: 40px;
   padding: 0 12px;
 }
@@ -343,11 +345,15 @@ h3 {
   font-variant-numeric: tabular-nums;
 }
 
-.index-card span {
-  display: block;
+.index-card .chip {
   margin-top: 8px;
-  color: var(--muted);
-  font-size: 12px;
+}
+
+.index-card .chip span {
+  display: inline;
+  margin-top: 0;
+  color: inherit;
+  font-size: inherit;
 }
 
 .section {

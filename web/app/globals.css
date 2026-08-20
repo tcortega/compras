@@ -126,6 +126,7 @@ table.data a:focus-visible,
   text-decoration: none;
   color: inherit;
   min-width: 0;
+  max-width: min(28rem, 100%);
 }
 
 .brand:hover {
@@ -135,10 +136,11 @@ table.data a:focus-visible,
 .brand-kicker {
   display: block;
   font-size: 11px;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
   margin-bottom: 4px;
+  overflow-wrap: break-word;
 }
 
 .brand-name {
@@ -184,6 +186,7 @@ table.data a:focus-visible,
   border-bottom: 1px solid #ddd2ae;
   font-size: 12.5px;
   line-height: 1.45;
+  overflow-wrap: break-word;
 }
 
 .coverage-bar-inner {
@@ -228,7 +231,7 @@ h1 {
   margin: 0 0 12px;
   font-size: clamp(32px, 5vw, 46px);
   line-height: 1.08;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 h2 {
@@ -247,6 +250,7 @@ h3 {
   margin: 0 0 28px;
   color: var(--ink-2);
   font-size: 17px;
+  overflow-wrap: break-word;
 }
 
 .hero {
@@ -355,7 +359,7 @@ h3 {
 
 .index-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   margin: 28px 0 0;
 }
@@ -369,7 +373,7 @@ h3 {
   text-decoration: none;
   color: inherit;
   min-width: 0;
-  min-height: 148px;
+  min-height: 132px;
 }
 
 .index-card:hover {
@@ -495,11 +499,17 @@ table.data {
 
 table.data th,
 table.data td {
-  padding: 10px 12px;
+  padding: 8px 12px;
   text-align: left;
   vertical-align: top;
   border-bottom: 1px solid var(--rule);
   overflow-wrap: break-word;
+}
+
+table.data th:first-child,
+table.data td:first-child {
+  min-width: 12rem;
+  max-width: 28rem;
 }
 
 table.data th {
@@ -583,7 +593,7 @@ table.data a:hover {
   color: var(--wheat-ink);
   font-size: 12px;
   line-height: 1.45;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .chip b {
@@ -593,7 +603,7 @@ table.data a:hover {
 
 .stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   margin: 22px 0 8px;
 }
@@ -616,6 +626,7 @@ table.data a:hover {
   font-weight: 500;
   letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
+  overflow-wrap: break-word;
 }
 
 .stat .chip {
@@ -682,13 +693,15 @@ table.data a:hover {
 
 .source span {
   display: block;
+  overflow-wrap: break-word;
 }
 
 .empty {
-  padding: 28px 16px;
+  padding: 36px 20px;
   text-align: center;
   color: var(--muted);
   margin: 0;
+  font-size: 14px;
 }
 
 .table-wrap > .empty {
@@ -704,6 +717,7 @@ table.data a:hover {
   padding: 22px 0 36px;
   color: var(--muted);
   font-size: 12.5px;
+  overflow-wrap: break-word;
 }
 
 .footer-inner {
@@ -805,6 +819,15 @@ table.data a:hover {
 
   .search button {
     width: 100%;
+  }
+
+  table.data th:first-child,
+  table.data td:first-child {
+    min-width: 8rem;
+  }
+
+  .brand {
+    max-width: 100%;
   }
 }
 

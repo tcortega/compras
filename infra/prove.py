@@ -191,6 +191,8 @@ def main() -> int:
         raise SystemExit("web / missing Londrina")
     if "UF mista" not in home:
         raise SystemExit("web / missing honest mixed UF")
+    if "Sete municípios" not in home:
+        raise SystemExit("web / missing short brand kicker")
     if "UF Brasil" in home or "total nacional" in folded:
         raise SystemExit("web / invented a national total")
 
@@ -317,6 +319,39 @@ def main() -> int:
     assert_served_page(item_html, "web /itens/{id}")
     if not re.search(r"R\$\s*[\d.]+,\d{2}", item_html):
         raise SystemExit("web /itens/{id} missing money")
+    mapped_row = next((row for row in rows if row.get("valorPorUnidadeCanonica") is not None), None)
+    if mapped_row is None:
+        raise SystemExit("api items missing a warehouse base price to prove the item page")
+    mapped_html = get_text(f"{WEB}/itens/{mapped_row['id']}")
+    assert_served_page(mapped_html, "web mapped item")
+    if "Valor por" not in mapped_html:
+        raise SystemExit("web mapped item hid the warehouse base price")
+    canon = str(mapped_row.get("unidadeCanonica") or "")
+    if not canon or canon == "unknown" or canon not in mapped_html:
+        raise SystemExit(f"web mapped item missing canonical unit {canon}")
+    unknown_page = get_json(f"{API}/api/items?q=CONHECIDA&skip=0&take=20")
+    unknown_row = next(
+        (row for row in (unknown_page.get("items") or []) if str(row.get("unidadeCanonica") or "") == "unknown"),
+        None,
+    )
+    if unknown_row is None:
+        raise SystemExit("api missing unknown-unit item (LOTE AVULSO / FOOBAR)")
+    unknown_html = get_text(f"{WEB}/itens/{unknown_row['id']}")
+    assert_served_page(unknown_html, "web unknown item")
+    if "não mapeada" not in unknown_html:
+        raise SystemExit("web unknown item missing não mapeada")
+    if re.search(r'class="kicker">Valor por', unknown_html):
+        raise SystemExit("web unknown item invented a base-price stat")
+    if re.search(r"\bunknown\b", unknown_html):
+        raise SystemExit("web leaked the warehouse unknown token")
+
+    paged = get_text(f"{WEB}/orgaos?uf=RJ&take=1")
+    assert_served_page(paged, "web /orgaos?uf=RJ&take=1")
+    next_href = re.search(r'<a href="([^"]+)">Próxima</a>', paged)
+    if next_href is None:
+        raise SystemExit("web /orgaos?uf=RJ&take=1 missing next page")
+    if "uf=RJ" not in next_href.group(1):
+        raise SystemExit(f"web pager dropped UF: {next_href.group(1)}")
 
     empty = get_text(f"{WEB}/orgaos?q=zzzz-sem-registro")
     assert_served_page(empty, "web empty orgaos")

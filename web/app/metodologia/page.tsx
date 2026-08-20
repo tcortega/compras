@@ -16,7 +16,7 @@ export default async function MetodologiaPage() {
         <p>Fase 2: busca, listagem e ficha. Sem pontuação, sem classificação de órgãos ou fornecedores e sem alertas públicos.</p>
         <p>As rotas lidas são GET /api/orgaos, /api/fornecedores, /api/contratacoes e /api/items, com detalhe por id.</p>
         <p>Listas usam PageRequest com skip e take no servidor. Não há ordenação por score.</p>
-        <p>Páginas de entidade são geradas com ISR (revalidate 3600) para caber atrás de CDN.</p>
+        <p>Fichas leem o warehouse a cada pedido.</p>
         <p>CPF chega mascarado da origem e não é exibido em campo próprio.</p>
         <p>O texto público publica número, fonte e snapshot. Não usa rótulo de veredito.</p>
         <p>

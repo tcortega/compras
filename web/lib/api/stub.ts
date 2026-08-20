@@ -180,7 +180,7 @@ export const stubClient: ExplorerClient = {
         ? { ...fornecedores, items: [], total: 0, coverage: { ...fornecedores.coverage, n: 0 } }
         : fornecedores,
       items: empty ? { ...items, items: [], total: 0, coverage: { ...items.coverage, n: 0 } } : items,
-      coverage: empty ? slice : { ...items.coverage, uf: items.coverage.uf },
+      coverage: slice,
       source: 'warehouse',
     } satisfies SearchPage
   },

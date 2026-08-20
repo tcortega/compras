@@ -91,7 +91,8 @@ def _doc(kind: str, entity_id: object, text: object) -> dict[str, str]:
         raise SystemExit(f"{kind} missing id")
     if not body:
         raise SystemExit(f"{kind} {eid} missing text")
-    return {"id": f"{kind}:{eid}", "kind": kind, "entityId": eid, "text": body}
+    # Meili document ids allow only [A-Za-z0-9_-].
+    return {"id": f"{kind}_{eid}", "kind": kind, "entityId": eid, "text": body}
 
 
 def _assert_factual(docs: list[dict[str, str]]) -> None:

@@ -30,6 +30,7 @@ C# never runs a detector.
 
 `search-index` reads warehouse text into Meilisearch after the seed.
 Python never calls C# for that job.
+Document id is `{kind}_{entityId}` so the upsert is idempotent.
 `/busca` uses `GET /api/busca` against Meilisearch when `MEILI_URL` is set.
 The explorer talks to the compose API at `http://api:5080`, not the in-process stub.
 

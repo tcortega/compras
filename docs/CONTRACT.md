@@ -121,6 +121,10 @@ All of these kinds stay `state=detected` and are not public alerts.
 `sourceUrl` text.
 `snapshotId` text.
 `methodologyVersion` text.
+New pipeline writes stamp `methodologyVersion` 0.2 on flags.
+An existing flag row keeps its prior stamp because `write_flags` ON CONFLICT updates delta only.
+API FullCycle fixtures stay on 0.1 so the frozen suite does not rewrite historical rows.
+Phase 0 and A3 label files stay on phase1-0.1.0.
 `replyText` text nullable.
 `repliedAt` Instant nullable.
 `suspended` bool default false.

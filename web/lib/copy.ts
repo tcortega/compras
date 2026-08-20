@@ -1,6 +1,6 @@
 export const SITE_NAME = 'Compras'
 export const SITE_TAG = 'Explorador de compras públicas'
-export const METHOD_VERSION = '0.1'
+export const METHOD_VERSION = '0.2'
 export const SLICE_YEAR = 2024
 export const SLICE_UF = 'RJ'
 export const SLICE_IBGE = '3306305'

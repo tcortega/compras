@@ -223,7 +223,7 @@ def write_flags(settings: Settings, flags: pl.DataFrame, items: pl.DataFrame) ->
             continue
         iid, snap, meth = mapped
         snap = str(row.get("snapshot_id") or snap)
-        meth = str(row.get("methodology_version") or meth)
+        meth = str(settings.methodology_version or row.get("methodology_version") or meth)
         rows.append(
             {
                 "id": flag_id(iid, str(row["kind"]), snap),

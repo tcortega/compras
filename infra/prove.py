@@ -61,6 +61,8 @@ PUBLISHED = {
     "4209300": ("municipio de lages", "SC"),
     "1506807": ("municipio de santarem", "PA"),
     "5218805": ("municipio de rio verde", "GO"),
+    "2924009": ("municipio de paulo afonso", "BA"),
+    "2613701": ("municipio de sao lourenco da mata", "PE"),
 }
 
 
@@ -69,7 +71,7 @@ def main() -> int:
     deny_flags(orgaos, f"{API}/api/orgaos")
     deny_stub(json.dumps(orgaos, ensure_ascii=False), "api /api/orgaos")
     items_page = orgaos.get("items") or []
-    if len(items_page) < 35:
+    if len(items_page) < 37:
         raise SystemExit(f"api /api/orgaos returned {len(items_page)} rows, need the published slice")
     by_ibge = {str(row.get("municipioIbge") or ""): row for row in items_page}
     for ibge, (nome, uf) in PUBLISHED.items():
@@ -86,7 +88,7 @@ def main() -> int:
     orgao_cov = orgaos.get("coverage") or {}
     if orgao_cov.get("uf") not in (None, ""):
         raise SystemExit(f"mixed orgao list invented a UF: {orgao_cov}")
-    if not isinstance(orgao_cov.get("n"), int) or orgao_cov["n"] < 35:
+    if not isinstance(orgao_cov.get("n"), int) or orgao_cov["n"] < 37:
         raise SystemExit(f"api orgaos coverage.n missing the extra slice: {orgao_cov}")
     if not orgao_cov.get("methodologyVersion"):
         raise SystemExit(f"api orgaos coverage missing methodologyVersion: {orgao_cov}")
@@ -294,6 +296,16 @@ def main() -> int:
     rio_verde_rows = rio_verde.get("items") or []
     if len(rio_verde_rows) != 1 or str(rio_verde_rows[0].get("municipioIbge") or "") != "5218805":
         raise SystemExit(f"api municipio filter 5218805 failed: {rio_verde_rows}")
+    paulo_afonso = get_json(f"{API}/api/orgaos?municipioIbge=2924009&skip=0&take=50")
+    deny_flags(paulo_afonso, f"{API}/api/orgaos?municipioIbge=2924009")
+    paulo_afonso_rows = paulo_afonso.get("items") or []
+    if len(paulo_afonso_rows) != 1 or str(paulo_afonso_rows[0].get("municipioIbge") or "") != "2924009":
+        raise SystemExit(f"api municipio filter 2924009 failed: {paulo_afonso_rows}")
+    sao_lourenco = get_json(f"{API}/api/orgaos?municipioIbge=2613701&skip=0&take=50")
+    deny_flags(sao_lourenco, f"{API}/api/orgaos?municipioIbge=2613701")
+    sao_lourenco_rows = sao_lourenco.get("items") or []
+    if len(sao_lourenco_rows) != 1 or str(sao_lourenco_rows[0].get("municipioIbge") or "") != "2613701":
+        raise SystemExit(f"api municipio filter 2613701 failed: {sao_lourenco_rows}")
 
     orgao = by_ibge["3306305"]
     oid = orgao["id"]
@@ -438,9 +450,13 @@ def main() -> int:
         raise SystemExit("web / missing Santarém")
     if "rio verde" not in folded:
         raise SystemExit("web / missing Rio Verde")
+    if "paulo afonso" not in folded:
+        raise SystemExit("web / missing Paulo Afonso")
+    if "sao lourenco da mata" not in folded and "são lourenço da mata" not in folded:
+        raise SystemExit("web / missing São Lourenço da Mata")
     if "UF mista" not in home:
         raise SystemExit("web / missing honest mixed UF")
-    if "Trinta e cinco municípios" not in home:
+    if "Trinta e sete municípios" not in home:
         raise SystemExit("web / missing short brand kicker")
     if "UF Brasil" in home or "total nacional" in folded:
         raise SystemExit("web / invented a national total")
@@ -518,6 +534,10 @@ def main() -> int:
         raise SystemExit("web /orgaos missing Santarém")
     if "rio verde" not in orgaos_fold:
         raise SystemExit("web /orgaos missing Rio Verde")
+    if "paulo afonso" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing Paulo Afonso")
+    if "sao lourenco da mata" not in orgaos_fold and "são lourenço da mata" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing São Lourenço da Mata")
     if "UF mista" not in orgaos_html:
         raise SystemExit("web /orgaos missing honest mixed UF")
 
@@ -620,10 +640,14 @@ def main() -> int:
     pe_table = table_html(pe_html)
     if "caruaru" not in pe_table.casefold():
         raise SystemExit("web /orgaos?uf=PE missing Caruaru")
+    if "sao lourenco da mata" not in pe_table.casefold() and "são lourenço da mata" not in pe_table.casefold():
+        raise SystemExit("web /orgaos?uf=PE missing São Lourenço da Mata")
     if "municipio de feira de santana" in pe_table.casefold():
         raise SystemExit("web UF=PE filter leaked Feira de Santana")
     if "prefeitura municipal de volta redonda" in pe_table.casefold():
         raise SystemExit("web UF=PE filter leaked Volta Redonda")
+    if not re.search(r"n=2", pe_html):
+        raise SystemExit("web UF=PE filter missing n=2")
     if "UF PE" not in pe_html:
         raise SystemExit("web UF=PE missing coverage UF")
 
@@ -979,6 +1003,34 @@ def main() -> int:
     if "UF GO" not in rio_verde_html:
         raise SystemExit("web Rio Verde filter missing UF GO")
 
+    paulo_afonso_html = get_text(f"{WEB}/orgaos?municipioIbge=2924009")
+    assert_served_page(paulo_afonso_html, "web /orgaos?municipioIbge=2924009")
+    paulo_afonso_table = table_html(paulo_afonso_html)
+    if "municipio de paulo afonso" not in paulo_afonso_table.casefold() and "município de paulo afonso" not in paulo_afonso_table.casefold():
+        raise SystemExit("web /orgaos?municipioIbge=2924009 missing Paulo Afonso")
+    if "municipio de sao lourenco da mata" in paulo_afonso_table.casefold() or "município de são lourenço da mata" in paulo_afonso_table.casefold():
+        raise SystemExit("web municipio filter leaked São Lourenço da Mata")
+    if "prefeitura municipal de volta redonda" in paulo_afonso_table.casefold():
+        raise SystemExit("web municipio filter leaked Volta Redonda")
+    if not re.search(r"n=1", paulo_afonso_html):
+        raise SystemExit("web Paulo Afonso filter missing n=1")
+    if "UF BA" not in paulo_afonso_html:
+        raise SystemExit("web Paulo Afonso filter missing UF BA")
+
+    sao_lourenco_html = get_text(f"{WEB}/orgaos?municipioIbge=2613701")
+    assert_served_page(sao_lourenco_html, "web /orgaos?municipioIbge=2613701")
+    sao_lourenco_table = table_html(sao_lourenco_html)
+    if "municipio de sao lourenco da mata" not in sao_lourenco_table.casefold() and "município de são lourenço da mata" not in sao_lourenco_table.casefold():
+        raise SystemExit("web /orgaos?municipioIbge=2613701 missing São Lourenço da Mata")
+    if "municipio de paulo afonso" in sao_lourenco_table.casefold() or "município de paulo afonso" in sao_lourenco_table.casefold():
+        raise SystemExit("web municipio filter leaked Paulo Afonso")
+    if "prefeitura municipal de volta redonda" in sao_lourenco_table.casefold():
+        raise SystemExit("web municipio filter leaked Volta Redonda")
+    if not re.search(r"n=1", sao_lourenco_html):
+        raise SystemExit("web São Lourenço da Mata filter missing n=1")
+    if "UF PE" not in sao_lourenco_html:
+        raise SystemExit("web São Lourenço da Mata filter missing UF PE")
+
     orgao_html = get_text(f"{WEB}/orgaos/{oid}")
     assert_served_page(orgao_html, "web /orgaos/{id}")
     if STAT_HOMOLOGADO.search(orgao_html):
@@ -1124,6 +1176,10 @@ def main() -> int:
         raise SystemExit("web /cobertura missing Santarém IBGE")
     if "5218805" not in cobertura:
         raise SystemExit("web /cobertura missing Rio Verde IBGE")
+    if "2924009" not in cobertura:
+        raise SystemExit("web /cobertura missing Paulo Afonso IBGE")
+    if "2613701" not in cobertura:
+        raise SystemExit("web /cobertura missing São Lourenço da Mata IBGE")
     if "não é um total nacional" not in cobertura:
         raise SystemExit("web /cobertura missing disclaimer")
     if "UF mista" not in cobertura:

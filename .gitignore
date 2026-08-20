@@ -4,6 +4,21 @@
 *.zip
 *.7z
 !labels/**/*.csv
+!ingest/fixtures/**/*.csv
+!normalize/compras_normalize/data/*.csv
+.e2e-landing/
+.e2e-work/
+*.egg-info/
+
+# local clickhouse server artifacts
+/clickhouse
+/cores/
+/data/
+/metadata/
+/preprocessed_configs/
+/status
+/store/
+/uuid
 
 # python
 .venv/

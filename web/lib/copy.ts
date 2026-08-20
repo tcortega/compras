@@ -31,12 +31,14 @@ export const SLICE_MUNICIPIOS = [
   { nome: 'Cruzeiro do Sul', uf: 'AC', ibge: '1200203' },
   { nome: 'Santana', uf: 'AP', ibge: '1600600' },
   { nome: 'Rorainópolis', uf: 'RR', ibge: '1400472' },
+  { nome: 'Maringá', uf: 'PR', ibge: '4115200' },
+  { nome: 'Taubaté', uf: 'SP', ibge: '3554102' },
 ] as const
 
-export const SLICE_BRAND = 'Vinte e três municípios · 2024'
+export const SLICE_BRAND = 'Vinte e cinco municípios · 2024'
 
 export const SLICE_LABEL =
-  'Volta Redonda e Niterói (RJ), Bauru (SP), Caxias do Sul (RS), Joinville (SC), Uberlândia (MG), Londrina (PR), Feira de Santana (BA), Caruaru (PE), Anápolis (GO), Vila Velha (ES), Campina Grande (PB), Caucaia (CE), Imperatriz (MA), Arapiraca (AL), Dourados (MS), Marabá (PA), Várzea Grande (MT), Ji-Paraná (RO), Parnamirim (RN), Cruzeiro do Sul (AC), Santana (AP) e Rorainópolis (RR) · 2024'
+  'Volta Redonda e Niterói (RJ), Bauru (SP), Caxias do Sul (RS), Joinville (SC), Uberlândia (MG), Londrina (PR), Feira de Santana (BA), Caruaru (PE), Anápolis (GO), Vila Velha (ES), Campina Grande (PB), Caucaia (CE), Imperatriz (MA), Arapiraca (AL), Dourados (MS), Marabá (PA), Várzea Grande (MT), Ji-Paraná (RO), Parnamirim (RN), Cruzeiro do Sul (AC), Santana (AP), Rorainópolis (RR), Maringá (PR) e Taubaté (SP) · 2024'
 
 export const copy = {
   coverageIncomplete:

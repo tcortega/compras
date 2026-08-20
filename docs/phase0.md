@@ -2,7 +2,7 @@
 
 Municipio chosen for the Phase 0 precision gate: Volta Redonda, RJ, IBGE 3306305, year 2024.
 Population is about 274k (IBGE 2022), inside the 100k-500k mid-size band, and it is not a capital.
-The published explorer fixture also lands municípios that the same 2024 COMPRA file already counted: Niterói, RJ, IBGE 3303302 (238 municipal contratacoes), Bauru, SP, IBGE 3506003 (736), Caxias do Sul, RS, IBGE 4305108 (577), Joinville, SC, IBGE 4209102 (346), Uberlândia, MG, IBGE 3170206 (1152), Londrina, PR, IBGE 4113700 (257), Feira de Santana, BA, IBGE 2910800 (12), Caruaru, PE, IBGE 2604106 (167), Anápolis, GO, IBGE 5201108 (62), Vila Velha, ES, IBGE 3205200 (33), Campina Grande, PB, IBGE 2504009 (225), Caucaia, CE, IBGE 2303709 (83), Imperatriz, MA, IBGE 2105302 (6), Arapiraca, AL, IBGE 2700300 (162), Dourados, MS, IBGE 5003702 (53), Marabá, PA, IBGE 1504208 (233), Várzea Grande, MT, IBGE 5108402 (23), Ji-Paraná, RO, IBGE 1100122 (183), Parnamirim, RN, IBGE 2403251 (52), Cruzeiro do Sul, AC, IBGE 1200203 (56), Santana, AP, IBGE 1600600 (6), and Rorainópolis, RR, IBGE 1400472 (6).
+The published explorer fixture also lands municípios that the same 2024 COMPRA file already counted: Niterói, RJ, IBGE 3303302 (238 municipal contratacoes), Bauru, SP, IBGE 3506003 (736), Caxias do Sul, RS, IBGE 4305108 (577), Joinville, SC, IBGE 4209102 (346), Uberlândia, MG, IBGE 3170206 (1152), Londrina, PR, IBGE 4113700 (257), Feira de Santana, BA, IBGE 2910800 (12), Caruaru, PE, IBGE 2604106 (167), Anápolis, GO, IBGE 5201108 (62), Vila Velha, ES, IBGE 3205200 (33), Campina Grande, PB, IBGE 2504009 (225), Caucaia, CE, IBGE 2303709 (83), Imperatriz, MA, IBGE 2105302 (6), Arapiraca, AL, IBGE 2700300 (162), Dourados, MS, IBGE 5003702 (53), Marabá, PA, IBGE 1504208 (233), Várzea Grande, MT, IBGE 5108402 (23), Ji-Paraná, RO, IBGE 1100122 (183), Parnamirim, RN, IBGE 2403251 (52), Cruzeiro do Sul, AC, IBGE 1200203 (56), Santana, AP, IBGE 1600600 (6), Rorainópolis, RR, IBGE 1400472 (6), Maringá, PR, IBGE 4115200 (425), and Taubaté, SP, IBGE 3554102 (384).
 Those extra rows use the same landed COMPRA/ITEM schema.
 They do not replace the Volta Redonda labeled set.
 Jaboatão dos Guararapes, PE, IBGE 2607901, has no municipal row in that 2024 COMPRA file.
@@ -31,6 +31,13 @@ Parintins, AM, IBGE 1303403, is present in the 2024 COMPRA file only as federal 
 Brasília, DF, IBGE 5300108, has no municipal row in that 2024 COMPRA file.
 Santana is the listed municipal AP fallback with landed volume after Nossa Senhora do Socorro and Lagarto had no municipal SE rows and Picos had only federal rows.
 Rorainópolis is the listed municipal RR fallback with landed volume after Floriano had no row, Parintins had only federal rows, and Brasília had no municipal row.
+Araguaína, TO, IBGE 1702109, is present in the 2024 COMPRA file only as federal, state, and other non-municipal rows.
+Gurupi, TO, IBGE 1709500, is present in the 2024 COMPRA file only as state and other non-municipal rows.
+Manacapuru, AM, IBGE 1302504, is present in the 2024 COMPRA file only as federal rows.
+Iranduba, AM, IBGE 1301852, is present in the 2024 COMPRA file only as federal rows.
+Unused UFs AM, PI, SE, TO, and DF have municipal rows only in small towns, so they have zero mid-size municipal rows in that 2024 COMPRA file.
+Maringá is the listed municipal PR fallback with landed volume after those unused UFs had no mid-size municipal row.
+Taubaté is the listed municipal SP fallback with landed volume after those unused UFs had no mid-size municipal row.
 The 2024 COMPRA file has 57,384 municipal rows across 731 distinct municipio names.
 Volta Redonda has 964 municipal contratacoes (959 unique id_compra), the highest volume among clearly mid-size non-capital cities after excluding Uberlandia / Ribeirao Preto which sit above 500k.
 Other candidates present with volume: Bauru 736, Caxias do Sul 577, Maringa 425, Taubate 384, Joinville 346, Campina Grande 225 municipal 2024, Londrina 257, Niteroi 238.

@@ -17,12 +17,14 @@ export const SLICE_MUNICIPIOS = [
   { nome: 'Londrina', uf: 'PR', ibge: '4113700' },
   { nome: 'Feira de Santana', uf: 'BA', ibge: '2910800' },
   { nome: 'Caruaru', uf: 'PE', ibge: '2604106' },
+  { nome: 'Anápolis', uf: 'GO', ibge: '5201108' },
+  { nome: 'Vila Velha', uf: 'ES', ibge: '3205200' },
 ] as const
 
-export const SLICE_BRAND = 'Nove municípios · 2024'
+export const SLICE_BRAND = 'Onze municípios · 2024'
 
 export const SLICE_LABEL =
-  'Volta Redonda e Niterói (RJ), Bauru (SP), Caxias do Sul (RS), Joinville (SC), Uberlândia (MG), Londrina (PR), Feira de Santana (BA) e Caruaru (PE) · 2024'
+  'Volta Redonda e Niterói (RJ), Bauru (SP), Caxias do Sul (RS), Joinville (SC), Uberlândia (MG), Londrina (PR), Feira de Santana (BA), Caruaru (PE), Anápolis (GO) e Vila Velha (ES) · 2024'
 
 export const copy = {
   coverageIncomplete:

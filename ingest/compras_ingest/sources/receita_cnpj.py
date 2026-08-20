@@ -79,6 +79,8 @@ SOCIO_COLS = [
     "qualificacao_representante",
     "faixa_etaria",
 ]
+CNAE_COLS = ["codigo", "descricao"]
+QUAL_COLS = ["codigo", "descricao"]
 
 
 def land_receita_cnpj(
@@ -94,19 +96,31 @@ def land_receita_cnpj(
         if not keep:
             raise ValueError("Receita remote fetch needs compras slice CNPJs or RECEITA_CNPJ_BASICOS")
         estabelecimentos, socios = _load_remote(official, keep)
+        cnaes = _stream_lookup(official, "Cnaes", CNAE_COLS)
+        qualificacoes = _stream_lookup(official, "Qualificacoes", QUAL_COLS)
         part = f"{official.month}-01"
     else:
         estabelecimentos, socios = _load_fixture(settings, keep)
+        if settings.receita_cnpj_path is None:
+            raise FileNotFoundError("RECEITA_CNPJ_PATH missing and RECEITA_CNPJ_FETCH is off")
+        cnaes = _read_named(settings.receita_cnpj_path, ("Cnaes",), CNAE_COLS)
+        qualificacoes = _read_named(settings.receita_cnpj_path, ("Qualificacoes",), QUAL_COLS)
         dates = [parse_date(v) for v in estabelecimentos["data_inicio_atividade"].to_list()] if (
             not estabelecimentos.is_empty() and "data_inicio_atividade" in estabelecimentos.columns
         ) else []
         part = partition_date_of(dates) if dates else datetime.now(timezone.utc).date().isoformat()
     estabelecimentos = mask_frame(estabelecimentos)
     socios = mask_frame(socios)
+    cnaes = _as_str(cnaes)
+    qualificacoes = _as_str(qualificacoes)
     _assert_no_raw_cpf_frame(estabelecimentos)
     _assert_no_raw_cpf_frame(socios)
+    _assert_no_raw_cpf_frame(cnaes)
+    _assert_no_raw_cpf_frame(qualificacoes)
     ref = store.write_parquet("receita_cnpj", part, estabelecimentos)
     socios_ref = store.write_parquet("receita_cnpj_socios", part, socios)
+    cnaes_ref = store.write_parquet("receita_cnpj_cnaes", part, cnaes)
+    quals_ref = store.write_parquet("receita_cnpj_qualificacoes", part, qualificacoes)
     meta = {
         "index_url": official.index_url if official else RFB_SHARE_URL,
         "mode": "fetch" if settings.receita_cnpj_fetch else "fixture",
@@ -114,8 +128,12 @@ def land_receita_cnpj(
         "basicos_n": len(keep),
         "estabelecimentos_sha256": ref.sha256,
         "socios_sha256": socios_ref.sha256,
+        "cnaes_sha256": cnaes_ref.sha256,
+        "qualificacoes_sha256": quals_ref.sha256,
         "estabelecimentos_rows": ref.rows,
         "socios_rows": socios_ref.rows,
+        "cnaes_rows": cnaes_ref.rows,
+        "qualificacoes_rows": quals_ref.rows,
     }
     store.put(
         f"receita_cnpj/date={ref.partition_date}/{ref.sha256}.source.json",
@@ -173,6 +191,13 @@ def _load_remote(official: ReceitaOfficial, keep: set[str]) -> tuple[pl.DataFram
     estab = _stream_kind(official, "Estabelecimentos", ESTAB_COLS, keep)
     socios = _stream_kind(official, "Socios", SOCIO_COLS, keep)
     return _join_filter(empresas, estab, socios, keep)
+
+
+def _stream_lookup(official: ReceitaOfficial, prefix: str, columns: list[str]) -> pl.DataFrame:
+    zips = [f for f in official.files if f.startswith(prefix) and f.endswith(".zip")]
+    if not zips:
+        return pl.DataFrame(schema={c: pl.String for c in columns})
+    return _stream_kind(official, prefix, columns, set())
 
 
 def _stream_kind(official: ReceitaOfficial, prefix: str, columns: list[str], keep: set[str]) -> pl.DataFrame:

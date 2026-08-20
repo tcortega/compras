@@ -98,10 +98,12 @@ from compras_ingest.warehouse import (
     fetch_adjacencies,
     fetch_all_items,
     fetch_catalog_codes,
+    fetch_cnaes,
     fetch_contratacao,
     fetch_contratacao_anos,
     fetch_exclusions,
     fetch_flags,
+    fetch_fornecedor_socios,
     fetch_item_facts,
     fetch_items_for,
     fetch_landing_sources,
@@ -134,6 +136,8 @@ LANDED_SOURCES = (
     "ocds",
     "receita_cnpj",
     "receita_cnpj_socios",
+    "receita_cnpj_cnaes",
+    "receita_cnpj_qualificacoes",
     "pncp_consulta",
     TCE_SP_SOURCE,
     TCE_RS_SOURCE,
@@ -407,6 +411,7 @@ def main() -> int:
     _assert_fracionamento_flags(result.items, flags, stored)
     _assert_retroactive_edit_flags(result.items, flags, stored, hashes_before_edit, store)
     _assert_receita_adjacency(settings)
+    _assert_fornecedor_receita_facts(settings)
     if "qty_unit_price_neq_total" not in kinds:
         raise SystemExit("warehouse missing qty_unit_price_neq_total after write_flags")
     if "retroactive_edit" not in kinds:
@@ -1138,6 +1143,35 @@ def _assert_receita_adjacency(settings: Settings) -> None:
                 raise SystemExit(f"adjacency stored raw CPF {raw}")
 
 
+def _assert_fornecedor_receita_facts(settings: Settings) -> None:
+    papel = "11222333000181"
+    financeira = "44555666000172"
+    socios = fetch_fornecedor_socios(settings, cnpj=papel)
+    names = {str(row.get("nome") or "") for row in socios}
+    if names != {"JOAO DA SILVA", "EDITORA EXEMPLO LTDA"}:
+        raise SystemExit(f"papelaria QSA {sorted(names)} != planted PF+PJ pair")
+    joao = next(row for row in socios if row.get("nome") == "JOAO DA SILVA")
+    if str(joao.get("cpfMasked") or "") != mask_cpf(RAW_CPF):
+        raise SystemExit(f"JOAO CPF not ingest-masked: {joao.get('cpfMasked')}")
+    if str(joao.get("qualificacao") or "") != "Sócio-Administrador":
+        raise SystemExit(f"JOAO qualificacao drifted: {joao.get('qualificacao')}")
+    editora = next(row for row in socios if row.get("nome") == "EDITORA EXEMPLO LTDA")
+    if editora.get("cpfMasked") not in (None, ""):
+        raise SystemExit(f"PJ socio stored a CPF: {editora.get('cpfMasked')}")
+    if str(editora.get("qualificacao") or "") != "Sócio":
+        raise SystemExit(f"EDITORA qualificacao drifted: {editora.get('qualificacao')}")
+    if fetch_fornecedor_socios(settings, cnpj=financeira):
+        raise SystemExit("financeira QSA is not empty")
+    cnaes = {str(row["codigo"]): str(row["descricao"]) for row in fetch_cnaes(settings)}
+    want_cnae = "Comércio varejista de livros, jornais, revistas e papelaria"
+    if cnaes.get("4761001") != want_cnae:
+        raise SystemExit(f"cnae 4761001 drifted: {cnaes.get('4761001')}")
+    blobs = [str(value) for row in socios for value in row.values() if value is not None]
+    assert_no_raw_cpf(blobs)
+    if RAW_CPF in " ".join(blobs):
+        raise SystemExit("warehouse socio stored raw CPF")
+
+
 def _load_retroactive_edit_expected() -> dict:
     from compras_detect.tier1.retroactive_edit import fixture_dir
 
@@ -1358,7 +1392,14 @@ def _assert_compras_gov_years(settings: Settings) -> None:
 
 def _assert_tier_a_landing(settings: Settings, ocds_report: dict) -> None:
     store = LandingStore(settings)
-    for source in ("ocds", "receita_cnpj", "receita_cnpj_socios", "pncp_consulta"):
+    for source in (
+        "ocds",
+        "receita_cnpj",
+        "receita_cnpj_socios",
+        "receita_cnpj_cnaes",
+        "receita_cnpj_qualificacoes",
+        "pncp_consulta",
+    ):
         keys = [k for k in store.list_parquet(source) if k.endswith(".parquet")]
         if not keys:
             raise SystemExit(f"no {source} parquet in landing")
@@ -1391,6 +1432,15 @@ def _assert_tier_a_landing(settings: Settings, ocds_report: dict) -> None:
                     raise SystemExit("receita_cnpj_socios landed empty from fixture")
                 if mask_cpf(RAW_CPF) not in " ".join(blobs):
                     raise SystemExit("receita socios missing masked CPF")
+            if source == "receita_cnpj_cnaes":
+                if df.is_empty():
+                    raise SystemExit("receita_cnpj_cnaes landed empty from fixture")
+                codes = {str(v) for v in df["codigo"].to_list()} if "codigo" in df.columns else set()
+                if "4761001" not in codes:
+                    raise SystemExit(f"receita cnaes missing 4761001: {codes}")
+            if source == "receita_cnpj_qualificacoes":
+                if df.is_empty():
+                    raise SystemExit("receita_cnpj_qualificacoes landed empty from fixture")
             if source == "ocds" and df.is_empty():
                 raise SystemExit("ocds landed empty from fixture")
             if source == "pncp_consulta":
@@ -1426,11 +1476,17 @@ def _assert_write_once(settings: Settings) -> None:
         basicos |= cnpj_basicos_from_frame(store.read_parquet(key))
     receita_first = store.list_parquet("receita_cnpj")
     socios_first = store.list_parquet("receita_cnpj_socios")
+    cnaes_first = store.list_parquet("receita_cnpj_cnaes")
+    quals_first = store.list_parquet("receita_cnpj_qualificacoes")
     land_receita_cnpj(settings, store, cnpj_basicos=basicos)
     if len(store.list_parquet("receita_cnpj")) != len(receita_first):
         raise SystemExit("receita reland wrote a second parquet")
     if len(store.list_parquet("receita_cnpj_socios")) != len(socios_first):
         raise SystemExit("receita socios reland wrote a second parquet")
+    if len(store.list_parquet("receita_cnpj_cnaes")) != len(cnaes_first):
+        raise SystemExit("receita cnaes reland wrote a second parquet")
+    if len(store.list_parquet("receita_cnpj_qualificacoes")) != len(quals_first):
+        raise SystemExit("receita qualificacoes reland wrote a second parquet")
     pncp_first = store.list_parquet("pncp_consulta")
     land_pncp_consulta(settings, store)
     if len(store.list_parquet("pncp_consulta")) != len(pncp_first):

@@ -32,10 +32,12 @@ from compras_ingest.warehouse import (
     fetch_all_items,
     write_adjacencies,
     write_catalog,
+    write_cnaes,
     write_entities,
     write_exclusions,
     write_facts,
     write_flags,
+    write_fornecedor_socios,
     write_landing_sources,
 )
 from compras_normalize.catalog import load_catalog
@@ -139,6 +141,12 @@ def warehouse_from_landing(
     if gap_items.height:
         items = pl.concat([items, gap_items], how="diagonal_relaxed") if items.height else gap_items
     entity_counts = write_entities(settings, items)
+    entity_counts["cnae"] = write_cnaes(settings, _concat_source(store, "receita_cnpj_cnaes"))
+    entity_counts["fornecedor_socio"] = write_fornecedor_socios(
+        settings,
+        _concat_source(store, "receita_cnpj_socios"),
+        _concat_source(store, "receita_cnpj_qualificacoes"),
+    )
     fact_rows = write_facts(settings, items)
     catalog_rows = write_catalog(settings, catalog_df)
     landing_sources = write_landing_sources(settings, store)

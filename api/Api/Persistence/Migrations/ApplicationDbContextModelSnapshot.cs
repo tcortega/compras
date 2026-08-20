@@ -407,6 +407,58 @@ namespace Api.Persistence.Migrations
                     b.ToTable("landing_source", (string)null);
                 });
 
+            modelBuilder.Entity("Api.Persistence.Entities.Cnae", b =>
+                {
+                    b.Property<string>("Codigo")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<string>("Descricao")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.HasKey("Codigo");
+
+                    b.ToTable("cnae", (string)null);
+                });
+
+            modelBuilder.Entity("Api.Persistence.Entities.FornecedorSocio", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CpfMasked")
+                        .HasMaxLength(18)
+                        .HasColumnType("character varying(18)");
+
+                    b.Property<string>("FornecedorCnpj")
+                        .IsRequired()
+                        .HasMaxLength(18)
+                        .HasColumnType("character varying(18)");
+
+                    b.Property<Guid>("FornecedorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("Qualificacao")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FornecedorCnpj");
+
+                    b.HasIndex("FornecedorId");
+
+                    b.ToTable("fornecedor_socio", (string)null);
+                });
+
             modelBuilder.Entity("Api.Persistence.Entities.Contratacao", b =>
                 {
                     b.HasOne("Api.Persistence.Entities.Orgao", "Orgao")
@@ -447,6 +499,17 @@ namespace Api.Persistence.Migrations
                     b.Navigation("Fornecedor");
                 });
 
+            modelBuilder.Entity("Api.Persistence.Entities.FornecedorSocio", b =>
+                {
+                    b.HasOne("Api.Persistence.Entities.Fornecedor", "Fornecedor")
+                        .WithMany("Socios")
+                        .HasForeignKey("FornecedorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Fornecedor");
+                });
+
             modelBuilder.Entity("Api.Persistence.Entities.Contratacao", b =>
                 {
                     b.Navigation("Items");
@@ -455,6 +518,8 @@ namespace Api.Persistence.Migrations
             modelBuilder.Entity("Api.Persistence.Entities.Fornecedor", b =>
                 {
                     b.Navigation("Items");
+
+                    b.Navigation("Socios");
                 });
 
             modelBuilder.Entity("Api.Persistence.Entities.Item", b =>

@@ -370,6 +370,10 @@ public static class SliceIds
 
 	public static readonly Guid FornecedorExtra = Guid.Parse("dddddddd-dddd-dddd-dddd-ddddddddddd1");
 
+	public static readonly Guid SocioJoao = Guid.Parse("eeeeeeee-0001-4000-8000-000000000001");
+
+	public static readonly Guid SocioEditora = Guid.Parse("eeeeeeee-0001-4000-8000-000000000002");
+
 	public const string Snapshot = "snap-2024-vr";
 
 	public const string Methodology = "0.1";

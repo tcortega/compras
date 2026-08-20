@@ -158,6 +158,28 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			MunicipioIbge = "4209102",
 			MunicipioNome = "Joinville",
 		};
+		var uberlandia = new Orgao
+		{
+			Id = SliceIds.OrgaoUberlandia,
+			Cnpj = "18431312000115",
+			RazaoSocial = "Municipio de Uberlandia",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "MG",
+			MunicipioIbge = "3170206",
+			MunicipioNome = "Uberlandia",
+		};
+		var londrina = new Orgao
+		{
+			Id = SliceIds.OrgaoLondrina,
+			Cnpj = "75771477000170",
+			RazaoSocial = "Municipio de Londrina",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "PR",
+			MunicipioIbge = "4113700",
+			MunicipioNome = "Londrina",
+		};
 		var fornecedor = new Fornecedor
 		{
 			Id = SliceIds.Fornecedor,
@@ -278,6 +300,34 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
 		};
+		var contratacaoUberlandia = new Contratacao
+		{
+			Id = SliceIds.ContratacaoUberlandia,
+			PncpId = "18431312000115-1-000095/2024",
+			OrgaoId = SliceIds.OrgaoUberlandia,
+			Modalidade = "pregao eletronico",
+			Objeto = "Aquisicao de coturnos, calcado de seguranca tatico",
+			Ano = 2024,
+			ValorHomologado = 35052m,
+			PublicadoEm = Instant.FromUtc(2024, 3, 26, 7, 10),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoLondrina = new Contratacao
+		{
+			Id = SliceIds.ContratacaoLondrina,
+			PncpId = "75771477000170-1-000026/2024",
+			OrgaoId = SliceIds.OrgaoLondrina,
+			Modalidade = "pregao eletronico",
+			Objeto = "Registro de precos para eventual fornecimento de medicamentos constantes na REMUME",
+			Ano = 2024,
+			ValorHomologado = 10259546.3707m,
+			PublicadoEm = Instant.FromUtc(2024, 1, 12, 7, 3),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
 		var itemNiteroi = new Item
 		{
 			Id = SliceIds.ItemNiteroi,
@@ -346,11 +396,45 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
 		};
+		var itemUberlandia = new Item
+		{
+			Id = SliceIds.ItemUberlandia,
+			ContratacaoId = SliceIds.ContratacaoUberlandia,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Coturno",
+			Catmat = "446381",
+			Quantidade = 127m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 276m,
+			ValorTotal = 35052m,
+			Uf = "MG",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var itemLondrina = new Item
+		{
+			Id = SliceIds.ItemLondrina,
+			ContratacaoId = SliceIds.ContratacaoLondrina,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Clindamicina",
+			Catmat = "268436",
+			Quantidade = 10000m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 1.0999m,
+			ValorTotal = 10999m,
+			Uf = "PR",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
 
-		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville);
+		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville, uberlandia, londrina);
 		db.Fornecedores.AddRange(fornecedor, fornecedorExtra);
-		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville);
-		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville);
+		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina);
+		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina);
 	}
 
 	private static JsonSerializerOptions CreateJson()

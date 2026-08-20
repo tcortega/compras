@@ -67,6 +67,8 @@ PUBLISHED = {
     "1100023": ("municipio de ariquemes", "RO"),
     "3201506": ("municipio de colatina", "ES"),
     "1502400": ("municipio de castanhal", "PA"),
+    "3122306": ("municipio de divinopolis", "MG"),
+    "3303906": ("municipio de petropolis", "RJ"),
 }
 
 
@@ -75,7 +77,7 @@ def main() -> int:
     deny_flags(orgaos, f"{API}/api/orgaos")
     deny_stub(json.dumps(orgaos, ensure_ascii=False), "api /api/orgaos")
     items_page = orgaos.get("items") or []
-    if len(items_page) < 41:
+    if len(items_page) < 43:
         raise SystemExit(f"api /api/orgaos returned {len(items_page)} rows, need the published slice")
     by_ibge = {str(row.get("municipioIbge") or ""): row for row in items_page}
     for ibge, (nome, uf) in PUBLISHED.items():
@@ -92,7 +94,7 @@ def main() -> int:
     orgao_cov = orgaos.get("coverage") or {}
     if orgao_cov.get("uf") not in (None, ""):
         raise SystemExit(f"mixed orgao list invented a UF: {orgao_cov}")
-    if not isinstance(orgao_cov.get("n"), int) or orgao_cov["n"] < 41:
+    if not isinstance(orgao_cov.get("n"), int) or orgao_cov["n"] < 43:
         raise SystemExit(f"api orgaos coverage.n missing the extra slice: {orgao_cov}")
     if not orgao_cov.get("methodologyVersion"):
         raise SystemExit(f"api orgaos coverage missing methodologyVersion: {orgao_cov}")
@@ -342,6 +344,16 @@ def main() -> int:
     castanhal_rows = castanhal.get("items") or []
     if len(castanhal_rows) != 1 or str(castanhal_rows[0].get("municipioIbge") or "") != "1502400":
         raise SystemExit(f"api municipio filter 1502400 failed: {castanhal_rows}")
+    divinopolis = get_json(f"{API}/api/orgaos?municipioIbge=3122306&skip=0&take=50")
+    deny_flags(divinopolis, f"{API}/api/orgaos?municipioIbge=3122306")
+    divinopolis_rows = divinopolis.get("items") or []
+    if len(divinopolis_rows) != 1 or str(divinopolis_rows[0].get("municipioIbge") or "") != "3122306":
+        raise SystemExit(f"api municipio filter 3122306 failed: {divinopolis_rows}")
+    petropolis = get_json(f"{API}/api/orgaos?municipioIbge=3303906&skip=0&take=50")
+    deny_flags(petropolis, f"{API}/api/orgaos?municipioIbge=3303906")
+    petropolis_rows = petropolis.get("items") or []
+    if len(petropolis_rows) != 1 or str(petropolis_rows[0].get("municipioIbge") or "") != "3303906":
+        raise SystemExit(f"api municipio filter 3303906 failed: {petropolis_rows}")
 
     orgao = by_ibge["3306305"]
     oid = orgao["id"]
@@ -498,9 +510,13 @@ def main() -> int:
         raise SystemExit("web / missing Colatina")
     if "castanhal" not in folded:
         raise SystemExit("web / missing Castanhal")
+    if "divinopolis" not in folded and "divinópolis" not in folded:
+        raise SystemExit("web / missing Divinópolis")
+    if "petropolis" not in folded and "petrópolis" not in folded:
+        raise SystemExit("web / missing Petrópolis")
     if "UF mista" not in home:
         raise SystemExit("web / missing honest mixed UF")
-    if "Quarenta e um municípios" not in home:
+    if "Quarenta e três municípios" not in home:
         raise SystemExit("web / missing short brand kicker")
     if "UF Brasil" in home or "total nacional" in folded:
         raise SystemExit("web / invented a national total")
@@ -590,6 +606,10 @@ def main() -> int:
         raise SystemExit("web /orgaos missing Colatina")
     if "castanhal" not in orgaos_fold:
         raise SystemExit("web /orgaos missing Castanhal")
+    if "divinopolis" not in orgaos_fold and "divinópolis" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing Divinópolis")
+    if "petropolis" not in orgaos_fold and "petrópolis" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing Petrópolis")
     if "UF mista" not in orgaos_html:
         raise SystemExit("web /orgaos missing honest mixed UF")
 
@@ -1147,6 +1167,34 @@ def main() -> int:
     if "UF PA" not in castanhal_html:
         raise SystemExit("web Castanhal filter missing UF PA")
 
+    divinopolis_html = get_text(f"{WEB}/orgaos?municipioIbge=3122306")
+    assert_served_page(divinopolis_html, "web /orgaos?municipioIbge=3122306")
+    divinopolis_table = table_html(divinopolis_html)
+    if "municipio de divinopolis" not in divinopolis_table.casefold() and "município de divinópolis" not in divinopolis_table.casefold():
+        raise SystemExit("web /orgaos?municipioIbge=3122306 missing Divinópolis")
+    if "municipio de petropolis" in divinopolis_table.casefold() or "município de petrópolis" in divinopolis_table.casefold():
+        raise SystemExit("web municipio filter leaked Petrópolis")
+    if "prefeitura municipal de volta redonda" in divinopolis_table.casefold():
+        raise SystemExit("web municipio filter leaked Volta Redonda")
+    if not re.search(r"n=1", divinopolis_html):
+        raise SystemExit("web Divinópolis filter missing n=1")
+    if "UF MG" not in divinopolis_html:
+        raise SystemExit("web Divinópolis filter missing UF MG")
+
+    petropolis_html = get_text(f"{WEB}/orgaos?municipioIbge=3303906")
+    assert_served_page(petropolis_html, "web /orgaos?municipioIbge=3303906")
+    petropolis_table = table_html(petropolis_html)
+    if "municipio de petropolis" not in petropolis_table.casefold() and "município de petrópolis" not in petropolis_table.casefold():
+        raise SystemExit("web /orgaos?municipioIbge=3303906 missing Petrópolis")
+    if "municipio de divinopolis" in petropolis_table.casefold() or "município de divinópolis" in petropolis_table.casefold():
+        raise SystemExit("web municipio filter leaked Divinópolis")
+    if "prefeitura municipal de volta redonda" in petropolis_table.casefold():
+        raise SystemExit("web municipio filter leaked Volta Redonda")
+    if not re.search(r"n=1", petropolis_html):
+        raise SystemExit("web Petrópolis filter missing n=1")
+    if "UF RJ" not in petropolis_html:
+        raise SystemExit("web Petrópolis filter missing UF RJ")
+
     orgao_html = get_text(f"{WEB}/orgaos/{oid}")
     assert_served_page(orgao_html, "web /orgaos/{id}")
     if STAT_HOMOLOGADO.search(orgao_html):
@@ -1304,6 +1352,10 @@ def main() -> int:
         raise SystemExit("web /cobertura missing Colatina IBGE")
     if "1502400" not in cobertura:
         raise SystemExit("web /cobertura missing Castanhal IBGE")
+    if "3122306" not in cobertura:
+        raise SystemExit("web /cobertura missing Divinópolis IBGE")
+    if "3303906" not in cobertura:
+        raise SystemExit("web /cobertura missing Petrópolis IBGE")
     if "não é um total nacional" not in cobertura:
         raise SystemExit("web /cobertura missing disclaimer")
     if "UF mista" not in cobertura:

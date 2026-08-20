@@ -466,6 +466,28 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			MunicipioIbge = "4209300",
 			MunicipioNome = "Lages",
 		};
+		var santarem = new Orgao
+		{
+			Id = SliceIds.OrgaoSantarem,
+			Cnpj = "05182233000761",
+			RazaoSocial = "Municipio de Santarem",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "PA",
+			MunicipioIbge = "1506807",
+			MunicipioNome = "Santarem",
+		};
+		var rioVerde = new Orgao
+		{
+			Id = SliceIds.OrgaoRioVerde,
+			Cnpj = "02056729000105",
+			RazaoSocial = "Municipio de Rio Verde",
+			Esfera = Api.Persistence.Entities.Esfera.Municipal,
+			Poder = "executivo",
+			Uf = "GO",
+			MunicipioIbge = "5218805",
+			MunicipioNome = "Rio Verde",
+		};
 		var fornecedor = new Fornecedor
 		{
 			Id = SliceIds.Fornecedor,
@@ -974,6 +996,34 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			Ano = 2024,
 			ValorHomologado = 2910m,
 			PublicadoEm = Instant.FromUtc(2024, 9, 4, 7, 15),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoSantarem = new Contratacao
+		{
+			Id = SliceIds.ContratacaoSantarem,
+			PncpId = "05182233000761-1-000020/2024",
+			OrgaoId = SliceIds.OrgaoSantarem,
+			Modalidade = "pregao eletronico",
+			Objeto = "Construcao de unidade Basica de Saude (UBS) Tapara Grande - Modelo Municipal",
+			Ano = 2024,
+			ValorHomologado = 326424.56m,
+			PublicadoEm = Instant.FromUtc(2024, 8, 29, 7, 18),
+			Source = "compras.gov.br",
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var contratacaoRioVerde = new Contratacao
+		{
+			Id = SliceIds.ContratacaoRioVerde,
+			PncpId = "02056729000105-1-001376/2024",
+			OrgaoId = SliceIds.OrgaoRioVerde,
+			Modalidade = "dispensa",
+			Objeto = "Aquisicao de 10 Lampada de LED tubular T8 minimo 40W bivolt luz branca 240 cm",
+			Ano = 2024,
+			ValorHomologado = 450m,
+			PublicadoEm = Instant.FromUtc(2024, 11, 6, 17, 3),
 			Source = "compras.gov.br",
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
@@ -1521,11 +1571,45 @@ public sealed class ComprasApiFixture : IAsyncLifetime
 			SnapshotId = SliceIds.Snapshot,
 			MethodologyVersion = SliceIds.Methodology,
 		};
+		var itemSantarem = new Item
+		{
+			Id = SliceIds.ItemSantarem,
+			ContratacaoId = SliceIds.ContratacaoSantarem,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Obras civis publicas",
+			Catmat = "5622",
+			Quantidade = 1m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 326424.56m,
+			ValorTotal = 326424.56m,
+			Uf = "PA",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
+		var itemRioVerde = new Item
+		{
+			Id = SliceIds.ItemRioVerde,
+			ContratacaoId = SliceIds.ContratacaoRioVerde,
+			FornecedorId = SliceIds.FornecedorExtra,
+			Descricao = "Lampada refletora",
+			Catmat = "485659",
+			Quantidade = 10m,
+			UnidadeMedida = "UN",
+			UnidadeCanonica = "un",
+			ValorUnitario = 45m,
+			ValorTotal = 450m,
+			Uf = "GO",
+			Quarter = SliceIds.Quarter,
+			SnapshotId = SliceIds.Snapshot,
+			MethodologyVersion = SliceIds.Methodology,
+		};
 
-		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville, uberlandia, londrina, feira, caruaru, anapolis, vilaVelha, campinaGrande, caucaia, imperatriz, arapiraca, dourados, maraba, varzeaGrande, jiParana, parnamirim, cruzeiroDoSul, santana, rorainopolis, maringa, taubate, cascavel, juizDeFora, foz, santaMaria, montesClaros, governadorValadares, canoas, lages);
+		db.Orgaos.AddRange(orgao, hidden, suspendTarget, pageAlfa, pageBeta, niteroi, bauru, caxias, joinville, uberlandia, londrina, feira, caruaru, anapolis, vilaVelha, campinaGrande, caucaia, imperatriz, arapiraca, dourados, maraba, varzeaGrande, jiParana, parnamirim, cruzeiroDoSul, santana, rorainopolis, maringa, taubate, cascavel, juizDeFora, foz, santaMaria, montesClaros, governadorValadares, canoas, lages, santarem, rioVerde);
 		db.Fornecedores.AddRange(fornecedor, fornecedorExtra);
-		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina, contratacaoFeira, contratacaoCaruaru, contratacaoAnapolis, contratacaoVilaVelha, contratacaoCampinaGrande, contratacaoCaucaia, contratacaoImperatriz, contratacaoArapiraca, contratacaoDourados, contratacaoMaraba, contratacaoVarzeaGrande, contratacaoJiParana, contratacaoParnamirim, contratacaoCruzeiroDoSul, contratacaoSantana, contratacaoRorainopolis, contratacaoMaringa, contratacaoTaubate, contratacaoCascavel, contratacaoJuizDeFora, contratacaoFoz, contratacaoSantaMaria, contratacaoMontesClaros, contratacaoGovernadorValadares, contratacaoCanoas, contratacaoLages);
-		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina, itemFeira, itemCaruaru, itemAnapolis, itemVilaVelha, itemCampinaGrande, itemCaucaia, itemImperatriz, itemArapiraca, itemDourados, itemMaraba, itemVarzeaGrande, itemJiParana, itemParnamirim, itemCruzeiroDoSul, itemSantana, itemRorainopolis, itemMaringa, itemTaubate, itemCascavel, itemJuizDeFora, itemFoz, itemSantaMaria, itemMontesClaros, itemGovernadorValadares, itemCanoas, itemLages);
+		db.Contratacoes.AddRange(contratacao, contratacaoNiteroi, contratacaoBauru, contratacaoCaxias, contratacaoJoinville, contratacaoUberlandia, contratacaoLondrina, contratacaoFeira, contratacaoCaruaru, contratacaoAnapolis, contratacaoVilaVelha, contratacaoCampinaGrande, contratacaoCaucaia, contratacaoImperatriz, contratacaoArapiraca, contratacaoDourados, contratacaoMaraba, contratacaoVarzeaGrande, contratacaoJiParana, contratacaoParnamirim, contratacaoCruzeiroDoSul, contratacaoSantana, contratacaoRorainopolis, contratacaoMaringa, contratacaoTaubate, contratacaoCascavel, contratacaoJuizDeFora, contratacaoFoz, contratacaoSantaMaria, contratacaoMontesClaros, contratacaoGovernadorValadares, contratacaoCanoas, contratacaoLages, contratacaoSantarem, contratacaoRioVerde);
+		db.Items.AddRange(item1, item2, itemNiteroi, itemBauru, itemCaxias, itemJoinville, itemUberlandia, itemLondrina, itemFeira, itemCaruaru, itemAnapolis, itemVilaVelha, itemCampinaGrande, itemCaucaia, itemImperatriz, itemArapiraca, itemDourados, itemMaraba, itemVarzeaGrande, itemJiParana, itemParnamirim, itemCruzeiroDoSul, itemSantana, itemRorainopolis, itemMaringa, itemTaubate, itemCascavel, itemJuizDeFora, itemFoz, itemSantaMaria, itemMontesClaros, itemGovernadorValadares, itemCanoas, itemLages, itemSantarem, itemRioVerde);
 	}
 
 	private static JsonSerializerOptions CreateJson()

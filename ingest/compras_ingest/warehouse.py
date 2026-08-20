@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
 from decimal import Decimal
 from pathlib import Path
@@ -11,8 +12,19 @@ import psycopg
 from psycopg.rows import dict_row
 
 from compras_ingest.ids import contratacao_id, flag_id, fornecedor_id, item_id, orgao_id
+from compras_ingest.landing import LandingStore
 from compras_ingest.settings import Settings
 from compras_normalize.text import parse_date, parse_datetime, parse_decimal
+
+PUBLIC_LANDING_SOURCES = (
+    ("compras_gov", "compras_gov"),
+    ("receita_cnpj", "receita_cnpj"),
+    ("ocds", "ocds"),
+    ("pncp_consulta", "pncp_consulta"),
+    ("tce_sp_licitacao", "tce_sp"),
+    ("tce_rs_licitacon", "tce_rs"),
+    ("cgu_ceis_cnep", "cgu_ceis_cnep"),
+)
 
 _NOW = lambda: datetime.now(timezone.utc)
 
@@ -295,7 +307,7 @@ def write_exclusions(settings: Settings, exclusions: pl.DataFrame, items: pl.Dat
 def fetch_counts(settings: Settings) -> dict[str, int]:
     with psycopg.connect(settings.postgres_dsn, row_factory=dict_row) as conn:
         counts = {}
-        for table in ("orgao", "fornecedor", "contratacao", "item", "flag", "item_exclusion"):
+        for table in ("orgao", "fornecedor", "contratacao", "item", "flag", "item_exclusion", "catalog_code", "landing_source"):
             counts[table] = conn.execute(f"SELECT count(*) AS n FROM {table}").fetchone()["n"]
     return counts
 
@@ -415,10 +427,72 @@ def fetch_exclusions(
         return list(conn.execute(sql, params).fetchall())
 
 
+def write_catalog(settings: Settings, catalog_df: pl.DataFrame) -> int:
+    rows: list[dict] = []
+    seen: set[tuple[str, str]] = set()
+    for row in catalog_df.iter_rows(named=True):
+        code = _catalog_int(
+            row.get("codigo") or row.get("codigoItem") or row.get("codigoitem") or row.get("codigoServico")
+        )
+        if not code:
+            continue
+        tipo = str(row.get("tipo") or "M").strip().upper()[:1]
+        kind = "catser" if tipo == "S" else "catmat"
+        key = (code, kind)
+        if key in seen:
+            continue
+        seen.add(key)
+        rows.append({"codigo": code, "kind": kind})
+    if not rows:
+        return 0
+    sql = """
+    INSERT INTO catalog_code (codigo, kind)
+    VALUES (%(codigo)s, %(kind)s)
+    ON CONFLICT (codigo, kind) DO NOTHING
+    """
+    with psycopg.connect(settings.postgres_dsn) as conn:
+        for row in rows:
+            conn.execute(sql, row)
+        conn.commit()
+    return len(rows)
+
+
+def write_landing_sources(settings: Settings, store: LandingStore) -> dict[str, dict]:
+    written: dict[str, dict] = {}
+    sql = """
+    INSERT INTO landing_source (name, "lastUpdate", n, "snapshotId")
+    VALUES (%(name)s, %(lastUpdate)s, %(n)s, %(snapshotId)s)
+    ON CONFLICT (name) DO UPDATE SET
+      "lastUpdate" = EXCLUDED."lastUpdate",
+      n = EXCLUDED.n,
+      "snapshotId" = EXCLUDED."snapshotId"
+    """
+    with psycopg.connect(settings.postgres_dsn) as conn:
+        for landing_name, public_name in PUBLIC_LANDING_SOURCES:
+            n, last_update, snap = _landing_freshness(store, landing_name)
+            row = {"name": public_name, "lastUpdate": last_update, "n": n, "snapshotId": snap}
+            if n == 0 and last_update is None:
+                continue
+            conn.execute(sql, row)
+            written[public_name] = row
+        conn.commit()
+    return written
+
+
+def fetch_catalog_codes(settings: Settings) -> list[dict]:
+    with psycopg.connect(settings.postgres_dsn, row_factory=dict_row) as conn:
+        return list(conn.execute("SELECT codigo, kind FROM catalog_code ORDER BY kind, codigo").fetchall())
+
+
+def fetch_landing_sources(settings: Settings) -> list[dict]:
+    with psycopg.connect(settings.postgres_dsn, row_factory=dict_row) as conn:
+        return list(conn.execute('SELECT name, "lastUpdate", n, "snapshotId" FROM landing_source ORDER BY name').fetchall())
+
+
 def fetch_raw_text_blobs(settings: Settings) -> list[str]:
     blobs: list[str] = []
     with psycopg.connect(settings.postgres_dsn, row_factory=dict_row) as conn:
-        for table in ("orgao", "fornecedor", "contratacao", "item", "flag", "item_exclusion"):
+        for table in ("orgao", "fornecedor", "contratacao", "item", "flag", "item_exclusion", "catalog_code", "landing_source"):
             for row in conn.execute(f"SELECT * FROM {table}").fetchall():
                 blobs.extend(str(v) for v in row.values() if v is not None)
     return blobs
@@ -530,6 +604,44 @@ def _upsert_items(conn, rows: list[dict], now) -> None:
     for row in rows:
         payload = {k: v for k, v in row.items() if k != "record_id"}
         conn.execute(sql, {**payload, "now": now})
+
+
+def _catalog_int(value) -> str:
+    raw = str(value or "").strip()
+    if raw == "" or raw.lower() in {"nan", "none", "null", "-"}:
+        return ""
+    parsed = parse_decimal(raw)
+    if parsed is None or parsed <= 0:
+        return ""
+    return str(int(parsed))
+
+
+def _landing_freshness(store: LandingStore, source: str) -> tuple[int, datetime | None, str | None]:
+    keys = store.list_parquet(source)
+    n = 0
+    last: datetime | None = None
+    snap: str | None = None
+    for key in keys:
+        meta = _read_manifest(store, key)
+        if meta is not None:
+            n += int(meta.get("rows") or 0)
+            written = parse_datetime(meta.get("written_at"))
+            if written is not None and (last is None or written > last):
+                last = written
+                snap = str(meta.get("sha256") or Path(key).stem)
+            continue
+        n += store.read_parquet(key).height
+    return n, last, snap
+
+
+def _read_manifest(store: LandingStore, parquet_key: str) -> dict | None:
+    manifest_key = parquet_key.removesuffix(".parquet") + ".manifest.json"
+    if not store.exists(manifest_key):
+        return None
+    raw = json.loads(store.get(manifest_key))
+    if not isinstance(raw, dict):
+        return None
+    return raw
 
 
 def _ch(settings: Settings):

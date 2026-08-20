@@ -128,6 +128,23 @@ All of these kinds stay `state=detected` and are not public alerts.
 Notify hold is 7 days: `publishAfter = notifiedAt + 7 days`.
 Replies store unedited.
 
+### catalog_code
+
+`codigo` text.
+`kind` catmat | catser.
+Composite primary key.
+Python writes from landed CATMAT/CATSER.
+C# joins `item.catmat` / `item.catser` as exact integers.
+
+### landing_source
+
+`name` text primary key.
+`lastUpdate` Instant nullable.
+`n` int.
+`snapshotId` text nullable.
+Python writes from landing manifests.
+C# does not invent a timestamp.
+
 ### item_exclusion (internal only)
 
 These are data-quality tags, not public alerts.
@@ -201,6 +218,11 @@ No ranking.
 - `GET /api/contratacoes/{id}`
 - `GET /api/items`
 - `GET /api/items/{id}`
+- `GET /api/cobertura` returns municípios ingeridos (nome, uf, ibge), years, row counts, live CATMAT exact-integer catalog join (`catmatCoveragePercent`, `nCoded`, `nItems`), per-source landing freshness (`compras_gov`, `receita_cnpj`, `ocds`, `pncp_consulta`, `tce_sp`, `tce_rs`, `cgu_ceis_cnep`), and the coverage denominator.
+A mixed-UF slice leaves `coverage.uf` empty.
+It is not a national total.
+Empty sources return `lastUpdate` null and `n=0`.
+The public CATMAT percent is the warehouse catalog join, not the Phase 0 VR 81.75 label and not the kNN classifier.
 
 Internal publication routes exist and are tested.
 `GET /api/internal/flags` lists warehouse facts by kind, state, itemId, skip, and take.

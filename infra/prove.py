@@ -426,6 +426,56 @@ def main() -> int:
     if str(got.get("id") or got.get("orgao", {}).get("id") or "") != str(oid):
         raise SystemExit("api get orgao id mismatch")
 
+    cobertura_api = get_json(f"{API}/api/cobertura")
+    deny_flags(cobertura_api, f"{API}/api/cobertura")
+    deny_stub(json.dumps(cobertura_api, ensure_ascii=False), "api /api/cobertura")
+    munic = cobertura_api.get("municipios") or {}
+    munic_items = munic.get("items") or []
+    if not isinstance(munic.get("n"), int) or munic["n"] < 59:
+        raise SystemExit(f"api /api/cobertura municipios.n missing the published slice: {munic}")
+    if len(munic_items) < 59:
+        raise SystemExit(f"api /api/cobertura returned {len(munic_items)} municipios")
+    ibges = {str(row.get("ibge") or "") for row in munic_items}
+    for ibge in PUBLISHED:
+        if ibge not in ibges:
+            raise SystemExit(f"api /api/cobertura missing IBGE {ibge}")
+    years = cobertura_api.get("years") or []
+    if 2024 not in years:
+        raise SystemExit(f"api /api/cobertura missing year 2024: {years}")
+    rows = cobertura_api.get("rows") or {}
+    if not isinstance(rows.get("items"), int) or rows["items"] < 1:
+        raise SystemExit(f"api /api/cobertura rows.items missing: {rows}")
+    n_coded = cobertura_api.get("nCoded")
+    n_items = cobertura_api.get("nItems")
+    percent = cobertura_api.get("catmatCoveragePercent")
+    if not isinstance(n_coded, int) or not isinstance(n_items, int) or n_items < 1:
+        raise SystemExit(f"api /api/cobertura CATMAT denominator missing: {cobertura_api}")
+    if n_items != rows["items"]:
+        raise SystemExit("api /api/cobertura nItems drifted from rows.items")
+    if not isinstance(percent, (int, float)):
+        raise SystemExit(f"api /api/cobertura catmatCoveragePercent missing: {percent}")
+    expected_percent = round(100 * n_coded / n_items, 2)
+    if abs(float(percent) - expected_percent) > 0.011:
+        raise SystemExit(f"api /api/cobertura CATMAT percent is not the warehouse join: {percent} vs {expected_percent}")
+    cov = cobertura_api.get("coverage") or {}
+    if cov.get("uf") not in (None, ""):
+        raise SystemExit(f"api /api/cobertura invented a UF: {cov}")
+    if cov.get("n") != n_items:
+        raise SystemExit(f"api /api/cobertura coverage.n is not item n: {cov}")
+    sources = {str(row.get("name") or ""): row for row in (cobertura_api.get("sources") or [])}
+    for name in ("compras_gov", "receita_cnpj", "ocds", "pncp_consulta", "tce_sp", "tce_rs", "cgu_ceis_cnep"):
+        row = sources.get(name)
+        if row is None:
+            raise SystemExit(f"api /api/cobertura missing source {name}")
+        if "lastUpdate" not in row:
+            raise SystemExit(f"api /api/cobertura source {name} missing lastUpdate")
+        if not isinstance(row.get("n"), int):
+            raise SystemExit(f"api /api/cobertura source {name} missing n")
+        if int(row["n"]) == 0 and row.get("lastUpdate") not in (None, ""):
+            raise SystemExit(f"api /api/cobertura invented lastUpdate for empty {name}: {row}")
+    if not (sources.get("compras_gov") or {}).get("lastUpdate"):
+        raise SystemExit("api /api/cobertura compras_gov lastUpdate is empty after land")
+
     items = get_json(f"{API}/api/items?skip=0&take=100")
     deny_flags(items, f"{API}/api/items")
     deny_stub(json.dumps(items, ensure_ascii=False), "api /api/items")
@@ -1643,6 +1693,14 @@ def main() -> int:
         raise SystemExit("web /cobertura missing disclaimer")
     if "UF mista" not in cobertura:
         raise SystemExit("web /cobertura must stay mixed-UF")
+    if "Join exato ao vivo" not in cobertura:
+        raise SystemExit("web /cobertura missing live CATMAT join")
+    if "de " not in cobertura or "%" not in cobertura:
+        raise SystemExit("web /cobertura missing CATMAT denominator")
+    if "compras_gov" not in cobertura:
+        raise SystemExit("web /cobertura missing landing source name")
+    if "sem ingestão" not in cobertura and not re.search(r"\d{2}/\d{2}/\d{4}", cobertura):
+        raise SystemExit("web /cobertura missing source freshness")
 
     metodologia = get_text(f"{WEB}/metodologia")
     assert_served_page(metodologia, "web /metodologia")

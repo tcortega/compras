@@ -70,6 +70,9 @@ public interface IComprasApi
 	[Get("/api/items/{id}")]
 	Task<IApiResponse<ItemDetail>> GetItem(Guid id);
 
+	[Get("/api/cobertura")]
+	Task<CoberturaPayload> GetCobertura();
+
 	[Post("/api/internal/flags")]
 	Task<IApiResponse<FlagRecord>> CreateFlag([Body] CreateFlagRequest body);
 

@@ -77,6 +77,26 @@ export function formatSource(source: string): string {
   return source
 }
 
+export function formatPercent(value: number | string | null | undefined): string {
+  const n = asNumber(value)
+  if (n == null) return copy.noValue
+  return `${new Intl.NumberFormat('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(n)}%`
+}
+
+export function formatLandingSource(name: string): string {
+  if (name === 'compras_gov') return 'Compras.gov.br'
+  if (name === 'receita_cnpj') return 'Receita CNPJ'
+  if (name === 'ocds') return 'OCDS'
+  if (name === 'pncp_consulta') return 'PNCP consulta'
+  if (name === 'tce_sp') return 'TCE-SP'
+  if (name === 'tce_rs') return 'TCE-RS'
+  if (name === 'cgu_ceis_cnep') return 'CGU CEIS/CNEP'
+  return name
+}
+
 export function formatEsfera(esfera: string): string {
   if (esfera === 'federal') return 'Federal'
   if (esfera === 'estadual') return 'Estadual'

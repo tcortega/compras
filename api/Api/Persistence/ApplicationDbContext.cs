@@ -14,6 +14,10 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
 
 	public DbSet<Flag> Flags => Set<Flag>();
 
+	public DbSet<CatalogCode> CatalogCodes => Set<CatalogCode>();
+
+	public DbSet<LandingSource> LandingSources => Set<LandingSource>();
+
 	protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
 	{
 		if (Database.ProviderName is { Length: > 0 }

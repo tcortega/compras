@@ -7,18 +7,19 @@ import { SourceLine } from '@/components/SourceLine'
 import { Stat } from '@/components/Stat'
 import { api, safeDetail } from '@/lib/api'
 import { METHOD_VERSION } from '@/lib/copy'
+import { explorerDynamic, explorerRevalidate, staticEntityIds } from '@/lib/rendering'
 import { formatCnpj, formatDate, formatNumber } from '@/lib/format'
 import { routes } from '@/lib/routes'
 import { contratacaoColumns, itemColumns } from '@/lib/tables'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
-export const revalidate = 3600
+export const dynamic = explorerDynamic
+export const revalidate = explorerRevalidate
 export const dynamicParams = true
 
 export async function generateStaticParams() {
-  const page = await api.listFornecedores({ skip: 0, take: 100 })
-  return page.items.map((row) => ({ id: row.id }))
+  return staticEntityIds(() => api.listFornecedores({ skip: 0, take: 100 }))
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {

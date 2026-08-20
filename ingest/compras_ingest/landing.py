@@ -144,11 +144,13 @@ def _s3_missing(exc: BaseException) -> bool:
 
 def _s3_client(settings: Settings):
     import boto3
+    from botocore.config import Config
 
-    kw = {
+    kw: dict = {
         "aws_access_key_id": settings.s3_access_key or None,
         "aws_secret_access_key": settings.s3_secret_key or None,
         "region_name": settings.s3_region,
+        "config": Config(s3={"addressing_style": "path"}),
     }
     if settings.s3_endpoint:
         kw["endpoint_url"] = settings.s3_endpoint

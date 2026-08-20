@@ -1,9 +1,11 @@
 import { Shell } from '@/components/Shell'
 import { loadSliceCoverage } from '@/lib/api'
 import { copy } from '@/lib/copy'
+import { explorerDynamic, explorerRevalidate } from '@/lib/rendering'
 import { routes } from '@/lib/routes'
 
-export const revalidate = 3600
+export const dynamic = explorerDynamic
+export const revalidate = explorerRevalidate
 
 export default async function NotFound() {
   const coverage = await loadSliceCoverage()

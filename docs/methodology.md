@@ -42,7 +42,8 @@ Ele só preenche item sem código oficial, por hash da descrição, embedding lo
 Caso de margem baixa permanece sem código.
 Código `knn` atribuído não é alerta público.
 A cobertura medida da Fase 0 em Volta Redonda 2024 permanece 81.75%.
-Esse número não é reescrito como se o classificador já tivesse rodado nesse recorte.
+Esse número é a linha de base rotulada daquele recorte, não o percentual ao vivo do warehouse.
+O percentual público em `/cobertura` é o join inteiro exato de `item.catmat`/`item.catser` ao catálogo ingerido.
 
 `unidadeMedida` é texto livre.
 Cada item recebe `unidadeCanonica` a partir da tabela em `normalize/compras_normalize/data/unidade_medida.csv`.

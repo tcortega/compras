@@ -1,5 +1,7 @@
 import { coverageFromItems } from '@/lib/coverage'
 import type {
+  CoberturaMunicipio,
+  CoberturaPayload,
   Contratacao,
   ExplorerClient,
   Fornecedor,
@@ -157,4 +159,83 @@ export const stubClient: ExplorerClient = {
     if (!row) throw new ApiNotFoundError('item', id)
     return row
   },
+
+  async getCobertura() {
+    return stubCobertura()
+  },
+}
+
+const CATALOG_CATMAT = new Set(['123456', '654321', '463210', '880111', '880222', '880333', '880444', '880555', '880666'])
+const CATALOG_CATSER = new Set(['10001'])
+const LANDING_NAMES = [
+  'compras_gov',
+  'receita_cnpj',
+  'ocds',
+  'pncp_consulta',
+  'tce_sp',
+  'tce_rs',
+  'cgu_ceis_cnep',
+] as const
+
+function catalogInt(raw: string | null | undefined): string {
+  if (!raw) return ''
+  const text = raw.trim()
+  if (!text || /^(nan|none|null|-)$/i.test(text)) return ''
+  const n = Number(text.replace(',', '.'))
+  if (!Number.isFinite(n) || n <= 0) return ''
+  return String(Math.trunc(n))
+}
+
+function stubCobertura(): CoberturaPayload {
+  const cts = liveContratacoes()
+  const items = liveItems()
+  const orgaoById = new Map(liveOrgaos().map((o) => [o.id, o]))
+  const seen = new Map<string, CoberturaMunicipio>()
+  for (const c of cts) {
+    const orgao = orgaoById.get(c.orgaoId)
+    if (!orgao) continue
+    const key = `${orgao.municipioIbge}:${orgao.uf}:${orgao.municipioNome}`
+    if (!seen.has(key)) {
+      seen.set(key, { nome: orgao.municipioNome, uf: orgao.uf, ibge: orgao.municipioIbge })
+    }
+  }
+  const municipios = [...seen.values()].sort((a, b) => a.nome.localeCompare(b.nome, 'en') || a.ibge.localeCompare(b.ibge, 'en'))
+  const years = [...new Set(cts.map((c) => c.ano))].sort((a, b) => a - b)
+  const nCoded = items.filter((i) => {
+    const mat = catalogInt(i.catmat)
+    const ser = catalogInt(i.catser)
+    return (mat && CATALOG_CATMAT.has(mat)) || (ser && CATALOG_CATSER.has(ser))
+  }).length
+  const percent = items.length === 0 ? 0 : Math.round((10000 * nCoded) / items.length) / 100
+  const lastCompra = cts.reduce<string | null>((acc, c) => {
+    const stamp = c.publicadoEm ?? c.updatedAt
+    if (!stamp) return acc
+    if (!acc || stamp > acc) return stamp
+    return acc
+  }, null)
+  return {
+    municipios: { n: municipios.length, items: municipios },
+    years,
+    rows: {
+      compras: cts.length,
+      items: items.length,
+      perYear: years.map((year) => ({
+        year,
+        compras: cts.filter((c) => c.ano === year).length,
+        items: items.filter((i) => {
+          const ct = cts.find((c) => c.id === i.contratacaoId)
+          return ct?.ano === year
+        }).length,
+      })),
+    },
+    catmatCoveragePercent: percent,
+    nCoded,
+    nItems: items.length,
+    sources: LANDING_NAMES.map((name) =>
+      name === 'compras_gov' && cts.length > 0
+        ? { name, lastUpdate: lastCompra, n: cts.length }
+        : { name, lastUpdate: null, n: 0 },
+    ),
+    coverage: coverageFromItems(items),
+  }
 }

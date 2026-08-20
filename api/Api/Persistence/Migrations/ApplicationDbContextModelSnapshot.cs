@@ -367,6 +367,42 @@ namespace Api.Persistence.Migrations
                     b.ToTable("orgao", (string)null);
                 });
 
+            modelBuilder.Entity("Api.Persistence.Entities.CatalogCode", b =>
+                {
+                    b.Property<string>("Codigo")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<string>("Kind")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.HasKey("Codigo", "Kind");
+
+                    b.ToTable("catalog_code", (string)null);
+                });
+
+            modelBuilder.Entity("Api.Persistence.Entities.LandingSource", b =>
+                {
+                    b.Property<string>("Name")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Instant?>("LastUpdate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("N")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SnapshotId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.HasKey("Name");
+
+                    b.ToTable("landing_source", (string)null);
+                });
+
             modelBuilder.Entity("Api.Persistence.Entities.Contratacao", b =>
                 {
                     b.HasOne("Api.Persistence.Entities.Orgao", "Orgao")

@@ -35,7 +35,7 @@ def normalize_frame(
         rows.append(
             _normalize_row(row, catalog, units, cnpj_by, snapshot_id, methodology_version)
         )
-    return pl.DataFrame(rows, infer_schema_length=0)
+    return pl.DataFrame(rows)
 
 
 def _normalize_row(

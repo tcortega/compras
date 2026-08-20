@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from dagster import AssetExecutionContext, Definitions, asset
 
 from compras_ingest.landing import LandingStore

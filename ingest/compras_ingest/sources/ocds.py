@@ -20,7 +20,7 @@ def land_ocds(
     if path is None:
         raise FileNotFoundError("OCDS_PATH missing. OCDS is a schema cross-check, not a primary source.")
     rows = _load_jsonl(path)
-    df = pl.DataFrame(rows, infer_schema_length=0) if rows else pl.DataFrame()
+    df = pl.DataFrame(rows) if rows else pl.DataFrame({"ocid": []})
     dates = [parse_datetime(r.get("date")) for r in rows]
     ref = store.write_parquet("ocds", partition_date_of(dates), df if not df.is_empty() else pl.DataFrame({"ocid": []}))
     report = _crosscheck(rows, compras_ids or set())

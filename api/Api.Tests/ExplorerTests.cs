@@ -528,6 +528,100 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		},
 	};
 
+	private static readonly Coverage s_uberlandiaOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "MG",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_uberlandia = new()
+	{
+		Id = SliceIds.OrgaoUberlandia,
+		Cnpj = "18431312000115",
+		RazaoSocial = "Municipio de Uberlandia",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "MG",
+		MunicipioIbge = "3170206",
+		MunicipioNome = "Uberlandia",
+		Coverage = s_uberlandiaOrgaoCoverage,
+	};
+
+	private static readonly Coverage s_londrinaOrgaoCoverage = new()
+	{
+		N = 1,
+		Uf = "PR",
+		Quarter = SliceIds.Quarter,
+		MethodologyVersion = SliceIds.Methodology,
+	};
+
+	private static readonly OrgaoRecord s_londrina = new()
+	{
+		Id = SliceIds.OrgaoLondrina,
+		Cnpj = "75771477000170",
+		RazaoSocial = "Municipio de Londrina",
+		Esfera = Esfera.Municipal,
+		Poder = "executivo",
+		Uf = "PR",
+		MunicipioIbge = "4113700",
+		MunicipioNome = "Londrina",
+		Coverage = s_londrinaOrgaoCoverage,
+	};
+
+	private static readonly ItemRecord s_itemUberlandia = new()
+	{
+		Id = SliceIds.ItemUberlandia,
+		ContratacaoId = SliceIds.ContratacaoUberlandia,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Coturno",
+		Catmat = "446381",
+		Catser = null,
+		Quantidade = 127m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 276m,
+		ValorTotal = 35052m,
+		Uf = "MG",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "MG",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
+	private static readonly ItemRecord s_itemLondrina = new()
+	{
+		Id = SliceIds.ItemLondrina,
+		ContratacaoId = SliceIds.ContratacaoLondrina,
+		FornecedorId = SliceIds.FornecedorExtra,
+		Descricao = "Clindamicina",
+		Catmat = "268436",
+		Catser = null,
+		Quantidade = 10000m,
+		UnidadeMedida = "UN",
+		UnidadeCanonica = "un",
+		ValorUnitario = 1.0999m,
+		ValorTotal = 10999m,
+		Uf = "PR",
+		Quarter = SliceIds.Quarter,
+		SnapshotId = SliceIds.Snapshot,
+		MethodologyVersion = SliceIds.Methodology,
+		Coverage = new()
+		{
+			N = 1,
+			Uf = "PR",
+			Quarter = SliceIds.Quarter,
+			MethodologyVersion = SliceIds.Methodology,
+		},
+	};
+
 	[Fact]
 	public async Task FullCycle_BrowseMunicipioAndUf()
 	{
@@ -585,6 +679,32 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Equal(new[] { s_joinville }, joinvillePage.Items);
 		await ValidateOrgao(client, s_joinville);
 
+		var uberlandiaPage = await client.ListOrgaos(municipioIbge: "3170206", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			uberlandiaPage.Coverage);
+		Assert.Equal(new[] { s_uberlandia }, uberlandiaPage.Items);
+		await ValidateOrgao(client, s_uberlandia);
+
+		var londrinaPage = await client.ListOrgaos(uf: "PR", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "PR",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			londrinaPage.Coverage);
+		Assert.Equal(new[] { s_londrina }, londrinaPage.Items);
+		await ValidateOrgao(client, s_londrina);
+
 		var mixed = await client.ListOrgaos(quarter: SliceIds.Quarter);
 		Assert.Equal("", mixed.Coverage.Uf);
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3306305", StringComparison.Ordinal));
@@ -592,6 +712,8 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3506003", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "4305108", StringComparison.Ordinal));
 		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "4209102", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "3170206", StringComparison.Ordinal));
+		Assert.Contains(mixed.Items, o => string.Equals(o.MunicipioIbge, "4113700", StringComparison.Ordinal));
 
 		var spItems = await client.ListItems(uf: "SP", quarter: SliceIds.Quarter);
 		Assert.Equal(
@@ -646,6 +768,33 @@ public sealed class ExplorerTests(ComprasApiFixture fixture) : IClassFixture<Com
 			OrgaoRazaoSocial = "Municipio de Caxias do Sul",
 			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
 			ContratacaoPncpId = "88830609000139-1-000888/2024",
+		});
+		var prItems = await client.ListItems(uf: "PR", quarter: SliceIds.Quarter);
+		Assert.Equal(
+			new Coverage
+			{
+				N = 1,
+				Uf = "PR",
+				Quarter = SliceIds.Quarter,
+				MethodologyVersion = SliceIds.Methodology,
+			},
+			prItems.Coverage);
+		Assert.Equal(new[] { s_itemLondrina }, prItems.Items);
+		await ValidateItem(client, new()
+		{
+			Item = s_itemLondrina,
+			OrgaoId = SliceIds.OrgaoLondrina,
+			OrgaoRazaoSocial = "Municipio de Londrina",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "75771477000170-1-000026/2024",
+		});
+		await ValidateItem(client, new()
+		{
+			Item = s_itemUberlandia,
+			OrgaoId = SliceIds.OrgaoUberlandia,
+			OrgaoRazaoSocial = "Municipio de Uberlandia",
+			FornecedorRazaoSocial = "Comercio de Limpeza Baixada Ltda",
+			ContratacaoPncpId = "18431312000115-1-000095/2024",
 		});
 
 		var empty = new Coverage

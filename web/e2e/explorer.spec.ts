@@ -88,10 +88,11 @@ test('órgão para contratação com denominador visível', async ({ page }) => 
 
 test('filtra município IBGE e UF e mantém cobertura no vazio', async ({ page }) => {
   await page.goto('/orgaos')
-  await expect(page.getByRole('link', { name: niteroiName })).toBeVisible()
-  await expect(page.getByRole('link', { name: bauruName })).toBeVisible()
-  await expect(page.getByRole('link', { name: caxiasName })).toBeVisible()
-  await expect(page.getByRole('link', { name: joinvilleName })).toBeVisible()
+  const publishedTable = page.locator('table.data')
+  await expect(publishedTable.getByRole('link', { name: niteroiName })).toBeVisible()
+  await expect(publishedTable.getByRole('link', { name: bauruName })).toBeVisible()
+  await expect(publishedTable.getByRole('link', { name: caxiasName })).toBeVisible()
+  await expect(publishedTable.getByRole('link', { name: joinvilleName })).toBeVisible()
   await expect(page.getByText(/UF mista/).first()).toBeVisible()
   await assertCoverageAndBan(page)
 
@@ -135,7 +136,7 @@ test('filtra município IBGE e UF e mantém cobertura no vazio', async ({ page }
   await expect(page.getByText(/n=1/).first()).toBeVisible()
   await expect(page.getByText(/UF RS/).first()).toBeVisible()
   await caxiasTable.getByRole('link', { name: caxiasName }).click()
-  await expect(page.getByRole('heading', { name: /Caxias do Sul/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: caxiasName })).toBeVisible()
   await expect(page.getByText('4305108', { exact: true })).toBeVisible()
   await assertCoverageAndBan(page)
 

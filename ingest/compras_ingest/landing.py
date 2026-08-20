@@ -61,8 +61,11 @@ class LandingStore:
             return path.resolve().as_uri()
         assert self._s3 is not None
         bucket = self._root
+        uri = f"s3://{bucket}/{key}"
+        if self.exists(key):
+            return uri
         self._s3.put_object(Bucket=bucket, Key=key, Body=data)
-        return f"s3://{bucket}/{key}"
+        return uri
 
     def exists(self, key: str) -> bool:
         if self._kind == "file":
@@ -71,8 +74,10 @@ class LandingStore:
         try:
             self._s3.head_object(Bucket=self._root, Key=key)
             return True
-        except Exception:
-            return False
+        except Exception as exc:
+            if _s3_missing(exc):
+                return False
+            raise
 
     def get(self, key: str) -> bytes:
         if self._kind == "file":
@@ -126,6 +131,15 @@ def _parse_uri(uri: str) -> tuple[str, Path | str]:
     if uri.startswith("file://"):
         return "file", Path(urlparse(uri).path)
     return "file", Path(uri)
+
+
+def _s3_missing(exc: BaseException) -> bool:
+    resp = getattr(exc, "response", None)
+    if not isinstance(resp, dict):
+        return False
+    code = str((resp.get("Error") or {}).get("Code") or "")
+    status = (resp.get("ResponseMetadata") or {}).get("HTTPStatusCode")
+    return code in {"404", "NoSuchKey", "NotFound"} or status == 404
 
 
 def _s3_client(settings: Settings):

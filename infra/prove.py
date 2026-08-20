@@ -426,7 +426,7 @@ def main() -> int:
     if str(got.get("id") or got.get("orgao", {}).get("id") or "") != str(oid):
         raise SystemExit("api get orgao id mismatch")
 
-    items = get_json(f"{API}/api/items?skip=0&take=50")
+    items = get_json(f"{API}/api/items?skip=0&take=100")
     deny_flags(items, f"{API}/api/items")
     deny_stub(json.dumps(items, ensure_ascii=False), "api /api/items")
     coverage = items.get("coverage") or {}

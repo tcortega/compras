@@ -4,7 +4,7 @@ from __future__ import annotations
 
 # compras_gov daily: live index has diario/YYYY/MM/DD COMPRA+ITEM.
 # Trailing day uses that pair when both exist, else mensal/YYYY/MM.
-# Stream-filter stays the 59 IBGE set. Years 2024,2025,2026 stay D1.
+# Stream-filter stays the covered IBGE set. Years 2024,2025,2026 stay D1.
 DAILY_COMPRAS_GOV_REASON = (
     "official diario/YYYY/MM/DD COMPRA+ITEM exists; else mensal/YYYY/MM"
 )

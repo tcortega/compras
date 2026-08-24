@@ -31,7 +31,7 @@ npm install
 npm run dev
 ```
 
-`API_BASE_URL=stub` (padrão) usa o recorte em processo: Volta Redonda e Niterói (RJ), Bauru (SP), Caxias do Sul (RS), Joinville (SC), Uberlândia (MG), Londrina (PR), Feira de Santana (BA), Caruaru (PE), Anápolis (GO), Vila Velha (ES), Campina Grande (PB), Caucaia (CE), Imperatriz (MA), Arapiraca (AL), Dourados (MS), Marabá (PA), Várzea Grande (MT), Ji-Paraná (RO), Parnamirim (RN), Cruzeiro do Sul (AC), Santana (AP), Rorainópolis (RR), Maringá (PR), Taubaté (SP), Cascavel (PR), Juiz de Fora (MG), Foz do Iguaçu (PR), Santa Maria (RS), Montes Claros (MG), Governador Valadares (MG), Canoas (RS), Lages (SC), Santarém (PA), Rio Verde (GO), Paulo Afonso (BA), São Lourenço da Mata (PE), Crato (CE), Ariquemes (RO), Colatina (ES), Castanhal (PA), Divinópolis (MG), Petrópolis (RJ), Ipatinga (MG), Macaé (RJ), Santa Luzia (MG), Nova Friburgo (RJ), Marília (SP), Balneário Camboriú (SC), Itaquaquecetuba (SP), Praia Grande (SP), São José dos Pinhais (PR), Suzano (SP), Guarujá (SP), Cotia (SP), Parauapebas (PA), Jacareí (SP), Itaboraí (RJ) e Maricá (RJ), 2024.
+`API_BASE_URL=stub` (padrão) usa o recorte em processo: 159 municípios em `lib/copy.ts` `SLICE_MUNICIPIOS`, 2024.
 O compose em `/infra` aponta `API_BASE_URL` para `http://api:5080` e publica o explorador em http://127.0.0.1:3100.
 Fora do compose, aponte `API_BASE_URL` para a API C#, por exemplo `http://127.0.0.1:5080`.
 Se `API_BASE_URL` aponta para a API, o cliente HTTP é obrigatório e o stub não pode responder.

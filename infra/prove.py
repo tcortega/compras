@@ -89,15 +89,115 @@ PUBLISHED = {
     "3524402": ("municipio de jacarei", "SP"),
     "3301900": ("municipio de itaborai", "RJ"),
     "3302700": ("municipio de marica", "RJ"),
+    "1200104": ("municipio de brasileia", "AC"),
+    "1200344": ("municipio de manoel urbano", "AC"),
+    "1200401": ("municipio de rio branco", "AC"),
+    "1200609": ("prefeitura municipal de tarauaca - acre", "AC"),
+    "2701704": ("municipio de capela", "AL"),
+    "2702504": ("municipio de dois riachos", "AL"),
+    "2707701": ("municipio de rio largo", "AL"),
+    "2709301": ("municipio de uniao dos palmares", "AL"),
+    "1300201": ("municipio de atalaia do norte", "AM"),
+    "1301308": ("municipio de codajas", "AM"),
+    "1304005": ("municipio de silves", "AM"),
+    "1600303": ("municipio de macapa", "AP"),
+    "2908101": ("municipio de cocos", "BA"),
+    "2912707": ("municipio de ibirapitanga", "BA"),
+    "2927309": ("municipio de salinas da margarida", "BA"),
+    "2929602": ("municipio de sapeacu", "BA"),
+    "2301000": ("municipio de aquiraz", "CE"),
+    "2304400": ("municipio de fortaleza", "CE"),
+    "2304954": ("municipio de guaiuba", "CE"),
+    "2305233": ("municipio de horizonte", "CE"),
+    "3203106": ("municipio de jeronimo monteiro", "ES"),
+    "3203700": ("municipio de muniz freire", "ES"),
+    "3204302": ("municipio de presidente kennedy", "ES"),
+    "3204955": ("municipio de sao roque do canaa", "ES"),
+    "5205497": ("municipio de cidade ocidental", "GO"),
+    "5208509": ("municipio de goiandira", "GO"),
+    "5210406": ("municipio de itaberai", "GO"),
+    "5219753": ("municipio de santo antonio do descoberto", "GO"),
+    "2104552": ("municipio de governador edison lobao", "MA"),
+    "2110039": ("municipio de santa luzia do parua", "MA"),
+    "2110658": ("municipio de sao domingos do azeitao", "MA"),
+    "2111300": ("municipio de sao luis", "MA"),
+    "3106200": ("municipio de belo horizonte", "MG"),
+    "3111200": ("municipio de campo belo", "MG"),
+    "3120201": ("municipio de cristais", "MG"),
+    "3131901": ("municipio de itabirito", "MG"),
+    "5001904": ("municipio de bataguassu", "MS"),
+    "5005400": ("municipio de maracaju", "MS"),
+    "5102504": ("municipio de caceres", "MT"),
+    "5107743": ("municipio de santa cruz do xingu", "MT"),
+    "1501451": ("municipio de belterra", "PA"),
+    "1506203": ("municipio de salinopolis", "PA"),
+    "1507201": ("municipio de sao domingos do capim", "PA"),
+    "1507979": ("municipio de terra santa", "PA"),
+    "2500601": ("municipio de alhandra", "PB"),
+    "2503704": ("municipio de cajazeiras", "PB"),
+    "2509701": ("municipio de monteiro", "PB"),
+    "2513901": ("municipio de sao bento", "PB"),
+    "2601706": ("municipio de belo jardim", "PE"),
+    "2601904": ("municipio de bezerros", "PE"),
+    "2612802": ("municipio de santa terezinha", "PE"),
+    "2615201": ("municipio de terra nova", "PE"),
+    "2202075": ("municipio de cajazeiras do piaui", "PI"),
+    "2204204": ("municipio de francisco santos", "PI"),
+    "2210623": ("municipio de sebastiao barros", "PI"),
+    "2211209": ("municipio de urucui", "PI"),
+    "4103701": ("municipio de cambe", "PR"),
+    "4107207": ("municipio de dois vizinhos", "PR"),
+    "4108403": ("municipio de francisco beltrao", "PR"),
+    "4115309": ("municipio de mariopolis", "PR"),
+    "4118501": ("municipio de pato branco", "PR"),
+    "4120606": ("municipio de prudentopolis", "PR"),
+    "4121406": ("municipio de realeza", "PR"),
+    "4122800": ("municipio de salgado filho", "PR"),
+    "4127106": ("municipio de telemaco borba", "PR"),
+    "4127965": ("municipio de turvo", "PR"),
+    "4128559": ("municipio de vera cruz do oeste", "PR"),
+    "3300100": ("municipio de angra dos reis", "RJ"),
+    "3302254": ("municipio de itatiaia", "RJ"),
+    "3304557": ("municipio de rio de janeiro", "RJ"),
+    "3305208": ("municipio de sao pedro da aldeia", "RJ"),
+    "2402303": ("municipio de caraubas", "RN"),
+    "2403103": ("municipio de currais novos", "RN"),
+    "2408102": ("municipio de natal", "RN"),
+    "1100452": ("municipio de buritis", "RO"),
+    "1100114": ("municipio de jaru", "RO"),
+    "1100205": ("municipio de porto velho", "RO"),
+    "1400100": ("municipio de boa vista", "RR"),
+    "1400175": ("municipio de canta", "RR"),
+    "1400209": ("municipio de caracarai", "RR"),
+    "1400605": ("municipio de sao luiz", "RR"),
+    "4303103": ("municipio de cachoeirinha", "RS"),
+    "4305900": ("municipio de coronel bicaco", "RS"),
+    "4318903": ("municipio de sao luiz gonzaga", "RS"),
+    "4319802": ("municipio de sao vicente do sul", "RS"),
+    "4208005": ("municipio de ita", "SC"),
+    "4214201": ("municipio de quilombo", "SC"),
+    "4217402": ("municipio de schroeder", "SC"),
+    "4219507": ("municipio de xanxere", "SC"),
+    "3507506": ("municipio de botucatu", "SP"),
+    "3508108": ("municipio de buritama", "SP"),
+    "3509502": ("municipio de campinas", "SP"),
+    "3518800": ("municipio de guarulhos", "SP"),
+    "3530805": ("municipio de mogi-mirim", "SP"),
+    "3536703": ("municipio de pederneiras", "SP"),
+    "3543402": ("municipio de ribeirao preto", "SP"),
+    "3547601": ("municipio de santa rosa de viterbo", "SP"),
+    "3549508": ("municipio de sao jose da bela vista", "SP"),
+    "3556206": ("municipio de valinhos", "SP"),
+    "1705508": ("municipio de colinas do tocantins", "TO"),
 }
 
 
 def main() -> int:
-    orgaos = get_json(f"{API}/api/orgaos?skip=0&take=100")
+    orgaos = get_json(f"{API}/api/orgaos?skip=0&take=200")
     deny_flags(orgaos, f"{API}/api/orgaos")
     deny_stub(json.dumps(orgaos, ensure_ascii=False), "api /api/orgaos")
     items_page = orgaos.get("items") or []
-    if len(items_page) < 59:
+    if len(items_page) < len(PUBLISHED):
         raise SystemExit(f"api /api/orgaos returned {len(items_page)} rows, need the published slice")
     by_ibge = {str(row.get("municipioIbge") or ""): row for row in items_page}
     for ibge, (nome, uf) in PUBLISHED.items():
@@ -114,8 +214,8 @@ def main() -> int:
     orgao_cov = orgaos.get("coverage") or {}
     if orgao_cov.get("uf") not in (None, ""):
         raise SystemExit(f"mixed orgao list invented a UF: {orgao_cov}")
-    if not isinstance(orgao_cov.get("n"), int) or orgao_cov["n"] < 59:
-        raise SystemExit(f"api orgaos coverage.n missing the extra slice: {orgao_cov}")
+    if not isinstance(orgao_cov.get("n"), int) or orgao_cov["n"] < len(PUBLISHED):
+        raise SystemExit(f"api orgaos coverage.n missing the published slice: {orgao_cov}")
     if not orgao_cov.get("methodologyVersion"):
         raise SystemExit(f"api orgaos coverage missing methodologyVersion: {orgao_cov}")
 
@@ -435,9 +535,9 @@ def main() -> int:
     deny_stub(json.dumps(cobertura_api, ensure_ascii=False), "api /api/cobertura")
     munic = cobertura_api.get("municipios") or {}
     munic_items = munic.get("items") or []
-    if not isinstance(munic.get("n"), int) or munic["n"] < 59:
+    if not isinstance(munic.get("n"), int) or munic["n"] < len(PUBLISHED):
         raise SystemExit(f"api /api/cobertura municipios.n missing the published slice: {munic}")
-    if len(munic_items) < 59:
+    if len(munic_items) < len(PUBLISHED):
         raise SystemExit(f"api /api/cobertura returned {len(munic_items)} municipios")
     ibges = {str(row.get("ibge") or "") for row in munic_items}
     for ibge in PUBLISHED:
@@ -715,14 +815,24 @@ def main() -> int:
         raise SystemExit("web / missing Maricá")
     if "UF mista" not in home:
         raise SystemExit("web / missing honest mixed UF")
-    if "Cinquenta e nove municípios" not in home:
+    if "Cento e cinquenta e nove municípios" not in home:
         raise SystemExit("web / missing short brand kicker")
+    if "rio de janeiro" not in folded:
+        raise SystemExit("web / missing Rio de Janeiro")
+    if "fortaleza" not in folded:
+        raise SystemExit("web / missing Fortaleza")
+    if "belo horizonte" not in folded:
+        raise SystemExit("web / missing Belo Horizonte")
+    if "macapa" not in folded and "macapá" not in folded:
+        raise SystemExit("web / missing Macapá")
+    if "colinas do tocantins" not in folded:
+        raise SystemExit("web / missing Colinas do Tocantins")
     if "2024-2026 YTD" not in home:
         raise SystemExit("web / missing 2024-2026 YTD")
     if "UF Brasil" in home or "total nacional" in folded:
         raise SystemExit("web / invented a national total")
 
-    orgaos_html = get_text(f"{WEB}/orgaos?take=100")
+    orgaos_html = get_text(f"{WEB}/orgaos?take=200")
     assert_served_page(orgaos_html, "web /orgaos")
     orgaos_fold = orgaos_html.casefold()
     if "volta redonda" not in orgaos_fold:
@@ -843,6 +953,16 @@ def main() -> int:
         raise SystemExit("web /orgaos missing Itaboraí")
     if "marica" not in orgaos_fold and "maricá" not in orgaos_fold:
         raise SystemExit("web /orgaos missing Maricá")
+    if "rio de janeiro" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing Rio de Janeiro")
+    if "fortaleza" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing Fortaleza")
+    if "belo horizonte" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing Belo Horizonte")
+    if "macapa" not in orgaos_fold and "macapá" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing Macapá")
+    if "colinas do tocantins" not in orgaos_fold:
+        raise SystemExit("web /orgaos missing Colinas do Tocantins")
     if "UF mista" not in orgaos_html:
         raise SystemExit("web /orgaos missing honest mixed UF")
 
@@ -869,8 +989,8 @@ def main() -> int:
         raise SystemExit("web /orgaos?uf=SP missing Marília")
     if "itaquaquecetuba" not in sp_table.casefold():
         raise SystemExit("web /orgaos?uf=SP missing Itaquaquecetuba")
-    if not re.search(r"n=9", sp_html):
-        raise SystemExit("web UF=SP filter missing n=9")
+    if not re.search(r"n=19", sp_html):
+        raise SystemExit("web UF=SP filter missing n=19")
     if "prefeitura municipal de volta redonda" in sp_table.casefold():
         raise SystemExit("web UF=SP filter leaked Volta Redonda")
     if "prefeitura municipal de niter" in sp_table.casefold():
@@ -901,8 +1021,8 @@ def main() -> int:
         raise SystemExit("web /orgaos?uf=SC missing Lages")
     if "balneario" not in sc_table.casefold() and "balneário" not in sc_table.casefold():
         raise SystemExit("web /orgaos?uf=SC missing Balneário Camboriú")
-    if not re.search(r"n=3", sc_html):
-        raise SystemExit("web UF=SC filter missing n=3")
+    if not re.search(r"n=7", sc_html):
+        raise SystemExit("web UF=SC filter missing n=7")
     if "municipio de caxias do sul" in sc_table.casefold():
         raise SystemExit("web UF=SC filter leaked Caxias do Sul")
     if "prefeitura municipal de volta redonda" in sc_table.casefold():
@@ -963,8 +1083,8 @@ def main() -> int:
         raise SystemExit("web UF=PE filter leaked Feira de Santana")
     if "prefeitura municipal de volta redonda" in pe_table.casefold():
         raise SystemExit("web UF=PE filter leaked Volta Redonda")
-    if not re.search(r"n=2", pe_html):
-        raise SystemExit("web UF=PE filter missing n=2")
+    if not re.search(r"n=6", pe_html):
+        raise SystemExit("web UF=PE filter missing n=6")
     if "UF PE" not in pe_html:
         raise SystemExit("web UF=PE missing coverage UF")
 
@@ -1537,6 +1657,8 @@ def main() -> int:
         ("3524402", "municipio de jacarei", "município de jacareí", "SP", "Jacareí", "municipio de parauapebas", "município de parauapebas"),
         ("3301900", "municipio de itaborai", "município de itaboraí", "RJ", "Itaboraí", "municipio de marica", "município de maricá"),
         ("3302700", "municipio de marica", "município de maricá", "RJ", "Maricá", "municipio de itaborai", "município de itaboraí"),
+        ("3304557", "municipio de rio de janeiro", "município de rio de janeiro", "RJ", "Rio de Janeiro", "municipio de fortaleza", "município de fortaleza"),
+        ("2304400", "municipio de fortaleza", "município de fortaleza", "CE", "Fortaleza", "municipio de rio de janeiro", "município de rio de janeiro"),
     ):
         extra_html = get_text(f"{WEB}/orgaos?municipioIbge={extra_ibge}")
         assert_served_page(extra_html, f"web /orgaos?municipioIbge={extra_ibge}")
@@ -1763,6 +1885,16 @@ def main() -> int:
         raise SystemExit("web /cobertura missing Itaboraí IBGE")
     if "3302700" not in cobertura:
         raise SystemExit("web /cobertura missing Maricá IBGE")
+    if "3304557" not in cobertura:
+        raise SystemExit("web /cobertura missing Rio de Janeiro IBGE")
+    if "2304400" not in cobertura:
+        raise SystemExit("web /cobertura missing Fortaleza IBGE")
+    if "3106200" not in cobertura:
+        raise SystemExit("web /cobertura missing Belo Horizonte IBGE")
+    if "1600303" not in cobertura:
+        raise SystemExit("web /cobertura missing Macapá IBGE")
+    if "1705508" not in cobertura:
+        raise SystemExit("web /cobertura missing Colinas do Tocantins IBGE")
     if "não é um total nacional" not in cobertura:
         raise SystemExit("web /cobertura missing disclaimer")
     if "UF mista" not in cobertura:

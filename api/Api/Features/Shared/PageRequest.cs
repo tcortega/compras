@@ -6,7 +6,7 @@ public record PageRequest
 {
 	public const int DefaultTake = 50;
 
-	public const int MaxTake = 100;
+	public const int MaxTake = 500;
 
 	[FromQuery]
 	public int? Skip { get; init; }

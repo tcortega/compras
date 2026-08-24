@@ -212,7 +212,7 @@ def run_pncp_consulta_gaps(
     sleeper=None,
     clock=None,
 ) -> tuple[LandingRef, pl.DataFrame, dict]:
-    """Land PNCP gaps for the 59, write only those rows. Skip complete compras.gov compras."""
+    """Land PNCP gaps for the covered slice, write only those rows. Skip complete compras.gov compras."""
     store = store or LandingStore(settings)
     covered = complete_compra_keys(store)
     ref, raw, report = land_pncp_consulta_gaps(

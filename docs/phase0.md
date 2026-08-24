@@ -121,6 +121,23 @@ The 2024 COMPRA file has 57,384 municipal rows across 731 distinct municipio nam
 Volta Redonda has 964 municipal contratacoes (959 unique id_compra), the highest volume among clearly mid-size non-capital cities after excluding Uberlandia / Ribeirao Preto which sit above 500k.
 Other candidates present with volume: Bauru 736, Caxias do Sul 577, Maringa 425, Taubate 384, Joinville 346, Cascavel 245, Campina Grande 225 municipal 2024, Londrina 257, Niteroi 238, Santa Maria 240, Juiz de Fora 142, Foz do Iguacu 871, Montes Claros 67, Governador Valadares 78, Canoas 11, Lages 199, Santarem 23, Rio Verde 384, Paulo Afonso 63 municipal 46 homologado, Sao Lourenco da Mata 65 municipal 64 homologado, Crato 69 municipal 45 homologado, Ariquemes 222 municipal 183 homologado, Colatina 5 municipal 5 homologado, Castanhal 24 municipal 23 homologado, Divinopolis 332 municipal 288 homologado, Petropolis 19 municipal 19 homologado, Ipatinga 62 municipal 47 homologado, Macae 182 municipal 160 homologado, Santa Luzia 65 municipal 58 homologado, Nova Friburgo 154 municipal 130 homologado, Marilia 95 municipal 82 homologado, Balneario Camboriu 74 municipal 69 homologado.
 
+## Next 100 municipal-executive IBGE codes
+
+D3 adds one batch of 100 extra municipal-executive IBGE codes that were not in the frozen 59.
+The list comes from official 2024 COMPRA+ITEM, keyed the same way land/filter already keys municipios: IBGE plus esfera M and poder not L.
+A city stays out if it has only federal, state, or camara rows, or if it has no MUNICIPIO DE / PREFEITURA executive COMPRA+ITEM pair.
+Qualifier on the remaining set: n_homolog_exec >= 1, n_item >= 20, n_exec >= 5.
+Selection ranks by (n_item, n_homolog_exec, n_exec), takes up to 4 cities per UF, then fills to 100 from leftover highest volume.
+n_added is 100 of 484 remaining executive COMPRA+ITEM cities (denominator 616 municipal non-legislative IBGE codes after land/filter).
+n_total_municipios is 159.
+UF mix of the added 100: AC 4, AL 4, AM 3, AP 1, BA 4, CE 4, ES 4, GO 4, MA 4, MG 4, MS 2, MT 2, PA 4, PB 4, PE 4, PI 4, PR 11, RJ 4, RN 3, RO 3, RR 4, RS 4, SC 4, SP 10, TO 1.
+DF and SE stay out because that 2024 COMPRA file has no municipal-executive COMPRA+ITEM pair there.
+Vitoria stays out as camara-only.
+Cities once excluded for the mid-size band, including Rio Largo, Caceres, Pato Branco, Francisco Beltrao, Rio de Janeiro, Fortaleza, Belo Horizonte, and Campinas, enter this batch because D3 is not limited to that band.
+Each planted city has one official COMPRA row and one matching ITEM row.
+Seed and coverage checks accept the frozen 59 plus this batch.
+They do not require only 59 forever.
+
 ## Bulk repo layout
 
 https://repositorio.dados.gov.br/seges/comprasgov/ has anual/, mensal/, diario/, catalogo_cnbs/, compras_legado/.

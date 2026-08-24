@@ -323,7 +323,7 @@ def _ingest(
         covered = complete_compra_keys(store)
     covered = covered or set()
     if gaps_only and not covered and not store.list_parquet("compras_gov"):
-        raise RuntimeError("PNCP gaps need compras.gov landing for the 59")
+        raise RuntimeError("PNCP gaps need compras.gov landing for the covered slice")
     cursor = _read_cursor(store, cursor_key)
     target_ibges = {ibge for ibge, _ in targets}
     if _cursor_done(cursor, year, target_ibges):

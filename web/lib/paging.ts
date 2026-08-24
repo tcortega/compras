@@ -1,7 +1,7 @@
 import type { Esfera, PageRequest } from '@/lib/types'
 
 export const DEFAULT_TAKE = 20
-export const MAX_TAKE = 100
+export const MAX_TAKE = 500
 
 function first(
   value: string | string[] | undefined,

@@ -170,6 +170,128 @@ function orgao(
   }
 }
 
+type D3City = {
+  i: number
+  cnpj: string
+  ibge: string
+  uf: string
+  nome: string
+  razao: string
+  pncp: string
+  item: string
+}
+
+const D3_BATCH: D3City[] = [
+  { i: 63, cnpj: "04508933000145", ibge: "1200104", uf: "AC", nome: "Brasiléia", razao: "Município de Brasiléia", pncp: "04508933000145-1-000005/2024", item: "Obras civis de pavimentação asfáltica" },
+  { i: 64, cnpj: "04051207000146", ibge: "1200344", uf: "AC", nome: "Manoel Urbano", razao: "Município de Manoel Urbano", pncp: "04051207000146-1-000008/2024", item: "Obras civis de edificação prediais" },
+  { i: 65, cnpj: "04034583000122", ibge: "1200401", uf: "AC", nome: "Rio Branco", razao: "Município de Rio Branco", pncp: "04034583000122-1-000116/2024", item: "Projeto e montagem de iluminação - residencial / comercial /artística" },
+  { i: 66, cnpj: "01674973000179", ibge: "1200609", uf: "AC", nome: "Tarauacá", razao: "Prefeitura Municipal de Tarauacá", pncp: "01674973000179-1-000001/2024", item: "Obras Civis de Pavimentação Asfáltica" },
+  { i: 67, cnpj: "12333753000106", ibge: "2701704", uf: "AL", nome: "Capela", razao: "Município de Capela", pncp: "12333753000106-1-000016/2024", item: "Metoclopramida Cloridrato" },
+  { i: 68, cnpj: "12250908000132", ibge: "2702504", uf: "AL", nome: "Dois Riachos", razao: "Município de Dois Riachos", pncp: "12250908000132-1-000006/2024", item: "Grampeador" },
+  { i: 69, cnpj: "12200168000120", ibge: "2707701", uf: "AL", nome: "Rio Largo", razao: "Município de Rio Largo", pncp: "12200168000120-1-000198/2024", item: "Obras civis de saneamento - sistema de drenagem pluvial e industrial" },
+  { i: 70, cnpj: "12332946000134", ibge: "2709301", uf: "AL", nome: "União dos Palmares", razao: "Município de União dos Palmares", pncp: "12332946000134-1-000006/2024", item: "Apresentação Artística / Musical / Canto / Coral Apresentação Artística / Musica" },
+  { i: 71, cnpj: "04530713000118", ibge: "1300201", uf: "AM", nome: "Atalaia do Norte", razao: "Município de Atalaia do Norte", pncp: "04530713000118-1-000007/2024", item: "Obras Civis de Pavimentação Asfáltica" },
+  { i: 72, cnpj: "04263331000175", ibge: "1301308", uf: "AM", nome: "Codajás", razao: "Município de Codajás", pncp: "04263331000175-1-000013/2024", item: "Manutenção de Equipamentos de Microfilmagem Manutenção de Equipamentos de Microf" },
+  { i: 73, cnpj: "04477634000190", ibge: "1304005", uf: "AM", nome: "Silves", razao: "Município de Silves", pncp: "04477634000190-1-000019/2024", item: "Obras civis de pavimentação asfáltica" },
+  { i: 74, cnpj: "05995766000177", ibge: "1600303", uf: "AP", nome: "Macapá", razao: "Município de Macapá", pncp: "05995766000177-1-000009/2024", item: "Estação trabalho" },
+  { i: 75, cnpj: "14222012000175", ibge: "2908101", uf: "BA", nome: "Cocos", razao: "Município de Cocos", pncp: "14222012000175-1-000023/2024", item: "Locação de Veículos - Leves / Pesados" },
+  { i: 76, cnpj: "13846753000164", ibge: "2912707", uf: "BA", nome: "Ibirapitanga", razao: "Município de Ibirapitanga", pncp: "13846753000164-1-000025/2024", item: "Locação de Máquinas de Escavação / Terraplenagem / Agrícola" },
+  { i: 77, cnpj: "13743281000114", ibge: "2927309", uf: "BA", nome: "Salinas da Margarida", razao: "Município de Salinas da Margarida", pncp: "13743281000114-1-000142/2024", item: "Obras Civis de Parques e Praças" },
+  { i: 78, cnpj: "13696257000171", ibge: "2929602", uf: "BA", nome: "Sapeaçu", razao: "Município de Sapeaçu", pncp: "13696257000171-1-000004/2024", item: "Base relé fotoelétrico iluminação" },
+  { i: 79, cnpj: "07911696000157", ibge: "2301000", uf: "CE", nome: "Aquiraz", razao: "Município de Aquiraz", pncp: "07911696000157-1-000028/2024", item: "Obras Civis de Pavimentação Asfáltica" },
+  { i: 80, cnpj: "07954605000160", ibge: "2304400", uf: "CE", nome: "Fortaleza", razao: "Município de Fortaleza", pncp: "07954605000160-1-000477/2024", item: "Locação de Veículos - Leves / Pesados" },
+  { i: 81, cnpj: "12359535000132", ibge: "2304954", uf: "CE", nome: "Guaiúba", razao: "Município de Guaiúba", pncp: "12359535000132-1-000027/2024", item: "Promoção de Evento" },
+  { i: 82, cnpj: "23555196000186", ibge: "2305233", uf: "CE", nome: "Horizonte", razao: "Município de Horizonte", pncp: "23555196000186-1-000040/2024", item: "Endoscopia Digestiva Alta - Diagnóstica" },
+  { i: 83, cnpj: "27165653000187", ibge: "3203106", uf: "ES", nome: "Jerônimo Monteiro", razao: "Município de Jerônimo Monteiro", pncp: "27165653000187-1-000118/2024", item: "Instalação / manutenção elétrica - predial, industrial" },
+  { i: 84, cnpj: "27165687000171", ibge: "3203700", uf: "ES", nome: "Muniz Freire", razao: "Município de Muniz Freire", pncp: "27165687000171-1-000074/2024", item: "Obras civis de pavimentação de paralelepípedo" },
+  { i: 85, cnpj: "27165703000126", ibge: "3204302", uf: "ES", nome: "Presidente Kennedy", razao: "Município de Presidente Kennedy", pncp: "27165703000126-1-000002/2024", item: "Comercialização / distribuição - vale transporte contratação de empresa vale tra" },
+  { i: 86, cnpj: "01612865000171", ibge: "3204955", uf: "ES", nome: "São Roque do Canaã", razao: "Município de São Roque do Canaã", pncp: "01612865000171-1-000034/2024", item: "Manutenção de Motores a Combustão Manutenção de Motores a Combustão" },
+  { i: 87, cnpj: "36862621000121", ibge: "5205497", uf: "GO", nome: "Cidade Ocidental", razao: "Município de Cidade Ocidental", pncp: "36862621000121-1-000050/2024", item: "Fornecimento de Refeições / Lanches / Salgados / Doces" },
+  { i: 88, cnpj: "01303221000100", ibge: "5208509", uf: "GO", nome: "Goiandira", razao: "Município de Goiandira", pncp: "01303221000100-1-000066/2024", item: "Luva De Proteção" },
+  { i: 89, cnpj: "02451938000153", ibge: "5210406", uf: "GO", nome: "Itaberaí", razao: "Município de Itaberaí", pncp: "02451938000153-1-000017/2025", item: "Coleta de Lixo - Residencial / Comercial / Industrial Coleta de Lixo - Residenci" },
+  { i: 90, cnpj: "00097857000171", ibge: "5219753", uf: "GO", nome: "Santo Antônio do Descoberto", razao: "Município de Santo Antônio do Descoberto", pncp: "00097857000171-1-000036/2024", item: "Construção / manutenção / reforma - telhado" },
+  { i: 91, cnpj: "01597627000134", ibge: "2104552", uf: "MA", nome: "Governador Edison Lobão", razao: "Município de Governador Edison Lobão", pncp: "01597627000134-1-000013/2024", item: "Manutenção de Geladeiras e Bebedouros" },
+  { i: 92, cnpj: "12511093000106", ibge: "2110039", uf: "MA", nome: "Santa Luzia do Paruá", razao: "Município de Santa Luzia do Paruá", pncp: "12511093000106-1-000021/2024", item: "Confecção Móveis / Placas / Painéis em vidro" },
+  { i: 93, cnpj: "01612333000134", ibge: "2110658", uf: "MA", nome: "São Domingos do Azeitão", razao: "Município de São Domingos do Azeitão", pncp: "01612333000134-1-000020/2024", item: "Transporte rodoviário - cargas / encomendas" },
+  { i: 94, cnpj: "06307102000130", ibge: "2111300", uf: "MA", nome: "São Luís", razao: "Município de São Luís", pncp: "06307102000130-1-000170/2024", item: "Consultoria e Assessoria - Contábil" },
+  { i: 95, cnpj: "18715383000140", ibge: "3106200", uf: "MG", nome: "Belo Horizonte", razao: "Município de Belo Horizonte", pncp: "18715383000140-1-000162/2024", item: "Estudos e projetos - instalações prediais" },
+  { i: 96, cnpj: "18659334000137", ibge: "3111200", uf: "MG", nome: "Campo Belo", razao: "Município de Campo Belo", pncp: "18659334000137-1-000477/2024", item: "Fornecimento de Refeições / Lanches / Salgados / Doces" },
+  { i: 97, cnpj: "17888082000155", ibge: "3120201", uf: "MG", nome: "Cristais", razao: "Município de Cristais", pncp: "17888082000155-1-000157/2024", item: "Obras civis públicas ( construção )" },
+  { i: 98, cnpj: "18307835000154", ibge: "3131901", uf: "MG", nome: "Itabirito", razao: "Município de Itabirito", pncp: "18307835000154-1-000007/2024", item: "Recrutamento e Seleção de Pessoal / Concurso Público / Vestibular Recrutamento e" },
+  { i: 99, cnpj: "03576220000156", ibge: "5001904", uf: "MS", nome: "Bataguassu", razao: "Município de Bataguassu", pncp: "03576220000156-1-000108/2024", item: "Grade Aradora" },
+  { i: 100, cnpj: "03442597000112", ibge: "5005400", uf: "MS", nome: "Maracaju", razao: "Município de Maracaju", pncp: "03442597000112-1-000060/2024", item: "Manutenção em Equipamentos de Consultório Odontológico" },
+  { i: 101, cnpj: "03214145000183", ibge: "5102504", uf: "MT", nome: "Cáceres", razao: "Município de Cáceres", pncp: "03214145000183-1-000079/2024", item: "Fita veda rosca" },
+  { i: 102, cnpj: "04178518000170", ibge: "5107743", uf: "MT", nome: "Santa Cruz do Xingu", razao: "Município de Santa Cruz do Xingu", pncp: "04178518000170-1-000008/2024", item: "Obras Civis de Pavimentação Asfáltica" },
+  { i: 103, cnpj: "01614112000103", ibge: "1501451", uf: "PA", nome: "Belterra", razao: "Município de Belterra", pncp: "01614112000103-1-000077/2024", item: "Obras Civis - Perfuração de Poços" },
+  { i: 104, cnpj: "05149166000198", ibge: "1506203", uf: "PA", nome: "Salinópolis", razao: "Município de Salinópolis", pncp: "05149166000198-1-000042/2024", item: "Instalação / manutenção - placa de identificação Instalação / manutenção - placa" },
+  { i: 105, cnpj: "05193115000163", ibge: "1507201", uf: "PA", nome: "São Domingos do Capim", razao: "Município de São Domingos do Capim", pncp: "05193115000163-1-000016/2024", item: "Obras Civis de Terraplenagem" },
+  { i: 106, cnpj: "23060866000193", ibge: "1507979", uf: "PA", nome: "Terra Santa", razao: "Município de Terra Santa", pncp: "23060866000193-1-000045/2024", item: "Consultoria e Assessoria - Jurídica Consultoria e Assessoria - Jurídica" },
+  { i: 107, cnpj: "08778318000100", ibge: "2500601", uf: "PB", nome: "Alhandra", razao: "Município de Alhandra", pncp: "08778318000100-1-000026/2024", item: "Inspeções e testes em materiais e equipamentos elétricos" },
+  { i: 108, cnpj: "08923971000115", ibge: "2503704", uf: "PB", nome: "Cajazeiras", razao: "Município de Cajazeiras", pncp: "08923971000115-1-000062/2024", item: "Supervisão / gerenciamento / fiscalização - projeto constru-ção / obras civis" },
+  { i: 109, cnpj: "09073628000191", ibge: "2509701", uf: "PB", nome: "Monteiro", razao: "Município de Monteiro", pncp: "09073628000191-1-000011/2024", item: "Filme Radiológico" },
+  { i: 110, cnpj: "09069709000118", ibge: "2513901", uf: "PB", nome: "São Bento", razao: "Município de São Bento", pncp: "09069709000118-1-000068/2024", item: "Manutenção / Reforma Predial" },
+  { i: 111, cnpj: "10260222000105", ibge: "2601706", uf: "PE", nome: "Belo Jardim", razao: "Município de Belo Jardim", pncp: "10260222000105-1-000277/2024", item: "Fornecimento de Refeições / Lanches / Salgados / Doces MARMITA – JANTA - devem c" },
+  { i: 112, cnpj: "10091510000175", ibge: "2601904", uf: "PE", nome: "Bezerros", razao: "Município de Bezerros", pncp: "10091510000175-1-000011/2024", item: "Apresentação Artística / Musical / Canto / Coral Contratação artística de CIEL S" },
+  { i: 113, cnpj: "11358140000152", ibge: "2612802", uf: "PE", nome: "Santa Terezinha", razao: "Município de Santa Terezinha", pncp: "11358140000152-1-000026/2024", item: "Troca filtro - veículo automotivo" },
+  { i: 114, cnpj: "11361201000130", ibge: "2615201", uf: "PE", nome: "Terra Nova", razao: "Município de Terra Nova", pncp: "11361201000130-1-000007/2024", item: "Ar condicionado - instalação/montagem/desmontagem/remoção - (parede / sistemas)" },
+  { i: 115, cnpj: "01612573000139", ibge: "2202075", uf: "PI", nome: "Cajazeiras do Piauí", razao: "Município de Cajazeiras do Piauí", pncp: "01612573000139-1-000007/2024", item: "Consultoria e Assessoria - Jurídica Consultoria e Assessoria - Jurídica" },
+  { i: 116, cnpj: "06553713000169", ibge: "2204204", uf: "PI", nome: "Francisco Santos", razao: "Município de Francisco Santos", pncp: "06553713000169-1-000039/2024", item: "Obras Civis de Pavimentação Asfáltica" },
+  { i: 117, cnpj: "01612805000159", ibge: "2210623", uf: "PI", nome: "Sebastião Barros", razao: "Município de Sebastião Barros", pncp: "01612805000159-1-000006/2024", item: "Instalação / manutenção - bombas hidráulicas / combustível" },
+  { i: 118, cnpj: "06985832000190", ibge: "2211209", uf: "PI", nome: "Uruçuí", razao: "Município de Uruçuí", pncp: "06985832000190-1-000032/2024", item: "Obras civis de parques e praças" },
+  { i: 119, cnpj: "75732057000184", ibge: "4103701", uf: "PR", nome: "Cambé", razao: "Município de Cambé", pncp: "75732057000184-1-000008/2024", item: "Perícia, laudo e avaliação Perícia, laudo e avaliação" },
+  { i: 120, cnpj: "76205640000108", ibge: "4107207", uf: "PR", nome: "Dois Vizinhos", razao: "Município de Dois Vizinhos", pncp: "76205640000108-1-000011/2024", item: "Fornecimento de Refeições / Lanches / Salgados / Doces Fornecimento de Refeições" },
+  { i: 121, cnpj: "77816510000166", ibge: "4108403", uf: "PR", nome: "Francisco Beltrão", razao: "Município de Francisco Beltrão", pncp: "77816510000166-1-000211/2024", item: "Obras civis de pavimentação de paralelepípedo" },
+  { i: 122, cnpj: "76995323000124", ibge: "4115309", uf: "PR", nome: "Mariópolis", razao: "Município de Mariópolis", pncp: "76995323000124-1-000214/2024", item: "Obras civis de pontes e viadutos - concreto" },
+  { i: 123, cnpj: "76995448000154", ibge: "4118501", uf: "PR", nome: "Pato Branco", razao: "Município de Pato Branco", pncp: "76995448000154-1-000097/2024", item: "Obras Civis de Pavimentação Asfáltica" },
+  { i: 124, cnpj: "77003424000134", ibge: "4120606", uf: "PR", nome: "Prudentópolis", razao: "Município de Prudentópolis", pncp: "77003424000134-1-000270/2024", item: "Incineração / aterramento - resíduos industriais / lixo especial" },
+  { i: 125, cnpj: "76205673000140", ibge: "4121406", uf: "PR", nome: "Realeza", razao: "Município de Realeza", pncp: "76205673000140-1-000204/2024", item: "Perícia, laudo e avaliação" },
+  { i: 126, cnpj: "76205699000198", ibge: "4122800", uf: "PR", nome: "Salgado Filho", razao: "Município de Salgado Filho", pncp: "76205699000198-1-000062/2024", item: "Cambagem e Caster em Veículo Automotivo" },
+  { i: 127, cnpj: "76170240000104", ibge: "4127106", uf: "PR", nome: "Telêmaco Borba", razao: "Município de Telêmaco Borba", pncp: "76170240000104-1-000275/2024", item: "Buffet" },
+  { i: 128, cnpj: "78279973000107", ibge: "4127965", uf: "PR", nome: "Turvo", razao: "Município de Turvo", pncp: "78279973000107-1-000228/2024", item: "Manutenção e Reparo de Máquinas de Escavação e Terraplanagem" },
+  { i: 129, cnpj: "78101821000101", ibge: "4128559", uf: "PR", nome: "Vera Cruz do Oeste", razao: "Município de Vera Cruz do Oeste", pncp: "78101821000101-1-000163/2024", item: "Fornecimento de refeições / lanches / salgados / doces" },
+  { i: 130, cnpj: "29172467000109", ibge: "3300100", uf: "RJ", nome: "Angra dos Reis", razao: "Município de Angra dos Reis", pncp: "29172467000109-1-000045/2024", item: "Fornecimento de Refeições / Lanches / Salgados / Doces Fornecimento de Refeições" },
+  { i: 131, cnpj: "31846892000170", ibge: "3302254", uf: "RJ", nome: "Itatiaia", razao: "Município de Itatiaia", pncp: "31846892000170-1-000042/2024", item: "Análise Clínica, Anatomia Patológica e Citopatologia" },
+  { i: 132, cnpj: "42498733000148", ibge: "3304557", uf: "RJ", nome: "Rio de Janeiro", razao: "Município de Rio de Janeiro", pncp: "42498733000148-1-001315/2024", item: "Manutenção extintores / mangueiras - combate incêndio" },
+  { i: 133, cnpj: "28909604000174", ibge: "3305208", uf: "RJ", nome: "São Pedro da Aldeia", razao: "Município de São Pedro da Aldeia", pncp: "28909604000174-1-000050/2024", item: "Instalação / Manutenção de Sistema de Sinalização Trânsito  Vertical / Horizonta" },
+  { i: 134, cnpj: "08349102000129", ibge: "2402303", uf: "RN", nome: "Caraúbas", razao: "Município de Caraúbas", pncp: "08349102000129-1-000011/2024", item: "Locação / Montagem / Desmontagem de Stands e Projetos em Feiras e Exposições" },
+  { i: 135, cnpj: "08109126000100", ibge: "2403103", uf: "RN", nome: "Currais Novos", razao: "Município de Currais Novos", pncp: "08109126000100-1-000252/2024", item: "Obras Civis de Terraplenagem" },
+  { i: 136, cnpj: "08241747000496", ibge: "2408102", uf: "RN", nome: "Natal", razao: "Município de Natal", pncp: "08241747000496-1-000031/2024", item: "Locação de Veículos - Leves / Pesados" },
+  { i: 137, cnpj: "01266058000144", ibge: "1100452", uf: "RO", nome: "Buritis", razao: "Município de Buritis", pncp: "01266058000144-1-000062/2024", item: "Manutenção / Reforma Predial" },
+  { i: 138, cnpj: "04279238000159", ibge: "1100114", uf: "RO", nome: "Jaru", razao: "Município de Jaru", pncp: "04279238000159-1-000216/2024", item: "Treinamento na área de administração pública Treinamento na área de administraçã" },
+  { i: 139, cnpj: "05903125000145", ibge: "1100205", uf: "RO", nome: "Porto Velho", razao: "Município de Porto Velho", pncp: "05903125000145-1-000016/2024", item: "Estudos e Projetos de Meio Ambiente - Plano Diretor Estudos e Projetos de Meio A" },
+  { i: 140, cnpj: "05943030000155", ibge: "1400100", uf: "RR", nome: "Boa Vista", razao: "Município de Boa Vista", pncp: "05943030000155-1-000086/2024", item: "Consultoria e Assessoria - Organização e Métodos Consultoria e Assessoria - Orga" },
+  { i: 141, cnpj: "01612682000156", ibge: "1400175", uf: "RR", nome: "Cantá", razao: "Município de Cantá", pncp: "01612682000156-1-000001/2024", item: "Obras civis de pavimentação asfáltica" },
+  { i: 142, cnpj: "04653408000113", ibge: "1400209", uf: "RR", nome: "Caracaraí", razao: "Município de Caracaraí", pncp: "04653408000113-1-000026/2024", item: "Consultoria e Assessoria - Administração de Material Consultoria e Assessoria - " },
+  { i: 143, cnpj: "04056230000123", ibge: "1400605", uf: "RR", nome: "São Luiz", razao: "Município de São Luiz", pncp: "04056230000123-1-000004/2024", item: "Fluido de sistema de freio" },
+  { i: 144, cnpj: "87990800000185", ibge: "4303103", uf: "RS", nome: "Cachoeirinha", razao: "Município de Cachoeirinha", pncp: "87990800000185-1-000412/2024", item: "Manutenção / reforma predial" },
+  { i: 145, cnpj: "87613154000137", ibge: "4305900", uf: "RS", nome: "Coronel Bicaco", razao: "Município de Coronel Bicaco", pncp: "87613154000137-1-000139/2024", item: "Obras civis - perfuração de poços" },
+  { i: 146, cnpj: "87613022000105", ibge: "4318903", uf: "RS", nome: "São Luiz Gonzaga", razao: "Município de São Luiz Gonzaga", pncp: "87613022000105-1-000162/2024", item: "Obras civis de pavimentação asfáltica" },
+  { i: 147, cnpj: "87572079000103", ibge: "4319802", uf: "RS", nome: "São Vicente do Sul", razao: "Município de São Vicente do Sul", pncp: "87572079000103-1-000349/2024", item: "Obras civis de parques e praças" },
+  { i: 148, cnpj: "83024240000153", ibge: "4208005", uf: "SC", nome: "Itá", razao: "Município de Itá", pncp: "83024240000153-1-000218/2024", item: "Manutenção Extintores / Mangueiras - Combate Incêndio" },
+  { i: 149, cnpj: "83021865000161", ibge: "4214201", uf: "SC", nome: "Quilombo", razao: "Município de Quilombo", pncp: "83021865000161-1-000027/2024", item: "Obras Civis de Pavimentação de Paralelepípedo" },
+  { i: 150, cnpj: "83102491000109", ibge: "4217402", uf: "SC", nome: "Schroeder", razao: "Município de Schroeder", pncp: "83102491000109-1-000217/2024", item: "Obras Civis de Pavimentação Asfáltica" },
+  { i: 151, cnpj: "83009860000113", ibge: "4219507", uf: "SC", nome: "Xanxerê", razao: "Município de Xanxerê", pncp: "83009860000113-1-000091/2024", item: "Obras civis de edificação prediais" },
+  { i: 152, cnpj: "46634101000115", ibge: "3507506", uf: "SP", nome: "Botucatu", razao: "Município de Botucatu", pncp: "46634101000115-1-000335/2024", item: "Ginecologia e Obstetrícia - Diagnose" },
+  { i: 153, cnpj: "44435121000131", ibge: "3508108", uf: "SP", nome: "Buritama", razao: "Município de Buritama", pncp: "44435121000131-1-000119/2024", item: "Fretamento" },
+  { i: 154, cnpj: "51885242000140", ibge: "3509502", uf: "SP", nome: "Campinas", razao: "Município de Campinas", pncp: "51885242000140-1-000423/2024", item: "Apresentação Artística / Musical / Canto / Coral Apresentação Artística / Musica" },
+  { i: 155, cnpj: "46319000000150", ibge: "3518800", uf: "SP", nome: "Guarulhos", razao: "Município de Guarulhos", pncp: "46319000000150-1-000542/2024", item: "Apresentação Artística / Musical / Canto / Coral Apresentação Artística / Musica" },
+  { i: 156, cnpj: "45332095000189", ibge: "3530805", uf: "SP", nome: "Mogi Mirim", razao: "Município de Mogi Mirim", pncp: "45332095000189-1-000197/2024", item: "Manutenção de Veículos Pesados - Parte Mecânica Manutenção de Veículos Pesados -" },
+  { i: 157, cnpj: "46189718000179", ibge: "3536703", uf: "SP", nome: "Pederneiras", razao: "Município de Pederneiras", pncp: "46189718000179-1-000217/2024", item: "Supervisão / gerenciamento / fiscalização - projeto constru-ção / obras civis" },
+  { i: 158, cnpj: "56024581000156", ibge: "3543402", uf: "SP", nome: "Ribeirão Preto", razao: "Município de Ribeirão Preto", pncp: "56024581000156-1-000683/2024", item: "Informação sobre eventos sociais, esportivos, culturais  na-cionais e internacio" },
+  { i: 159, cnpj: "45368545000193", ibge: "3547601", uf: "SP", nome: "Santa Rosa de Viterbo", razao: "Município de Santa Rosa de Viterbo", pncp: "45368545000193-1-000078/2024", item: "Instalação / manutenção elétrica - predial, industrial" },
+  { i: 160, cnpj: "59851600000106", ibge: "3549508", uf: "SP", nome: "São José da Bela Vista", razao: "Município de São José da Bela Vista", pncp: "59851600000106-1-000123/2024", item: "Supervisão / gerenciamento / fiscalização - projeto constru-ção / obras civis" },
+  { i: 161, cnpj: "45787678000102", ibge: "3556206", uf: "SP", nome: "Valinhos", razao: "Município de Valinhos", pncp: "45787678000102-1-000314/2024", item: "Cenografia" },
+  { i: 162, cnpj: "01795483000120", ibge: "1705508", uf: "TO", nome: "Colinas do Tocantins", razao: "Município de Colinas do Tocantins", pncp: "01795483000120-1-000036/2024", item: "Obras civis de pavimentação asfáltica" },
+]
+
+function d3OrgaoId(i: number): string {
+  return `7c2e1f40-3306-4050-9a01-${String(i).padStart(12, '0')}`
+}
+
+function d3CtId(i: number): string {
+  return `9e4a3b62-3306-4050-9a03-${String(i + 6).padStart(12, '0')}`
+}
+
 export const orgaos: Orgao[] = [
   orgao(
     ids.orgaoPref,
@@ -791,6 +913,7 @@ export const orgaos: Orgao[] = [
     '3302700',
     'Maricá',
   ),
+  ...D3_BATCH.map((row) => orgao(d3OrgaoId(row.i), row.cnpj, row.razao, 'executivo', T2, row.uf, row.ibge, row.nome)),
 ]
 
 export const fornecedores: Fornecedor[] = [
@@ -1644,6 +1767,9 @@ export const contratacoes: Contratacao[] = [
     '2024-09-27T16:43:49.000Z',
     'compras.gov.br',
   ),
+  ...D3_BATCH.map((row) =>
+    ct(d3CtId(row.i), row.pncp, d3OrgaoId(row.i), 'dispensa', row.item, 2024, 1_000, T2, 'compras.gov.br'),
+  ),
 ]
 
 function item(
@@ -1771,4 +1897,7 @@ export const items: Item[] = [
   item(84, ids.ctJacarei, ids.fornPapel, 'Macacão', '221026', 132, 'Unidade', 'un', 349.51, 'SP', '2024-Q4', T2),
   item(85, ids.ctItaborai, ids.fornPapel, 'Cola', '619622', 400, 'Frasco 1,00 KG', 'frasco', 11.16, 'RJ', '2024-Q3', T2),
   item(86, ids.ctMarica, ids.fornPapel, 'Bomba', '607508', 1, 'Unidade', 'un', 198.4, 'RJ', '2024-Q3', T2),
+  ...D3_BATCH.map((row, idx) =>
+    item(87 + idx, d3CtId(row.i), ids.fornPapel, row.item, null, 1, 'Unidade', 'un', 1_000, row.uf, '2024-Q4', T2),
+  ),
 ]

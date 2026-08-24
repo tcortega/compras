@@ -9,7 +9,7 @@ The explorer may start on Postgres.
 ## Identity
 
 Phase 0 precision slice: Volta Redonda, RJ, IBGE 3306305, year 2024.
-The published explorer slice also lands Niterói, RJ, IBGE 3303302, Bauru, SP, IBGE 3506003, Caxias do Sul, RS, IBGE 4305108, Joinville, SC, IBGE 4209102, Uberlândia, MG, IBGE 3170206, Londrina, PR, IBGE 4113700, Feira de Santana, BA, IBGE 2910800, Caruaru, PE, IBGE 2604106, Anápolis, GO, IBGE 5201108, Vila Velha, ES, IBGE 3205200, Campina Grande, PB, IBGE 2504009, Caucaia, CE, IBGE 2303709, Imperatriz, MA, IBGE 2105302, Arapiraca, AL, IBGE 2700300, Dourados, MS, IBGE 5003702, Marabá, PA, IBGE 1504208, Várzea Grande, MT, IBGE 5108402, Ji-Paraná, RO, IBGE 1100122, Parnamirim, RN, IBGE 2403251, Cruzeiro do Sul, AC, IBGE 1200203, Santana, AP, IBGE 1600600, Rorainópolis, RR, IBGE 1400472, Maringá, PR, IBGE 4115200, Taubaté, SP, IBGE 3554102, Cascavel, PR, IBGE 4104808, Juiz de Fora, MG, IBGE 3136702, Foz do Iguaçu, PR, IBGE 4108304, Santa Maria, RS, IBGE 4316907, Montes Claros, MG, IBGE 3143302, Governador Valadares, MG, IBGE 3127701, Canoas, RS, IBGE 4304606, Lages, SC, IBGE 4209300, Santarém, PA, IBGE 1506807, Rio Verde, GO, IBGE 5218805, Paulo Afonso, BA, IBGE 2924009, São Lourenço da Mata, PE, IBGE 2613701, Crato, CE, IBGE 2304202, Ariquemes, RO, IBGE 1100023, Colatina, ES, IBGE 3201506, Castanhal, PA, IBGE 1502400, Divinópolis, MG, IBGE 3122306, Petrópolis, RJ, IBGE 3303906, Ipatinga, MG, IBGE 3131307, Macaé, RJ, IBGE 3302403, Santa Luzia, MG, IBGE 3157807, Nova Friburgo, RJ, IBGE 3303401, Marília, SP, IBGE 3529005, Balneário Camboriú, SC, IBGE 4202008, Itaquaquecetuba, SP, IBGE 3523107, Praia Grande, SP, IBGE 3541000, São José dos Pinhais, PR, IBGE 4125506, Suzano, SP, IBGE 3552502, Guarujá, SP, IBGE 3518701, Cotia, SP, IBGE 3513009, Parauapebas, PA, IBGE 1505536, Jacareí, SP, IBGE 3524402, Itaboraí, RJ, IBGE 3301900, and Maricá, RJ, IBGE 3302700, years 2024, 2025, and 2026 YTD, from official Compras.gov.br anual COMPRA and ITEM files partitioned by source/year/date.
+The published explorer slice lands 159 municipal-executive IBGE codes: the frozen 59 plus one batch of 100 additional codes taken from official Compras.gov.br anual COMPRA and ITEM volume, years 2024, 2025, and 2026 YTD, partitioned by source/year/date.
 That published set does not limit the schema.
 A mixed-UF aggregate leaves `uf` empty.
 It is not a national total.
@@ -318,7 +318,7 @@ The explorer does not read this source.
 Live CKAN is gated by `TCE_RS_FETCH`.
 
 PNCP consulta lands under `pncp_consulta/date=` with a resumable `_cursor.json` or `_gaps_cursor.json`.
-A background Dagster job (`pncp_consulta_gaps_run`, America/Sao_Paulo) fetches only gaps for the already covered 59 IBGE codes.
+A background Dagster job (`pncp_consulta_gaps_run`, America/Sao_Paulo) fetches only gaps for the already covered IBGE codes.
 A gap is a consulta compra, item, or later page that the Compras.gov.br bulk does not already give that IBGE.
 Complete compras.gov rows are not re-fetched.
 Warehouse reads those gap rows as normal itens and contratacoes.

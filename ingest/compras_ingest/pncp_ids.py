@@ -43,14 +43,14 @@ def item_identity(pncp_id: object, numero_item: object) -> tuple[str, int, int, 
 
 
 def live_ibge_targets() -> list[tuple[str, str]]:
-    """59 covered municipios only. Never Brazil."""
+    """Covered municipios only. Never Brazil."""
     return sorted(SLICE_IBGE_UF.items())
 
 
 def fixture_ibge_targets(ibge: str, uf: str) -> list[tuple[str, str]]:
     token = ibge_token(ibge)
     if token not in SLICE_IBGE_CODES:
-        raise RuntimeError(f"pncp_consulta ibge {ibge} is outside the 59")
+        raise RuntimeError(f"pncp_consulta ibge {ibge} is outside the covered slice")
     return [(token, str(uf or SLICE_IBGE_UF[token]).upper())]
 
 

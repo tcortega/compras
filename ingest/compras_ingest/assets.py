@@ -119,7 +119,7 @@ GAPS_ASSET_NAME = "pncp_consulta_gaps"
 @asset(
     name=GAPS_ASSET_NAME,
     group_name="tier_b",
-    description="PNCP consulta gaps for the covered 59. Skip complete compras.gov rows. 1s spacing. America/Sao_Paulo.",
+    description="PNCP consulta gaps for the covered slice. Skip complete compras.gov rows. 1s spacing. America/Sao_Paulo.",
 )
 def pncp_consulta_gaps(context: AssetExecutionContext) -> dict:
     settings = _settings()
@@ -299,7 +299,7 @@ trailing_window_refetch_schedule = ScheduleDefinition(
 pncp_consulta_gaps_job = define_asset_job(
     name=GAPS_JOB_NAME,
     selection=[GAPS_ASSET_NAME],
-    description="Daily PNCP consulta gaps for the covered 59 municipios.",
+    description="Daily PNCP consulta gaps for the covered municipios.",
 )
 
 pncp_consulta_gaps_schedule = ScheduleDefinition(

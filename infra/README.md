@@ -10,7 +10,11 @@ From this directory:
 docker compose up --build --wait
 ```
 
-That command starts Postgres 16, ClickHouse, MinIO, Meilisearch, Dagster, the warehouse seed, the search-index sync, the C# API, and the Next.js explorer.
+That command starts Postgres 16, ClickHouse, MinIO, Meilisearch, Dagster webserver and daemon, the warehouse seed, the search-index sync, the C# API, and the Next.js explorer.
+
+Both Dagster processes load `/app/ingest/workspace.yaml`.
+`icc` is part of `docker compose up` and keeps container-to-container traffic on a stock Linux Docker engine.
+The dockerd snippet this stack expects is `docker/daemon.json`.
 
 The seed runs the existing Python ingest/normalize into Postgres and ClickHouse using the in-repo 2024 fixture of 159 municípios listed in `web/lib/copy.ts` `SLICE_MUNICIPIOS`.
 

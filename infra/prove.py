@@ -15,6 +15,14 @@ API = os.environ.get("API_BASE_URL", "http://127.0.0.1:5080").rstrip("/")
 WEB = os.environ.get("WEB_BASE_URL", "http://127.0.0.1:3100").rstrip("/")
 MEILI = os.environ.get("MEILI_URL", "http://127.0.0.1:7700").rstrip("/")
 MEILI_KEY = os.environ.get("MEILI_MASTER_KEY", "dev-meili-master-key-32chars-ok")
+DAGSTER = os.environ.get("DAGSTER_URL", "http://127.0.0.1:3000").rstrip("/")
+SCHEDULES = {
+    "trailing_window_refetch_daily": ("0 3 * * *", "America/Sao_Paulo"),
+    "incremental_land_daily": ("0 4 * * *", "America/Sao_Paulo"),
+    "incremental_land_monthly": ("0 5 1 * *", "America/Sao_Paulo"),
+    "pncp_consulta_gaps_daily": ("30 4 * * *", "America/Sao_Paulo"),
+    "nightly_detector_daily": ("0 6 * * *", "America/Sao_Paulo"),
+}
 
 STUB_MARKERS = (
     "7c2e1f40-3306-4050",
@@ -2029,6 +2037,8 @@ def main() -> int:
     deny_flags(items, f"{API}/api/items")
     deny_flags(item, f"{API}/api/items/{iid}")
 
+    prove_dagster_workspace()
+
     print("compose prove ok")
     print(f"orgaos={len(items_page)} ibges={sorted(by_ibge)} items={n} flags={flag_n}")
     return 0
@@ -2069,6 +2079,124 @@ def get_json(url: str) -> dict:
     if not isinstance(data, dict):
         raise SystemExit(f"{url} JSON is not an object")
     return data
+
+
+def post_json(url: str, payload: dict) -> dict:
+    body = json.dumps(payload).encode()
+    req = urllib.request.Request(
+        url,
+        data=body,
+        headers={"content-type": "application/json", "accept": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            raw = resp.read().decode("utf-8", "replace")
+    except urllib.error.HTTPError as exc:
+        raise SystemExit(f"{url} status {exc.code}") from exc
+    except urllib.error.URLError as exc:
+        raise SystemExit(f"{url} unreachable: {exc.reason}") from exc
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise SystemExit(f"{url} is not JSON") from exc
+    if not isinstance(data, dict):
+        raise SystemExit(f"{url} JSON is not an object")
+    return data
+
+
+def prove_dagster_workspace() -> None:
+    payload = post_json(
+        f"{DAGSTER}/graphql",
+        {
+            "query": """
+            query ComprasDaemonWorkspace {
+              instance {
+                daemonHealth {
+                  allDaemonStatuses {
+                    daemonType
+                    healthy
+                    required
+                  }
+                }
+              }
+              workspaceOrError {
+                __typename
+                ... on Workspace {
+                  locationEntries {
+                    name
+                    loadStatus
+                    locationOrLoadError {
+                      __typename
+                      ... on RepositoryLocation {
+                        repositories {
+                          name
+                          schedules {
+                            name
+                            cronSchedule
+                            executionTimezone
+                          }
+                        }
+                      }
+                      ... on PythonError {
+                        message
+                      }
+                    }
+                  }
+                }
+                ... on PythonError {
+                  message
+                }
+              }
+            }
+            """
+        },
+    )
+    if payload.get("errors"):
+        raise SystemExit(f"dagster graphql errors: {payload.get('errors')}")
+    data = payload.get("data") or {}
+    workspace = data.get("workspaceOrError") or {}
+    if workspace.get("__typename") != "Workspace":
+        raise SystemExit(f"dagster workspace did not load: {workspace}")
+    found: dict[str, tuple[str, str]] = {}
+    loaded = False
+    for entry in workspace.get("locationEntries") or []:
+        if str(entry.get("loadStatus") or "") == "LOADED":
+            loaded = True
+        loc = entry.get("locationOrLoadError") or {}
+        if loc.get("__typename") == "PythonError":
+            raise SystemExit(f"dagster location error: {loc.get('message')}")
+        for repo in loc.get("repositories") or []:
+            for row in repo.get("schedules") or []:
+                name = str(row.get("name") or "")
+                found[name] = (
+                    str(row.get("cronSchedule") or ""),
+                    str(row.get("executionTimezone") or ""),
+                )
+    if not loaded:
+        raise SystemExit("dagster workspace location is not LOADED")
+    missing = [name for name in SCHEDULES if name not in found]
+    if missing:
+        raise SystemExit(f"dagster workspace missing schedules {missing}: {sorted(found)}")
+    for name, (cron, tz) in SCHEDULES.items():
+        got_cron, got_tz = found[name]
+        if got_cron != cron:
+            raise SystemExit(f"dagster schedule {name} cron {got_cron} != {cron}")
+        if got_tz != tz:
+            raise SystemExit(f"dagster schedule {name} tz {got_tz} != {tz}")
+    statuses = ((data.get("instance") or {}).get("daemonHealth") or {}).get("allDaemonStatuses") or []
+    scheduler = None
+    for row in statuses:
+        kind = str(row.get("daemonType") or "")
+        if "SCHEDULER" in kind.upper() and "SENSOR" not in kind.upper():
+            scheduler = row
+            break
+    if scheduler is None:
+        kinds = [str(row.get("daemonType") or "") for row in statuses]
+        raise SystemExit(f"dagster instance missing scheduler daemon: {kinds}")
+    if scheduler.get("healthy") is not True:
+        raise SystemExit(f"dagster scheduler daemon is not healthy: {scheduler}")
+    print(f"dagster schedules={sorted(SCHEDULES)}")
 
 
 def get_text(url: str, ok: tuple[int, ...] = (200,)) -> str:

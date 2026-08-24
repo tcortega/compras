@@ -513,10 +513,10 @@ test('unidade canônica e preço-base só quando o warehouse gravou', async ({ p
     await unknownLink.click()
   } else {
     await page.goto('/itens?q=Sinaliza')
-    await expect(page.getByRole('link', { name: /Sinaliza/ })).toBeVisible()
+    await expect(page.getByRole('link', { name: /Sinaliza[cç][aã]o provis[oó]ria/ })).toBeVisible()
     await expect(page.locator('table.data tbody')).not.toHaveText(/unknown/i)
-    await page.getByRole('link', { name: /Sinaliza/ }).click()
-    await expect(page.getByRole('heading', { name: /Sinaliza/ })).toBeVisible()
+    await page.getByRole('link', { name: /Sinaliza[cç][aã]o provis[oó]ria/ }).click()
+    await expect(page.getByRole('heading', { name: /Sinaliza[cç][aã]o provis[oó]ria/ })).toBeVisible()
   }
   await expect(page.getByText('não mapeada').first()).toBeVisible()
   await expect(page.locator('.stats .kicker', { hasText: 'Valor por' })).toHaveCount(0)

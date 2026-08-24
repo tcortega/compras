@@ -55,9 +55,11 @@ def _normalize_row(
     unit_raw = _first(row, "unidademedida", "nomeunidademedida", "siglaunidademedida") or ""
     unit = units.match(unit_raw)
     qty = parse_decimal(_first(row, "quantidaderesultado", "quantidade")) or Decimal("0")
-    unit_price = parse_decimal(
-        _first(row, "valorunitarioresultado", "valorunitariohomologado", "valorunitario", "valorunitarioestimado")
-    )
+    resultado_unit = parse_decimal(_first(row, "valorunitarioresultado", "valorunitariohomologado"))
+    estimado_unit = parse_decimal(_first(row, "valorunitarioestimado"))
+    unit_price = resultado_unit
+    if unit_price is None:
+        unit_price = parse_decimal(_first(row, "valorunitario", "valorunitarioestimado"))
     total = parse_decimal(_first(row, "valortotalresultado", "valortotal"))
     price_base = _price_per_canonical(unit, unit_price, qty, total)
     publicado = parse_datetime(_first(row, "datapublicacaopncp", "datainclusaopncp"))
@@ -110,6 +112,17 @@ def _normalize_row(
         "unidade_canonica": unit.canonical,
         "unit_parse_confidence": unit.confidence,
         "valor_unitario": _dec_str(unit_price),
+        "valor_unitario_resultado": _dec_str(resultado_unit),
+        "valor_unitario_estimado": _dec_str(estimado_unit),
+        "situacao": _first(
+            row,
+            "situacaocompraitemnome",
+            "situacaocompranome",
+            "situacaocompraitem",
+            "situacao",
+        )
+        or "",
+        "resultado_http": _first(row, "resultado_http", "resultados_http", "resultado_status") or "",
         "valor_total": _dec_str(total),
         "valor_referencia": _dec_str(
             parse_decimal(_first(row, "valor_referencia", "preco_referencia", "valor_referencia_catalogo"))

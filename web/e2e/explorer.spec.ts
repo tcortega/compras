@@ -277,7 +277,8 @@ test('lista o recorte publicado com UF mista', async ({ page }) => {
   await page.goto('/orgaos?take=200')
   const publishedTable = page.locator('table.data')
   for (const name of publishedNames) {
-    await expect(publishedTable.getByRole('link', { name }).first()).toBeVisible()
+    // Warehouse razao is usually unaccented MUNICIPIO DE X. The município column keeps the official accent.
+    await expect(publishedTable.getByText(name).first()).toBeVisible()
   }
   await expect(page.getByText(/UF mista/).first()).toBeVisible()
   await assertCoverageAndBan(page)

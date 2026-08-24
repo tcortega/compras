@@ -190,6 +190,7 @@ PUBLISHED = {
     "3556206": ("municipio de valinhos", "SP"),
     "1705508": ("municipio de colinas do tocantins", "TO"),
 }
+PUBLISHED_UFS = {uf for _name, uf in PUBLISHED.values()}
 
 
 def main() -> int:
@@ -581,7 +582,7 @@ def main() -> int:
     if not (sources.get("compras_gov") or {}).get("lastUpdate"):
         raise SystemExit("api /api/cobertura compras_gov lastUpdate is empty after land")
 
-    items = get_json(f"{API}/api/items?skip=0&take=100")
+    items = get_json(f"{API}/api/items?skip=0&take=500")
     deny_flags(items, f"{API}/api/items")
     deny_stub(json.dumps(items, ensure_ascii=False), "api /api/items")
     coverage = items.get("coverage") or {}
@@ -614,9 +615,11 @@ def main() -> int:
         raise SystemExit(f"api invented a unit for FOOBAR: {unknown[0].get('unidadeCanonica')}")
     if unknown and unknown[0].get("valorPorUnidadeCanonica") is not None:
         raise SystemExit("api invented a base price for unknown unit")
-    ufs = {str(row.get("uf") or "") for row in rows}
-    if ufs != {"RJ", "SP", "RS", "SC", "MG", "PR", "BA", "PE", "GO", "ES", "PB", "CE", "MA", "AL", "MS", "PA", "MT", "RO", "RN", "AC", "AP", "RR"}:
-        raise SystemExit(f"api items UF set is not RJ+SP+RS+SC+MG+PR+BA+PE+GO+ES+PB+CE+MA+AL+MS+PA+MT+RO+RN+AC+AP+RR: {sorted(ufs)}")
+    ufs = {str(row.get("uf") or "") for row in rows if row.get("uf")}
+    missing = PUBLISHED_UFS - ufs
+    extra = ufs - PUBLISHED_UFS
+    if missing or extra:
+        raise SystemExit(f"api items UF set drifted from the published slice: missing={sorted(missing)} extra={sorted(extra)}")
     iid = rows[0]["id"]
     item = get_json(f"{API}/api/items/{iid}")
     deny_flags(item, f"{API}/api/items/{iid}")
@@ -2048,7 +2051,8 @@ def assert_served_page(html: str, where: str) -> None:
                 raise SystemExit(f"{where} leaked {kind}")
     if not re.search(r"n=\d+", html):
         raise SystemExit(f"{where} missing coverage n")
-    if not any(token in html for token in ("UF RJ", "UF SP", "UF RS", "UF SC", "UF MG", "UF PR", "UF BA", "UF PE", "UF GO", "UF ES", "UF PB", "UF CE", "UF MA", "UF AL", "UF MS", "UF PA", "UF MT", "UF RO", "UF RN", "UF AC", "UF AP", "UF RR", "UF mista", "filtro sem registros")):
+    uf_tokens = tuple(f"UF {uf}" for uf in sorted(PUBLISHED_UFS)) + ("UF mista", "filtro sem registros")
+    if not any(token in html for token in uf_tokens):
         raise SystemExit(f"{where} missing UF / empty-filter chip")
     if not re.search(r"trimestre|trim\.", html, re.I):
         raise SystemExit(f"{where} missing trimestre")

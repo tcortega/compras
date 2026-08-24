@@ -173,9 +173,10 @@ export const SLICE_YEAR_CANDIDATES = [2024, 2025, 2026] as const
 
 function formatSliceCities(rows: readonly { nome: string; uf: string }[]): string {
   const parts = rows.map((row) => `${row.nome} (${row.uf})`)
-  if (parts.length === 0) return ''
-  if (parts.length === 1) return parts[0]
-  return `${parts.slice(0, -1).join(', ')} e ${parts.at(-1)}`
+  const first = parts[0]
+  if (first === undefined) return ''
+  if (parts.length === 1) return first
+  return `${parts.slice(0, -1).join(', ')} e ${parts[parts.length - 1] ?? first}`
 }
 
 export const SLICE_CITIES = formatSliceCities(SLICE_MUNICIPIOS)
